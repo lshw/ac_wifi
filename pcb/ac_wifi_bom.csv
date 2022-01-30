@@ -1,0 +1,36 @@
+Quantity, Footprint, Comment, Designator,编号
+1,"SIP2N","SIP2",J3 
+1,"RCY150P","330uF/10V",C3 
+1,"RCY200P","10uF/450v",C5 
+1,"ACY200P","0.08A/250V",F1 
+2,"EIA7343","560uH",L1 L2 
+4,"SIP1_8.5","SIP1",CONN2 J6 J4 J5 
+1,"DO-214AC","SMAJ440CA",D2 
+2,"S208T02","S208T02",U5 U6 
+2,"SMA","RS1M",D4 D3 
+1,"smt0603.ele","3.3k",R13 
+1,"SOT89","HT7233",U3 
+2,"smt0603.ele","10k",R14 R8 
+1,"EIA_B","100uF/6.3V",C7 
+1,"speak","speak",SPK1 
+2,"DO-214AC","M7",D6 D8 
+2,"3x6sw","3x6x2.5sw",S1 S2 
+3,"smt0603.ele","2k",R16 R15 R17 
+1,"esp12fa","ESP-12F",U2 
+2,"SIP2N","unknown",J2 J1 
+2,"smt0603.ele","4.7k",R2 R3 
+6,"smt0805.ele","100nF",C1 C4 C13 C11 C14 C12 
+1,"SMA","ES1J",D1 
+1,"SO8","SM7035P",U1 
+1,"smt0805.ele","4.7uF",C2 
+1,"smt0805.ele","1k",R9 
+1,"MR2.0X10","1.81mR",R10 
+1,"smt0603.ele","100nF",C6 
+1,"SO8","HLW8032",U4 
+3,"smt0603.ele","33nF",C9 C8 C10 
+2,"smt0603.ele","1k",R11 R12 
+2,"0805","10",R19 R18 
+1,"SOT-23","AO3400A",Q1 
+4,"smt0805.ele","470k",R4 R7 R6 R5 
+1,"5050","WS2813",LED1 
+2,"DO-214AA","P6SMB6.8CA",D7 D5 

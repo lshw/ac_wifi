@@ -1,0 +1,17 @@
+*~
+*.backup
+*.zip
+*.gbr
+*.xy
+*.bom
+*.cnc
+\.*.sw?
+*.xy
+*.bom
+*.net
+*.stl
+*.gcode
+*.log
+*.hex
+*.bin
+*.bak
