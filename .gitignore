@@ -1,3 +1,19 @@
+\#*
+*~
+.~*
+\.*.sw?
+*-
+*.ps
+*.orig
+*.rej
+*.diff
+*.patch
+*.log
+*.hex
+*.bin
+*.bom
+*.xy
+
 # Prerequisites
 *.d
 
