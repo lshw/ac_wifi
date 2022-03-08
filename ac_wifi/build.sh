@@ -22,7 +22,9 @@ ver=$date-${a:0:7}
 echo $ver
 export COMMIT=$ver
 
-arduino=/opt/arduino-1.8.13
+arduino=/opt/arduino-1.8.19
+astyle  --options = $arduino/lib/formatter.conf ac_wifi/*.h ac_wifi/*.ino ac_wifi/*.c
+
 arduinoset=$home/.arduino15
 mkdir -p /tmp/${me}_build /tmp/${me}_cache
 
