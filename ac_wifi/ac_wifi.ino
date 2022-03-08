@@ -5,7 +5,7 @@ extern "C" {
 #include "config.h"
 #include "global.h"
 String hostname = HOSTNAME;
-#define SSD 4 //SSD
+#include "gpio.h"
 #include "ota.h"
 #include "wifi_client.h"
 #include "httpd.h"
@@ -15,7 +15,9 @@ void init1() {
 uint32_t t0 = 0;
 void setup()
 {
+  ESP.wdtEnable(50000);
   Serial.begin(115200);
+  gpio_setup();
   load_nvram(); //从esp8266的nvram载入数据
   wifi_country_t mycountry =
   {
@@ -28,11 +30,9 @@ void setup()
   wifi_set_country(&mycountry);
   wifi_station_connect();
   pinMode(LEDP, OUTPUT);
-  pinMode(SSD, OUTPUT);
-  digitalWrite(SSD, HIGH);
 
   analogWrite(5, 5);
-  play("1");//234567A"); //滴～～
+  play("12");//234567A"); //滴～～
   analogWrite(5, 0);
 
   send(0x2f0000L);
@@ -64,7 +64,6 @@ void setup()
   Serial.flush();
   wdt_disable();
   wifi_setup();
-  delay(1500);
   if (wifi_station_get_connect_status() != STATION_GOT_IP) {
     ap_on_time = millis() + 30000;  //WPS 20秒
     if (WiFi.beginWPSConfig()) {
@@ -81,6 +80,7 @@ void setup()
       wifi_station_set_config(&config[ap_id]); //保存成功的ssid,用于下次通讯
       wifi_set_add(wps_ssid, wps_password);
     }
+    ESP.wdtFeed();
   }
   if (wifi_station_get_connect_status() != STATION_GOT_IP) {
     AP();
@@ -88,6 +88,7 @@ void setup()
     httpd_listen();
     ota_setup();
   }
+  ESP.wdtEnable(5000);
 }
 
 void wput() {
@@ -96,8 +97,31 @@ void wput() {
 
 bool httpd_up = false;
 uint32_t last_check_connected;
+bool last_keygen;
 void loop()
 {
+  if (last_keygen != digitalRead(KEYWORD)) {
+    last_keygen = digitalRead(KEYWORD);
+    if (last_keygen == LOW) {
+      if (keydown_ms + 20 > millis()) return;
+      keydown_ms = millis();
+      if (digitalRead(SSD) == HIGH) {
+        Serial.println("down");
+        digitalWrite(SSD, LOW);
+        analogWrite(5, 5);
+        play("2");
+        analogWrite(5, 0);
+      } else {
+        Serial.println("up");
+        digitalWrite(SSD, HIGH);
+        analogWrite(5, 5);
+        play("1");
+        analogWrite(5, 0);
+      }
+    }
+
+  }
+  ESP.wdtFeed();
   last_check_connected = millis() + 1000; //1秒检查一次connected;
   if (ap_client_linked || connected_is_ok) {
     httpd_loop();

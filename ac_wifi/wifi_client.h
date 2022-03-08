@@ -110,7 +110,7 @@ void wifi_setup() {
     fp.close();
     SPIFFS.end();
   }
-  WiFiMulti.run();
+  WiFiMulti.run(5000);
   wifi_connected_is_ok();
 }
 bool connected_is_ok = false;
