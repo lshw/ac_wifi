@@ -5,6 +5,7 @@ extern "C" {
 #include "config.h"
 #include "global.h"
 String hostname = HOSTNAME;
+#include "hlw8032.h"
 #include "gpio.h"
 #include "ota.h"
 #include "wifi_client.h"
@@ -16,7 +17,7 @@ uint32_t t0 = 0;
 void setup()
 {
   ESP.wdtEnable(50000);
-  Serial.begin(115200);
+  Serial.begin(4800); //hlw8032需要这个速度
   gpio_setup();
   load_nvram(); //从esp8266的nvram载入数据
   wifi_country_t mycountry =
@@ -60,7 +61,6 @@ void setup()
   Serial.println("Hostname: " + hostname);
   Serial.flush();
 
-  _myTicker.attach(1, timer1s);
   Serial.flush();
   wdt_disable();
   wifi_setup();
