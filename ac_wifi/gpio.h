@@ -23,6 +23,7 @@ void key_check() {
       }
     }
   }
+  get_ac();
 }
 
 void gpio_setup() {

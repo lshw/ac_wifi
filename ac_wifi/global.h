@@ -14,17 +14,12 @@ struct tm now;
 int16_t update_timeok = 0; //0-马上wget ，-1 关闭，>0  xx分钟后wget
 uint8_t ota_status = 0; //0:wps, 1:ap
 uint8_t timer3 = 30; //最长30秒等待上线
-void timer1s();
 
 bool wifi_connected_is_ok();
 extern bool connected_is_ok;
 uint16_t http_get(uint8_t);
 extern bool ap_client_linked ;
 uint32_t ap_on_time = 200000;
-
-void timer1s() {
-}
-
 uint16_t wget() {
   uint16_t httpCode = http_get( nvram.nvram7 & NVRAM7_URL); //先试试上次成功的url
   if (httpCode < 200  || httpCode >= 400) {

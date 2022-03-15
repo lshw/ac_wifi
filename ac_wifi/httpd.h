@@ -54,6 +54,7 @@ void handleRoot() {
              "<body>"
              "SN:<mark>" + hostname + "</mark> &nbsp; "
              "版本:<mark>" VER "</mark>"
+             "<br>" + String(ac_raw()) +
              "<hr>"
              + wifi_stat + "<hr>" + wifi_scan +
              "<hr><form action=/save.php method=post>"
