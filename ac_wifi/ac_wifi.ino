@@ -96,30 +96,19 @@ void wput() {
 }
 
 bool httpd_up = false;
-uint32_t last_check_connected;
-bool last_keygen;
 void loop()
 {
-  if (last_keygen != digitalRead(KEYWORD)) {
-    last_keygen = digitalRead(KEYWORD);
-    if (last_keygen == LOW) {
-      if (keydown_ms + 20 > millis()) return;
-      keydown_ms = millis();
-      if (digitalRead(SSD) == HIGH) {
-        Serial.println("down");
-        digitalWrite(SSD, LOW);
-        analogWrite(5, 5);
-        play("2");
-        analogWrite(5, 0);
-      } else {
-        Serial.println("up");
-        digitalWrite(SSD, HIGH);
-        analogWrite(5, 5);
-        play("1");
-        analogWrite(5, 0);
-      }
+  if (ssr_change & 0x80) {
+    ssr_change &= ~0x80;
+    analogWrite(5, 5);
+    if (ssr_change == 0) {
+      Serial.println("OUT CLOSE");
+      play("1");
+    } else {
+      Serial.println("OUT OPEN");
+      play("2");
     }
-
+    analogWrite(5, 0);
   }
   ESP.wdtFeed();
   last_check_connected = millis() + 1000; //1秒检查一次connected;

@@ -1,28 +1,34 @@
 #ifndef __GPIO_H__
 #define __GPIO_H__
 
-#define SSD 4 //SSD
-#define KEYWORD 14
-
+#define SSR 4 //SSD
+#define KEYWORD 0
+uint32_t last_check_connected;
+bool last_keygen = HIGH ;
 uint32_t keydown_ms = 0;
-ICACHE_RAM_ATTR void keydown() {
-  if (keydown_ms + 20 > millis()) return;
-  keydown_ms = millis();
-  if (digitalRead(SSD) == HIGH) {
-    Serial.println("down");
-    digitalWrite(SSD, LOW);
-    play("2");
-  } else {
-    Serial.println("up");
-    digitalWrite(SSD, HIGH);
-    play("1");
+uint8_t ssr_change = 0;
+void key_check() {
+  if (last_keygen != digitalRead(KEYWORD)) {
+    last_keygen = digitalRead(KEYWORD);
+    if (last_keygen == LOW) {
+      if (keydown_ms + 20 > millis()) return;
+      keydown_ms = millis();
+      ssr_change |= 0x80;
+      if (digitalRead(SSR) == HIGH) {
+        ssr_change &= ~1;
+        digitalWrite(SSR, LOW);
+      } else {
+        ssr_change |= 1;
+        digitalWrite(SSR, HIGH);
+      }
+    }
   }
 }
+
 void gpio_setup() {
-  pinMode(SSD, OUTPUT);
-  pinMode(0, INPUT);
-  pinMode(KEYWORD, INPUT);
-  digitalWrite(SSD, HIGH);
-  //  attachInterrupt(digitalPinToInterrupt(D3), keydown, FALLING);
+  pinMode(SSR, OUTPUT);
+  digitalWrite(SSR, HIGH);
+  pinMode(KEYWORD, INPUT_PULLUP);
+  _myTicker.attach_ms(20, key_check);
 }
 #endif //__GPIO_H__
