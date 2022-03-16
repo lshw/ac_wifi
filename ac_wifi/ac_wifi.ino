@@ -7,6 +7,7 @@ extern "C" {
 String hostname = HOSTNAME;
 #include "hlw8032.h"
 #include "gpio.h"
+#include "clock.h"
 #include "ota.h"
 #include "wifi_client.h"
 #include "httpd.h"
@@ -20,6 +21,8 @@ void setup()
   Serial.begin(4800); //hlw8032需要这个速度
   gpio_setup();
   load_nvram(); //从esp8266的nvram载入数据
+  setup_clock();
+
   wifi_country_t mycountry =
   {
     .cc = "CN",
@@ -123,6 +126,8 @@ void loop()
       wput();
       httpd_up = true;
       httpd_listen();
+      if (!ntp_get("ntp.anheng.com.cn"))
+        ntp_get("1.debian.pool.ntp.org");
     }
   }
   yield();

@@ -10,7 +10,7 @@
 #include "pwm_speeker.h"
 Ticker _myTicker;
 DNSServer dnsServer;
-struct tm now;
+extern bool wifi_connected;
 int16_t update_timeok = 0; //0-马上wget ，-1 关闭，>0  xx分钟后wget
 uint8_t ota_status = 0; //0:wps, 1:ap
 uint8_t timer3 = 30; //最长30秒等待上线
