@@ -97,7 +97,7 @@ void setup()
 void wput() {
   uint16_t httpCode = wget();
 }
-
+uint32_t last_disp_time = 0;
 bool httpd_up = false;
 void loop()
 {
@@ -128,11 +128,17 @@ void loop()
       httpd_listen();
       if (!ntp_get("ntp.anheng.com.cn"))
         ntp_get("1.debian.pool.ntp.org");
+      last_disp_time = 0;
     }
   }
   yield();
   if (nvram.change) save_nvram();
   system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
+  loop_clock();
+  if ((now.tm_sec == 0 && last_disp_time < millis()) || last_disp_time == 0) {
+    last_disp_time = millis() + 60000 - now.tm_sec * 1000;
+    Serial.printf("%s\r\n", asctime(&now));
+  }
 }
 
 bool smart_config() {
