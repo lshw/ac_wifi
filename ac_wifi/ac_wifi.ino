@@ -11,8 +11,10 @@ String hostname = HOSTNAME;
 #include "ota.h"
 #include "wifi_client.h"
 #include "httpd.h"
-void init1() {
-  save_nvram();
+void run_20ms() {
+  key_check();
+  sound_20ms();
+  get_ac();
 }
 uint32_t t0 = 0;
 void setup()
@@ -43,7 +45,8 @@ void setup()
   send(0x2f0000L);
   nvram.boot_count++;
   nvram.change = 1;
-  init1();
+  save_nvram();
+  _myTicker.attach_ms(20, run_20ms);
 #ifdef GIT_COMMIT_ID
   Serial.println(F("Git Ver=" GIT_COMMIT_ID));
 #endif
