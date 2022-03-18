@@ -17,6 +17,7 @@ uint8_t timer3 = 30; //最长30秒等待上线
 
 bool wifi_connected_is_ok();
 extern bool connected_is_ok;
+extern uint8_t sound_buf[100];
 uint16_t http_get(uint8_t);
 extern bool ap_client_linked ;
 uint32_t ap_on_time = 200000;

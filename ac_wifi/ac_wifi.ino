@@ -36,11 +36,7 @@ void setup()
   wifi_set_country(&mycountry);
   wifi_station_connect();
   pinMode(LEDP, OUTPUT);
-
-  analogWrite(5, 5);
   play("12");//234567A"); //滴～～
-  analogWrite(5, 0);
-
   send(0x2f0000L);
   send(0x2f0000L);
   nvram.boot_count++;
@@ -106,7 +102,6 @@ void loop()
 {
   if (ssr_change & 0x80) {
     ssr_change &= ~0x80;
-    analogWrite(5, 5);
     if (ssr_change == 0) {
       Serial.println("OUT CLOSE");
       play("1");
@@ -114,7 +109,6 @@ void loop()
       Serial.println("OUT OPEN");
       play("2");
     }
-    analogWrite(5, 0);
   }
   ESP.wdtFeed();
   last_check_connected = millis() + 1000; //1秒检查一次connected;
