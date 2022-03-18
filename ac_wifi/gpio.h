@@ -23,13 +23,11 @@ void key_check() {
       }
     }
   }
-  get_ac();
 }
 
 void gpio_setup() {
   pinMode(SSR, OUTPUT);
   digitalWrite(SSR, HIGH);
   pinMode(KEYWORD, INPUT_PULLUP);
-  _myTicker.attach_ms(20, key_check);
 }
 #endif //__GPIO_H__
