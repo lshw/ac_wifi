@@ -172,6 +172,7 @@ uint16_t http_get(uint8_t no) {
     } else {
       Serial.print("http error code ");
       Serial.println(httpCode);
+      break;
     }
   }
   //  http.end();
