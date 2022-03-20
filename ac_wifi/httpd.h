@@ -55,6 +55,8 @@ void handleRoot() {
              "SN:<mark>" + hostname + "</mark> &nbsp; "
              "版本:<mark>" VER "</mark>"
              "<br>" + String(ac_raw()) +
+             "<br>输出:" + String(digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
+             + String(get_kwh()) + "KWh"
              "<hr>"
              + wifi_stat + "<hr>" + wifi_scan +
              "<hr><form action=/save.php method=post>"
