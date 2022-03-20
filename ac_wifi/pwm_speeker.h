@@ -41,11 +41,16 @@ void play(char * qz) {
   sound_buf[sizeof(sound_buf) - 1] = 0;
 }
 bool pwm_on = false;
+uint16_t vol = 5;
 void sound_20ms() {
+  if (sound_delay < millis() + 40) {
+    analogWrite(5, 0);
+    pwm_on = false;
+  }
   if (sound_delay > millis()) return;
   if (sound_buf[0] != 0) {
     if (!pwm_on) {
-      analogWrite(5, 2);
+      analogWrite(5, vol);
       pwm_on = true;
     }
     sound(sound_buf[0], 500);
