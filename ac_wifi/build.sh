@@ -40,7 +40,7 @@ $arduino/arduino-builder \
 -tools $arduino/hardware/tools/avr \
 -tools $arduinoset/packages \
 -built-in-libraries $arduino/libraries \
--libraries $sketchbook/libraries \
+-libraries lib/libraries \
 -fqbn=$fqbn \
 -ide-version=10813 \
 -build-path /tmp/${me}_build \
@@ -63,7 +63,7 @@ $arduino/arduino-builder \
 -tools $arduino/hardware/tools/avr \
 -tools $arduinoset/packages \
 -built-in-libraries $arduino/libraries \
--libraries $sketchbook/libraries \
+-libraries lib/libraries \
 -fqbn=$fqbn \
 -ide-version=10813 \
 -build-path /tmp/${me}_build \
