@@ -131,6 +131,20 @@ void http_add_ssid() {
   httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/?" + String(millis()) + "');</script></body></html>");
   yield();
 }
+void sound_play() {
+  yield();
+  for (uint8_t i = 0; i < httpd.args(); i++) {
+    if (httpd.argName(i).compareTo("play") == 0) {
+      play((char *)httpd.arg(i).c_str());
+    } else if (httpd.argName(i).compareTo("vol") == 0) {
+      vol = httpd.arg(i).toInt();
+      analogWrite(5, vol);
+    }
+  }
+  httpd.send(200, "text/html", "<html><head></head><body>ok</body></html>");
+  yield();
+}
+
 void httpsave() {
   File fp;
   String url, data;
@@ -195,10 +209,12 @@ void httpsave() {
   httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
   yield();
 }
+
 void httpd_listen() {
 
   httpd.on("/", handleRoot);
   httpd.on("/save.php", httpsave); //保存设置
+  httpd.on("/sound.php", sound_play); //播放音乐  http://xxxx/sound.php?play=123
   httpd.on("/add_ssid.php", http_add_ssid); //保存设置
   httpd.on("/generate_204", http204);//安卓上网检测
 
