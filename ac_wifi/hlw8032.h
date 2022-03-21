@@ -1,7 +1,7 @@
 #ifndef __HLW8032_H__
 #define __HLW8032_H__
-uint8_t ac_buf[25];
-char ac_str[100];
+uint8_t ac_buf[30];
+char ac_str[120];
 uint32_t last_ac = 0;
 int32_t pf = -1;
 bool ac_init = false;
