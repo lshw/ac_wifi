@@ -14,12 +14,16 @@ String hostname = HOSTNAME;
 void run_20ms() {
   key_check();
   sound_20ms();
-  get_ac();
+  if (millis() > 10000) get_ac();
 }
 uint32_t t0 = 0;
 void setup()
 {
   ESP.wdtEnable(50000);
+  while (millis() < 2000) {
+    ESP.wdtFeed();
+    yield();
+  }
   Serial.begin(4800, SERIAL_8E1); //hlw8032需要这个速度
   gpio_setup();
   load_nvram(); //从esp8266的nvram载入数据
