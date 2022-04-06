@@ -85,42 +85,36 @@ void fix_ac_set() {
     update_kwh_count();
 }
 
-/*
-  void ac_datalog_put(char * msg) {
-    char buf[100];
-    get_time();
-    if(time_str[2]=='0') return; //时间不对
-    update_pf();
-    snprintf(buf,sizeof(buf),"%.2f,%.2f,%.2f,%.2f,%lf,%s", voltage, current*1000.0, power, power_ys , get_kwh(),msg);
-    datalog.qz = 0x1f << 1; //raw asc格式
-    datalog_put(buf,strlen(buf));
-  }
-*/
 bool power_down = false;
-void get_ac() {
+bool ac_ok = false;
+uint32_t ac_ok_count = 0;
+void ac_20ms() {
+  if (Serial.available() < 24) return;
+  if (Serial.available()  > 24) {
+    while (Serial.available() > 24) {
+      Serial.read();
+    }
+    return;
+  }
+  memset(ac_buf, 0, sizeof(ac_buf));
+  Serial.read(ac_buf, 24);
+  for (uint8_t i = 2; i < 23; i++) {
+    ac_buf[23] -= ac_buf[i];
+  }
+  if (ac_buf[23] != 0) {
+    return;
+  }
+  last_ac = millis();
+  ac_ok = true;
+  ac_ok_count++;
+}
+void ac_decode() {
   uint32_t d32;
   float f1;
   uint8_t i = 0;
-  int16_t dat, adc0, adc1;
   uint8_t state, dataUpdata;
-  if (Serial.available() < 24) return;
-  if (Serial.available()  > 24) {
-    while (Serial.available() > 24)
-      Serial.read();
-    return;
-  }
-
-  memset(ac_buf, 0, sizeof(ac_buf));
-  Serial.readBytes(ac_buf, 24);
-  adc0 = 0;
-  for (i = 2; i < 23; i++) {
-    adc0 += ac_buf[i];
-  }
-  if ((adc0 & 0xff) != ac_buf[23]) {
-    return;
-  }
-
-  last_ac = millis();
+  if (!ac_ok) return;
+  ac_ok = false;
   pf = (uint32_t) ((ac_buf[20] & 0x80) << 9 | ( ac_buf[21] << 8) | ac_buf[22]);
   state = ac_buf[0];
   dataUpdata = ac_buf[20];

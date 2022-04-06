@@ -57,7 +57,8 @@ void handleRoot() {
              "<br>" + String(ac_raw()) +
              "<br>输出:" + String(digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
              + String(get_kwh()) + "KWh"
-             "<hr>"
+             + ",测试次数:" + String(ac_ok_count)
+             + "<hr>"
              + wifi_stat + "<hr>" + wifi_scan +
              "<hr><form action=/save.php method=post>"
              "输入ssid:passwd(可以多行多个)"
