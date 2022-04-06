@@ -14,7 +14,7 @@ String hostname = HOSTNAME;
 void run_20ms() {
   key_check();
   sound_20ms();
-  if (millis() > 10000) get_ac();
+  if (millis() > 2000) ac_20ms();
 }
 uint32_t t0 = 0;
 void setup()
@@ -40,7 +40,7 @@ void setup()
   wifi_set_country(&mycountry);
   wifi_station_connect();
   pinMode(LEDP, OUTPUT);
-  play("12");//234567A"); //滴～～
+  play("1"); //滴～～
   send(0x2f0000L);
   send(0x2f0000L);
   nvram.boot_count++;
@@ -124,6 +124,7 @@ void loop()
     dnsServer.processNextRequest();
   if (connected_is_ok) {
     if (!httpd_up) {
+      play("2");
       wput();
       httpd_up = true;
       httpd_listen();
@@ -132,6 +133,7 @@ void loop()
       last_disp_time = 0;
     }
   }
+  ac_decode();
   yield();
   if (nvram.change) save_nvram();
   system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
