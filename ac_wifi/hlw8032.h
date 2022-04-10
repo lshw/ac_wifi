@@ -9,23 +9,6 @@ float current = 0.0, voltage = 0.0, power = 0.0, power_ys = 0.0; //上次测量
 uint32_t v_cs = 0, i_cs = 0, p_cs = 0;
 uint32_t ac_kwh_count = 0; //开机后计算得到， 几个脉冲一度电。
 float voltage0 = 0.0; //上次测量的电压值
-struct sets { //不会经常变化的设置， 需要保存到文件系统 sets.dat
-  uint8_t bz; //不等于0, 需要保存
-  uint16_t ac_power_change_value;
-  uint16_t ac_voltage_change_value;
-  uint16_t ac_alert_minute;
-  float ac_v_calibration;
-  float ac_i_calibration;
-} __attribute__ ((packed)); //字节紧凑格式， 不做字对齐
-struct sets sets;
-
-void save_sets() { //保存设置到文件
-  if (sets.bz == 0) return;
-
-  //save ac_power_change_value; ac_voltage_change_value; ac_alert_minute; ac_v_calibration; ac_i_calibration
-  if (millis() < 600000) { //10分钟之内允许修改
-  }
-}
 
 uint32_t ac_int32( uint8_t * dat) { //从hlw8032的数据中获取32位整数
   uint32_t ret = 0;
@@ -52,7 +35,8 @@ void update_pf() { //更新kwh累计， 清理脉冲计数
     nvram.kwh += 1.0;
     nvram.ac_pf -= ac_kwh_count;
   }
-  save_nvram();
+  set_modi |= NVRAM_CHARGE;
+  set_file_modi |= NVRAM_CHARGE;
 }
 
 void update_kwh_count() { //根据需要修改并保存校准数据
@@ -67,18 +51,22 @@ void update_kwh_count() { //根据需要修改并保存校准数据
     nvram.kwh += (double)(nvram.ac_pf / ac_kwh_count);
     nvram.ac_pf = 0;
     ac_kwh_count = new_kwh_count;
-    sets.bz |= 0x2;
-    save_nvram(); //保存到nvram
-    save_nvram_file(); //保存到文件
-    save_sets(); //保存设置数据
+    set_modi |= NVRAM_CHARGE;
+    set_file_modi |= NVRAM_CHARGE;
   }
 }
 
 void fix_ac_set() { //初始化
   //电阻采样4个470k 加1个1k为1.881  //参数=0.0001*(R1+R2)/R2  R1=470k*4,R2=1K
-  if (!(sets.ac_v_calibration > 1.0 && sets.ac_v_calibration < 3.00)) sets.ac_v_calibration = 1.881;
+  if (!(sets.ac_v_calibration > 1.0 && sets.ac_v_calibration < 3.00)) {
+    sets.ac_v_calibration = 1.881;
+    set_modi |= SET_FILE_CHARGE;
+  }
   //1m欧->1.0 ,10m欧->0.1,  0.5m欧 -> 2.0 1.81*1.1m欧->0.50226 // 参数=0.0001/R
-  if (!(sets.ac_i_calibration > 0.1 && sets.ac_i_calibration < 2.00)) sets.ac_i_calibration = 1.44 / (0.00199 * 1000);
+  if (!(sets.ac_i_calibration > 0.1 && sets.ac_i_calibration < 2.00)) {
+    sets.ac_i_calibration = 1.44 / (0.00199 * 1000);
+    set_modi |= SET_FILE_CHARGE;
+  }
   update_kwh_count();
 }
 
@@ -155,7 +143,6 @@ void ac_decode() { //hlm8032数据解码
       if (f1 <= 1.0) power_ys = f1;
     } else power_ys = 0;
   }
-  //  bool alert = ac_alert();
   if (ac_init == false && p_cs > 0) {
     fix_ac_set();
     ac_init = true;
@@ -164,8 +151,8 @@ void ac_decode() { //hlm8032数据解码
   if (power_down == false) {
     if (voltage < 40) {
       power_down = true;
-      save_nvram();
-      save_nvram_file();
+      set_modi |= NVRAM_CHARGE;
+      set_file_modi |= NVRAM_CHARGE;
     }
   } else if (voltage > 80) {
     power_down = false;
