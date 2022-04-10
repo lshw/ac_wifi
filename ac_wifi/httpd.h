@@ -59,6 +59,9 @@ void handleRoot() {
              + String(get_kwh()) + "KWh"
              + ",测试次数:" + String(ac_ok_count)
              + "<hr>"
+             + "电压校准参数:" + String(sets.ac_v_calibration)
+             + ",电流校准参数:" + String(sets.ac_i_calibration)
+             + "<hr>"
              + wifi_stat + "<hr>" + wifi_scan +
              "<hr><form action=/save.php method=post>"
              "输入ssid:passwd(可以多行多个)"
@@ -238,7 +241,7 @@ void httpd_listen() {
                  "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
                  "</head>"
                  "<body>"
-                 "<script>setTimeout(function(){ alert('升级成功!'); }, 15000); </script>"
+                 "<script>setTimeout(function(){ alert('升级成功!'); window.location.href = '/';}, 20000); </script>"
                  "</body>"
                  "</html>"
                 );

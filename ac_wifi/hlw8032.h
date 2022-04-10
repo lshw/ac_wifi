@@ -80,7 +80,7 @@ void fix_ac_set() {
   //电阻采样4个470k 加1个1k为1.881  //参数=0.0001*(R1+R2)/R2  R1=470k*4,R2=1K
   if (!(sets.ac_v_calibration > 1.0 && sets.ac_v_calibration < 3.00)) sets.ac_v_calibration = 1.881;
   //1m欧->1.0 ,10m欧->0.1,  0.5m欧 -> 2.0 1.81*1.1m欧->0.50226 // 参数=0.0001/R
-  if (!(sets.ac_i_calibration > 0.1 && sets.ac_i_calibration < 2.00)) sets.ac_i_calibration = 1.0 / (0.00199 * 1000);
+  if (!(sets.ac_i_calibration > 0.1 && sets.ac_i_calibration < 2.00)) sets.ac_i_calibration = 1.44 / (0.00199 * 1000);
   if (ac_int32(&ac_buf[2 + 6 + 6]) != 0)
     update_kwh_count();
 }
