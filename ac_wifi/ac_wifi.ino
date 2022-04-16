@@ -14,20 +14,24 @@ String hostname = HOSTNAME;
 void run_20ms() {
   key_check();
   sound_20ms();
-  if (millis() > 2000) ac_20ms();
+  ac_20ms();
+  ac_decode();
 }
 uint32_t t0 = 0;
 void setup()
 {
   ESP.wdtEnable(50000);
-  while (millis() < 2000) {
-    ESP.wdtFeed();
-    yield();
-  }
+  /*
+    while (millis() < 2000) {
+      ESP.wdtFeed();
+      yield();
+    }
+  */
   Serial.begin(4800, SERIAL_8E1); //hlw8032需要这个速度
   gpio_setup();
   load_nvram(); //从esp8266的nvram载入数据
   setup_clock();
+  _myTicker.attach_ms(20, run_20ms);
 
   wifi_country_t mycountry =
   {
@@ -46,7 +50,6 @@ void setup()
   nvram.boot_count++;
   nvram.change = 1;
   save_nvram();
-  _myTicker.attach_ms(20, run_20ms);
 #ifdef GIT_COMMIT_ID
   Serial.println(F("Git Ver=" GIT_COMMIT_ID));
 #endif
@@ -124,7 +127,7 @@ void loop()
     dnsServer.processNextRequest();
   if (connected_is_ok) {
     if (!httpd_up) {
-      play("2");
+      play("3");
       wput();
       httpd_up = true;
       httpd_listen();
@@ -133,7 +136,6 @@ void loop()
       last_disp_time = 0;
     }
   }
-  ac_decode();
   yield();
   if (nvram.change) save_nvram();
   system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
