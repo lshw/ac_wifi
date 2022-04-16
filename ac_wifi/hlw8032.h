@@ -29,12 +29,13 @@ void save_sets() { //保存设置到文件
 
 }
 
-uint32_t ac_int32( uint8_t * dat) {
+uint32_t ac_int32( uint8_t * dat) { //从hlw8032的数据中获取32位整数
   uint32_t ret = 0;
   ret = (uint32_t) (dat[0] << 16) | (dat[1] << 8) | dat[2] ;
   return ret;
 }
-double get_kwh() {
+
+double get_kwh() { //获取当前数据
   double kwh;
   kwh = nvram.kwh;
   if (sets.ac_kwh_count > 0)
@@ -42,7 +43,7 @@ double get_kwh() {
   return kwh;
 }
 
-void update_pf() {
+void update_pf() { //更新kwh累计， 清理脉冲计数
   if (pf < 0) return; //hlm8032未开始工作
   if (nvram.ac_pf0 == pf) return;
   if (nvram.ac_pf0 < pf) {
@@ -56,7 +57,7 @@ void update_pf() {
   save_nvram();
 }
 
-void update_kwh_count() {
+void update_kwh_count() { //根据需要修改并保存校准数据
   uint32_t new_kwh_count;
   if (millis() > 600000) return; //开机超过600秒， 不能修改
   if (p_cs == 0) {
@@ -108,7 +109,8 @@ void ac_20ms() {
   ac_ok = true;
   ac_ok_count++;
 }
-void ac_decode() {
+
+void ac_decode() { //hlm8032数据解码
   uint32_t d32;
   float f1;
   uint8_t i = 0;
@@ -118,15 +120,6 @@ void ac_decode() {
   pf = (uint32_t) ((ac_buf[20] & 0x80) << 9 | ( ac_buf[21] << 8) | ac_buf[22]);
   state = ac_buf[0];
   dataUpdata = ac_buf[20];
-  if ((state & 0xf9) == 0xf8) voltage = 0.0; //电压
-  else if (state == 0x55 || (state & 0b1001) == 0) {
-    d32 = ac_int32(&ac_buf[2 + 3]);
-    if ((d32 & 0xffff00) != 0) { // 滤除异常值
-      v_cs = ac_int32(&ac_buf[2]);
-      voltage = (float) v_cs / d32 * sets.ac_v_calibration;
-      if (isnan(voltage) || isinf(voltage)) voltage = 0.0;
-    }
-  }
   if ((state & 0xf5) == 0xf4) current = 0.0;
   else if (state == 0x55 || (state & 0b101) == 0) {
     d32 = ac_int32(&ac_buf[8 + 3]);
@@ -134,6 +127,20 @@ void ac_decode() {
       i_cs = ac_int32(&ac_buf[8]);
       current =  (float) i_cs / d32 * sets.ac_i_calibration;
       if (isnan(current) || isinf(current)) current = 0.0;
+      else if (current > 5.0) { //过流保护
+        digitalWrite(SSR, LOW);
+        i_over = 10000; //关机10秒
+      }
+    }
+  }
+
+  if ((state & 0xf9) == 0xf8) voltage = 0.0; //电压
+  else if (state == 0x55 || (state & 0b1001) == 0) {
+    d32 = ac_int32(&ac_buf[2 + 3]);
+    if ((d32 & 0xffff00) != 0) { // 滤除异常值
+      v_cs = ac_int32(&ac_buf[2]);
+      voltage = (float) v_cs / d32 * sets.ac_v_calibration;
+      if (isnan(voltage) || isinf(voltage)) voltage = 0.0;
     }
   }
 

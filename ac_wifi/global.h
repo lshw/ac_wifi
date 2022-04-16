@@ -16,6 +16,7 @@ extern bool wifi_connected;
 int16_t update_timeok = 0; //0-马上wget ，-1 关闭，>0  xx分钟后wget
 uint8_t ota_status = 0; //0:wps, 1:ap
 uint8_t timer3 = 30; //最长30秒等待上线
+uint16_t i_over = 0; //电流过高保护， 倒计时ms
 
 bool wifi_connected_is_ok();
 extern bool connected_is_ok;
