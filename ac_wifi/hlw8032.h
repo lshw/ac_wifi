@@ -8,8 +8,8 @@ bool ac_init = false;
 float current = 0.0, voltage = 0.0, power = 0.0, power_ys = 0.0; //上次测量
 uint32_t v_cs = 0, i_cs = 0, p_cs = 0;
 float voltage0 = 0.0; //上次测量的电压值
-struct sets {
-  uint8_t bz; //bit0置位: 保存测试数据， bit1置位:保存校准数据
+struct sets { //不会经常变化的设置， 需要保存到文件系统 sets.dat
+  uint8_t bz; //不等于0, 需要保存
   uint16_t ac_power_change_value;
   uint16_t ac_voltage_change_value;
   uint16_t ac_alert_minute;
@@ -19,7 +19,7 @@ struct sets {
 } __attribute__ ((packed)); //字节紧凑格式， 不做字对齐
 struct sets sets;
 
-void save_sets() {
+void save_sets() { //保存设置到文件
   if (sets.bz == 0) return;
   if (sets.bz & 2) { //save ac_power_change_value; ac_voltage_change_value; ac_alert_minute; ac_kwh_count; ac_v_calibration; ac_i_calibration
     if (millis() < 600000) { //10分钟之内允许修改
