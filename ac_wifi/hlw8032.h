@@ -7,13 +7,13 @@ int32_t pf = -1;
 bool ac_init = false;
 float current = 0.0, voltage = 0.0, power = 0.0, power_ys = 0.0; //上次测量
 uint32_t v_cs = 0, i_cs = 0, p_cs = 0;
+uint32_t ac_kwh_count = 0; //开机后计算得到， 几个脉冲一度电。
 float voltage0 = 0.0; //上次测量的电压值
 struct sets { //不会经常变化的设置， 需要保存到文件系统 sets.dat
   uint8_t bz; //不等于0, 需要保存
   uint16_t ac_power_change_value;
   uint16_t ac_voltage_change_value;
   uint16_t ac_alert_minute;
-  uint32_t ac_kwh_count;
   float ac_v_calibration;
   float ac_i_calibration;
 } __attribute__ ((packed)); //字节紧凑格式， 不做字对齐
@@ -22,7 +22,7 @@ struct sets sets;
 void save_sets() { //保存设置到文件
   if (sets.bz == 0) return;
 
-  //save ac_power_change_value; ac_voltage_change_value; ac_alert_minute; ac_kwh_count; ac_v_calibration; ac_i_calibration
+  //save ac_power_change_value; ac_voltage_change_value; ac_alert_minute; ac_v_calibration; ac_i_calibration
   if (millis() < 600000) { //10分钟之内允许修改
   }
 }
@@ -36,8 +36,8 @@ uint32_t ac_int32( uint8_t * dat) { //从hlw8032的数据中获取32位整数
 double get_kwh() { //获取当前数据
   double kwh;
   kwh = nvram.kwh;
-  if (sets.ac_kwh_count > 0)
-    kwh += (double)nvram.ac_pf / sets.ac_kwh_count;
+  if (ac_kwh_count > 0)
+    kwh += (double)nvram.ac_pf / ac_kwh_count;
   return kwh;
 }
 
@@ -48,26 +48,25 @@ void update_pf() { //更新kwh累计， 清理脉冲计数
     nvram.ac_pf += (pf - nvram.ac_pf0);
   }
   nvram.ac_pf0 = pf;
-  if (sets.ac_kwh_count > 0 && nvram.ac_pf >= sets.ac_kwh_count) {
+  if (ac_kwh_count > 0 && nvram.ac_pf >= ac_kwh_count) {
     nvram.kwh += 1.0;
-    nvram.ac_pf -= sets.ac_kwh_count;
+    nvram.ac_pf -= ac_kwh_count;
   }
   save_nvram();
 }
 
 void update_kwh_count() { //根据需要修改并保存校准数据
   uint32_t new_kwh_count;
-  if (millis() > 600000) return; //开机超过600秒， 不能修改
   if (p_cs == 0) {
-    sets.ac_kwh_count = 0; //无效
+    ac_kwh_count = 0; //无效
     return;
   }
   new_kwh_count = (uint32_t) 1000000000 / (p_cs * sets.ac_i_calibration * sets.ac_v_calibration / 3600); //HLW8032手册15页
-  if (new_kwh_count != sets.ac_kwh_count && new_kwh_count > 50000 && new_kwh_count < 2000000) { //0.5m欧-10m欧
+  if (new_kwh_count != ac_kwh_count && new_kwh_count > 50000 && new_kwh_count < 2000000) { //0.5m欧-10m欧
     update_pf();
-    nvram.kwh += (double)(nvram.ac_pf / sets.ac_kwh_count);
+    nvram.kwh += (double)(nvram.ac_pf / ac_kwh_count);
     nvram.ac_pf = 0;
-    sets.ac_kwh_count = new_kwh_count;
+    ac_kwh_count = new_kwh_count;
     sets.bz |= 0x2;
     save_nvram(); //保存到nvram
     save_nvram_file(); //保存到文件
@@ -106,7 +105,7 @@ void ac_20ms() {
   ac_ok = true;
   ac_ok_count++;
 }
-
+uint32_t p_cs0 = 0;
 void ac_decode() { //hlm8032数据解码
   uint32_t d32;
   float f1;
@@ -145,7 +144,7 @@ void ac_decode() { //hlm8032数据解码
   else if (state == 0x55 || (state & 0b11) == 0) {
     d32 = ac_int32(&ac_buf[14 + 3]);
     if ((d32 & 0xffff00) != 0) { // 滤除异常值
-      p_cs = ac_int32(&ac_buf[14]);
+      p_cs = ac_int32(&ac_buf[2 + 6 + 6]);
       power = (float) p_cs / d32 * sets.ac_v_calibration * sets.ac_i_calibration;
       if (isnan(power) || isinf(power)) power = 0.0;
     }
@@ -171,7 +170,10 @@ void ac_decode() { //hlm8032数据解码
   } else if (voltage > 80) {
     power_down = false;
   }
-  if (p_cs > 0 && sets.ac_kwh_count == 0) update_kwh_count();
+  if (p_cs0 != p_cs) {
+    p_cs0 = p_cs;
+    update_kwh_count();
+  }
 }
 
 char * ac_raw() {
