@@ -1,8 +1,6 @@
 #ifndef __GPIO_H__
 #define __GPIO_H__
 
-#define SSR 4 //SSD
-#define KEYWORD 0
 uint32_t last_check_connected;
 bool last_keygen = HIGH ;
 uint32_t keydown_ms = 0;
