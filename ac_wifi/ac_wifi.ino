@@ -16,6 +16,10 @@ void run_20ms() {
   sound_20ms();
   ac_20ms();
   ac_decode();
+  if (i_over > 20)
+    i_over -= 20;
+  else
+    i_over = 0;
 }
 uint32_t t0 = 0;
 void setup()
