@@ -58,7 +58,8 @@ void update_kwh_count() { //根据需要修改并保存校准数据
   new_kwh_count = (uint32_t) 1000000000 / (p_cs * sets.ac_i_calibration * sets.ac_v_calibration / 3600); //HLW8032手册15页
   if (new_kwh_count != ac_kwh_count && new_kwh_count > 50000 && new_kwh_count < 2000000) { //0.5m欧-10m欧
     update_pf();
-    nvram.kwh += (double)(nvram.ac_pf / ac_kwh_count);
+    if (ac_kwh_count > 0)
+      nvram.kwh += (double)(nvram.ac_pf / ac_kwh_count);
     nvram.ac_pf = 0;
     ac_kwh_count = new_kwh_count;
     set_modi |= NVRAM_CHARGE;
