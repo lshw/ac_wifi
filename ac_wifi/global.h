@@ -8,8 +8,6 @@
 #include <DNSServer.h>
 #include "ws2813.h"
 #include "pwm_speeker.h"
-#define SSR 4 //SSD
-#define KEYWORD 0  //按键
 Ticker _myTicker;
 DNSServer dnsServer;
 extern bool wifi_connected;

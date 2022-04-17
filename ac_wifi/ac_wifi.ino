@@ -4,7 +4,6 @@ extern "C" {
 }
 #include "config.h"
 #include "global.h"
-String hostname = HOSTNAME;
 #include "hlw8032.h"
 #include "gpio.h"
 #include "clock.h"
