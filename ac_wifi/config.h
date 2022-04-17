@@ -2,10 +2,13 @@
 #define _CONFIG_H_
 
 #define VER "1.0"
-#define HOSTNAME "ac_"
 
+String hostname = "ac_";
 
 #define DEFAULT_URL0 "http://temp.cfido.com:808/ac_wifi.php"
 #define DEFAULT_URL1 "http://temp2.wf163.com:808/ac_wifi.php"
+
+#define SSR 4 //SSD
+#define KEYWORD 0  //按键
 
 #endif //_CONFIG_H_

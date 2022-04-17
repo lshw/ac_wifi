@@ -7,9 +7,9 @@
 #define NVRAM_CHARGE 0b1
 #define SET_FILE_CHARGE 0b10
 
+void update_kwh_count(); //更新kwh的脉冲数，
 uint8_t set_modi = 0; //不等于0, 需要保存
 uint8_t set_file_modi = 0; //不等于0, 需要保存
-void fix_ac_set();
 struct {
   uint8_t nc;
   uint8_t nvram7;
@@ -45,7 +45,7 @@ void load_nvram() {
     SPIFFS.end();
     if (nvram.crc32 != calculateCRC32((uint8_t*) &nvram, sizeof(nvram) - sizeof(nvram.crc32))) {
       memset(&nvram, 0, sizeof(nvram));
-      fix_ac_set();
+      update_kwh_count(); //校准数据初始化
     }
   } else {
     Serial.println("\r\nwifi channel=" + String(nvram.ch) );
