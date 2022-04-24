@@ -33,6 +33,7 @@ void setup()
   Serial.begin(4800, SERIAL_8E1); //hlw8032需要这个速度
   gpio_setup();
   load_nvram(); //从esp8266的nvram载入数据
+  load_set(); //从files载入数据
   setup_clock();
   _myTicker.attach_ms(20, run_20ms);
 
@@ -51,7 +52,6 @@ void setup()
   send(0x2f0000L);
   send(0x2f0000L);
   nvram.boot_count++;
-  nvram.change = 1;
   save_nvram();
 #ifdef GIT_COMMIT_ID
   Serial.println(F("Git Ver=" GIT_COMMIT_ID));
@@ -120,6 +120,8 @@ void loop()
       play("2");
     }
   }
+  if (nvram_save > 0 && nvram_save < millis())
+    save_nvram_file();
   ESP.wdtFeed();
   last_check_connected = millis() + 1000; //1秒检查一次connected;
   if (ap_client_linked || connected_is_ok) {
@@ -140,19 +142,23 @@ void loop()
     }
   }
   yield();
-  if (nvram.change) save_nvram();
   system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
+  if (set_modi && (set_modi & SET_CHARGE)) {
+    save_set();
+  }
   loop_clock();
   if ((now.tm_sec == 0 && last_disp_time < millis()) || last_disp_time == 0) {
     last_disp_time = millis() + 60000 - now.tm_sec * 1000;
     Serial.printf("%s\r\n", asctime(&now));
   }
+  yield();
+  system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
 }
 
 bool smart_config() {
   //插上电， 等20秒， 如果没有上网成功， 就会进入 CO xx计数， 100秒之内完成下面的操作
   //手机连上2.4G的wifi,然后微信打开网页：http://wx.ai-thinker.com/api/old/wifi/config
-  nvram.change = 1;
+  save_nvram();
   if (wifi_connected_is_ok()) return true;
   WiFi.mode(WIFI_STA);
   WiFi.beginSmartConfig();
