@@ -203,7 +203,7 @@ bool http_update()
   switch (ret) {
     case HTTP_UPDATE_FAILED:
       Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\r\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
-      ESP.restart();
+      reboot_now = true;
       break;
 
     case HTTP_UPDATE_NO_UPDATES:

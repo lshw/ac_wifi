@@ -22,6 +22,7 @@ extern uint8_t sound_buf[100];
 uint16_t http_get(uint8_t);
 extern bool ap_client_linked ;
 uint32_t ap_on_time = 200000;
+bool reboot_now = false;
 uint16_t wget() {
   uint16_t httpCode = http_get( nvram.nvram7 & NVRAM7_URL); //先试试上次成功的url
   if (httpCode < 200  || httpCode >= 400) {

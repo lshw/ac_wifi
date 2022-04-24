@@ -120,7 +120,7 @@ void loop()
       play("2");
     }
   }
-  if (nvram_save > 0 && nvram_save < millis())
+  if (nvram_save > 0 && nvram_save <= millis())
     save_nvram_file();
   ESP.wdtFeed();
   last_check_connected = millis() + 1000; //1秒检查一次connected;
@@ -153,6 +153,11 @@ void loop()
   }
   yield();
   system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
+  if (reboot_now) {
+    save_nvram_file();
+    reboot_now = false;
+    ESP.restart();
+  }
 }
 
 bool smart_config() {
