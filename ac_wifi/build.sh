@@ -18,9 +18,9 @@ cd ..
 branch=`git branch |grep "^\*" |awk '{print $2}'`
 a=`git rev-parse --short HEAD`
 date=`git log --date=short -1 |grep ^Date: |awk '{print $2}' |tr -d '-'`
+git_id=${a:0:7}
 ver=$date-${a:0:7}
 echo $ver
-export COMMIT=$ver
 
 arduino=/opt/arduino-1.8.19
 astyle  --options=$arduino/lib/formatter.conf ac_wifi/*.h ac_wifi/*.ino ac_wifi/*.c
@@ -29,7 +29,7 @@ arduinoset=$home/.arduino15
 mkdir -p /tmp/${me}_build /tmp/${me}_cache
 
 #传递宏定义 GIT_COMMIT_ID 到源码中，源码git版本
-CXXFLAGS="-DGIT_COMMIT_ID=\"$ver\" "
+CXXFLAGS="-DGIT_COMMIT_ID=\"$git_id\" -DGIT_VER=\"$ver\" "
 fqbn="esp8266:esp8266:espduino:ResetMethod=v1,UploadTool=esptool,xtal=160,vt=flash,exception=disabled,stacksmash=disabled,ssl=all,mmu=4816,non32xfer=fast,eesz=4M2M,ip=lm2f,dbg=Disabled,lvl=None____,wipe=none,baud=460800 " 
 $arduino/arduino-builder \
 -dump-prefs \
