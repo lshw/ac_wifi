@@ -69,7 +69,7 @@ void setup()
   Serial.print(__DAY__);
   Serial.println(F(" " __TIME__));
   hostname += String(ESP.getChipId(), HEX);
-  WiFi.hostname(hostname);
+  hostname.toUpperCase();
   Serial.println("Hostname: " + hostname);
   Serial.flush();
 
