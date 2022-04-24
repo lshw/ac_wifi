@@ -167,6 +167,12 @@ uint16_t http_get(uint8_t no) {
       Serial.println(httpCode);
       // file found at server
       if (httpCode == HTTP_CODE_OK) {
+        String payload = http.getString();
+        payload.toUpperCase();
+        if (payload.compareTo("UPDATE") == 0) {
+          if (http_update() == false)
+            http_update();
+        }
       }
       break;
     } else {
