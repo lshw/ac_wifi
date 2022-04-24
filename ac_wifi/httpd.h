@@ -58,6 +58,8 @@ void handleRoot() {
              "<br>输出:" + String(digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
              + String(get_kwh()) + "KWh"
              + ",测试次数:" + String(ac_ok_count)
+             + ",uptime:" + String(millis() / 1000) + "秒"
+             + ",最大电流:" + String(i_max) + "A"
              + "<hr>"
              + "电压校准参数:" + String(sets.ac_v_calibration)
              + ",电流校准参数:" + String(sets.ac_i_calibration)
