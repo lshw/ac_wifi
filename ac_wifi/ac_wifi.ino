@@ -154,6 +154,8 @@ void loop()
   yield();
   system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
   if (reboot_now) {
+    save_nvram();
+    nvram_save = millis();
     save_nvram_file();
     reboot_now = false;
     ESP.restart();
