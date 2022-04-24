@@ -58,6 +58,7 @@ void wifi_setup() {
   uint8_t count = 0;
   boolean is_ssid = true;
   WiFi.mode(WIFI_STA);
+  WiFi.hostname(hostname);
   wifi_set_sleep_type(LIGHT_SLEEP_T);
   if (SPIFFS.begin()) {
     if (!SPIFFS.exists("/ssid.txt")) {
