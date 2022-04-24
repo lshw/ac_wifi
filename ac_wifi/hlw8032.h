@@ -19,7 +19,7 @@ uint32_t ac_int32( uint8_t * dat) { //从hlw8032的数据中获取32位整数
 double get_kwh() { //获取当前数据
   double kwh;
   kwh = nvram.kwh;
-  if (ac_kwh_count > 0)
+  if (ac_kwh_count > 0 && nvram.ac_pf > 0)
     kwh += (double)nvram.ac_pf / ac_kwh_count;
   return kwh;
 }
