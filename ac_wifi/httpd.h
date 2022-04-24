@@ -113,6 +113,30 @@ void handleNotFound() {
   httpd.client().stop();
   message = "";
 }
+void http_switch() {
+  String data;
+  char ch;
+  int8_t mh_offset;
+  for (uint8_t i = 0; i < httpd.args(); i++) {
+    if (httpd.argName(i).compareTo("switch") == 0) {
+      data = httpd.arg(i);
+      data.trim();
+      data.toUpperCase();
+      break;
+    }
+  }
+  if (data == "") return;
+  if (data.compareTo("ON") == 0) {
+    ssr_change |= 1;
+    digitalWrite(SSR, HIGH);
+
+  } else if (data.compareTo("OFF") == 0) {
+    ssr_change &= ~1;
+    digitalWrite(SSR, LOW);
+  }
+  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/?" + String(millis()) + "');</script></body></html>");
+  yield();
+}
 void http_add_ssid() {
   String data;
   char ch;
@@ -218,6 +242,7 @@ void httpd_listen() {
 
   httpd.on("/", handleRoot);
   httpd.on("/save.php", httpsave); //保存设置
+  httpd.on("/switch.php", http_switch); //保存设置
   httpd.on("/sound.php", sound_play); //播放音乐  http://xxxx/sound.php?play=123
   httpd.on("/add_ssid.php", http_add_ssid); //保存设置
   httpd.on("/generate_204", http204);//安卓上网检测
