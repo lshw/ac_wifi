@@ -182,6 +182,7 @@ void httpsave() {
   for (uint8_t i = 0; i < httpd.args(); i++) {
     if (httpd.argName(i).compareTo("reboot") == 0) {
       reboot_now = true;
+      continue;
     }
     if (httpd.argName(i).compareTo("data") == 0) {
       data = httpd.arg(i);
