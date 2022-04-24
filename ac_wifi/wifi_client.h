@@ -123,7 +123,7 @@ bool wifi_connected_is_ok() {
     //  ht16c21_cmd(0x88, 0); //停止闪烁
     if (nvram.ch != wifi_get_channel() ) {
       nvram.ch =  wifi_get_channel();
-      nvram.change = 1;
+      save_nvram();
     }
 
     uint8_t ap_id = wifi_station_get_current_ap_id();

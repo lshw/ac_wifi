@@ -26,7 +26,8 @@ uint16_t wget() {
   uint16_t httpCode = http_get( nvram.nvram7 & NVRAM7_URL); //先试试上次成功的url
   if (httpCode < 200  || httpCode >= 400) {
     nvram.nvram7 = (nvram.nvram7 & ~ NVRAM7_URL) | (~ nvram.nvram7 & NVRAM7_URL);
-    nvram.change = 1;
+    save_nvram();
+    nvram_save = 0; //不需要保存 url选择， 到file
     httpCode = http_get(nvram.nvram7 & NVRAM7_URL); //再试试另一个的url
   }
   return httpCode;
