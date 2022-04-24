@@ -9,7 +9,7 @@ float current = 0.0, voltage = 0.0, power = 0.0, power_ys = 0.0; //上次测量
 uint32_t v_cs = 0, i_cs = 0, p_cs = 0;
 uint32_t ac_kwh_count = 0; //开机后计算得到， 几个脉冲一度电。
 float voltage0 = 0.0; //上次测量的电压值
-
+float i_max = 0.0;
 uint32_t ac_int32( uint8_t * dat) { //从hlw8032的数据中获取32位整数
   uint32_t ret = 0;
   ret = (uint32_t) (dat[0] << 16) | (dat[1] << 8) | dat[2] ;
@@ -157,6 +157,7 @@ void ac_decode() { //hlm8032数据解码
     p_cs0 = p_cs;
     update_kwh_count();
   }
+  if (i_max < current) i_max = current;
 }
 
 char * ac_raw() {
