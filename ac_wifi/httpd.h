@@ -177,7 +177,6 @@ void httpsave() {
   File fp;
   String url, data;
   SPIFFS.begin();
-  bool reboot_now = false;
   for (uint8_t i = 0; i < httpd.args(); i++) {
     if (httpd.argName(i).compareTo("reboot") == 0) {
       reboot_now = true;
