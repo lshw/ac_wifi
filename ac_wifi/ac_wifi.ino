@@ -101,6 +101,7 @@ void wput() {
   uint16_t httpCode = wget();
 }
 uint32_t last_disp_time = 0;
+uint32_t ms0 = 0;
 bool httpd_up = false;
 void loop()
 {
@@ -114,10 +115,13 @@ void loop()
       play("2");
     }
   }
-  if ((nvram_save > 0 && nvram_save <= millis())
-      || (last_save + 120000 < millis())
-      || last_save > millis())
-    save_nvram_file();
+  if (ms0 + 1000 < millis()) {
+    ms0 = millis();
+    if ((nvram_save > 0 && nvram_save <= millis())
+        || (last_save + 120000 < millis())
+        || last_save > millis())
+      save_nvram_file();
+  }
   ESP.wdtFeed();
   last_check_connected = millis() + 1000; //1秒检查一次connected;
   if (ap_client_linked || connected_is_ok) {
