@@ -36,22 +36,27 @@ void save_nvram() {
   nvram_save = millis() + 60000; //60秒后 保存 nvram到 file
 }
 
+uint32_t last_save = 0;
 void save_nvram_file() {
   File fp;
   if (nvram_save == 0) return;
-  if (nvram_save > millis()) {
-    if (nvram_save - millis() < 600000) //可能millis() 溢出
+
+  if (last_save  < millis()) { //最多120秒保存一次数据
+    if (nvram_save > millis()
+        && millis() - last_save < 12000
+        && nvram_save - millis() < 600000) //可能millis() 溢出
       return;
+
   }
+  last_save = millis();
   SPIFFS.begin();
   fp = SPIFFS.open("/nvram.txt", "w");
-  nvram.crc32 = calculateCRC32((uint8_t*) &nvram, sizeof(nvram) - sizeof(nvram.crc32));
+  save_nvram();
   fp.write((uint8_t *)&nvram, sizeof(nvram));
   fp.close();
   SPIFFS.end();
   nvram_save = 0;
 }
-
 void load_nvram() {
   File fp;
   ESP.rtcUserMemoryRead(0, (uint32_t*) &nvram, sizeof(nvram));

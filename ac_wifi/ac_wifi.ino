@@ -24,12 +24,6 @@ uint32_t t0 = 0;
 void setup()
 {
   ESP.wdtEnable(50000);
-  /*
-    while (millis() < 2000) {
-      ESP.wdtFeed();
-      yield();
-    }
-  */
   Serial.begin(4800, SERIAL_8E1); //hlw8032需要这个速度
   gpio_setup();
   load_nvram(); //从esp8266的nvram载入数据
@@ -120,7 +114,9 @@ void loop()
       play("2");
     }
   }
-  if (nvram_save > 0 && nvram_save <= millis())
+  if ((nvram_save > 0 && nvram_save <= millis())
+      || (last_save + 120000 < millis())
+      || last_save > millis())
     save_nvram_file();
   ESP.wdtFeed();
   last_check_connected = millis() + 1000; //1秒检查一次connected;
@@ -154,7 +150,6 @@ void loop()
   yield();
   system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
   if (reboot_now) {
-    save_nvram();
     nvram_save = millis();
     save_nvram_file();
     reboot_now = false;
