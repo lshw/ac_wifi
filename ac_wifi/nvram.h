@@ -45,6 +45,7 @@ void save_nvram_file() {
   }
   SPIFFS.begin();
   fp = SPIFFS.open("/nvram.txt", "w");
+  nvram.crc32 = calculateCRC32((uint8_t*) &nvram, sizeof(nvram) - sizeof(nvram.crc32));
   fp.write((uint8_t *)&nvram, sizeof(nvram));
   fp.close();
   SPIFFS.end();
