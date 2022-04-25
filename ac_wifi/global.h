@@ -165,4 +165,13 @@ void  wifi_set_add(const char * wps_ssid, const char * wps_password) {
   }
 }
 
+void dump_hex(char * msg, uint16_t len) {
+  for (uint16_t i = 0; i < len; i++) {
+    if ((i % 0x10) == 0) Serial.printf("\r\n[%04X]", i);
+    if ((i % 0x10) == 8) Serial.write(' ');
+    Serial.printf(" %02X", msg[i]);
+  }
+  Serial.println();
+}
+
 #endif
