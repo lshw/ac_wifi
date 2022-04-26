@@ -52,7 +52,7 @@ void update_kwh_count() { //根据需要修改并保存校准数据
   if (p_cs == 0) {
     new_kwh_count = 0; //无效
   } else
-  new_kwh_count = (uint32_t) 1000000000 / (p_cs * sets.ac_i_calibration * sets.ac_v_calibration / 3600); //HLW8032手册15页
+    new_kwh_count = (uint32_t) 1000000000 / (p_cs * sets.ac_i_calibration * sets.ac_v_calibration / 3600); //HLW8032手册15页
   if (new_kwh_count != nvram.ac_kwh_count  && new_kwh_count < 2000000) { //0.5m欧-10m欧
     update_pf();
     if (nvram.ac_kwh_count > 0)
