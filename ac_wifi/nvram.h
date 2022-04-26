@@ -13,7 +13,7 @@ struct {
   uint8_t nvram7;
   uint8_t reserved;
   uint8_t ch;
-  uint32_t boot_count;
+  uint32_t ac_kwh_count = 0; //几个脉冲一度电。
   double  kwh; //总度数
   uint32_t  ac_pf; //未换算成度数的pf计数,  超过 sets.ac_kwh_count  就进1到ac_kwh
   uint32_t  ac_pf0; //已统计的HLW8032的pf 如果实际的小于这个数据， 就要把它加上8032的读数， 加到 sets.ac_pf, 并且设置本行为8032读数。

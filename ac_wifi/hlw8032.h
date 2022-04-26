@@ -7,7 +7,6 @@ int32_t pf = -1;
 bool ac_init = false;
 float current = 0.0, voltage = 0.0, power = 0.0, power_ys = 0.0; //上次测量
 uint32_t v_cs = 0, i_cs = 0, p_cs = 0;
-uint32_t ac_kwh_count = 0; //开机后计算得到， 几个脉冲一度电。
 float voltage0 = 0.0; //上次测量的电压值
 float i_max = 0.0;
 uint32_t ac_int32( uint8_t * dat) { //从hlw8032的数据中获取32位整数
@@ -19,8 +18,8 @@ uint32_t ac_int32( uint8_t * dat) { //从hlw8032的数据中获取32位整数
 double get_kwh() { //获取当前数据
   double kwh;
   kwh = nvram.kwh;
-  if (ac_kwh_count > 0 && nvram.ac_pf > 0)
-    kwh += (double)nvram.ac_pf / ac_kwh_count;
+  if (nvram.ac_kwh_count > 0 && nvram.ac_pf > 0)
+    kwh += (double)nvram.ac_pf / nvram.ac_kwh_count;
   return kwh;
 }
 
@@ -31,9 +30,9 @@ void update_pf() { //更新kwh累计， 清理脉冲计数
     nvram.ac_pf += (pf - nvram.ac_pf0);
   }
   nvram.ac_pf0 = pf;
-  if (ac_kwh_count > 0 && nvram.ac_pf >= ac_kwh_count) {
+  if (nvram.ac_kwh_count > 0 && nvram.ac_pf >= nvram.ac_kwh_count) {
     nvram.kwh += 1.0;
-    nvram.ac_pf -= ac_kwh_count;
+    nvram.ac_pf -= nvram.ac_kwh_count;
   }
   save_nvram();
 }
@@ -51,16 +50,16 @@ void update_kwh_count() { //根据需要修改并保存校准数据
     set_modi |= SET_CHARGE;
   }
   if (p_cs == 0) {
-    ac_kwh_count = 0; //无效
+    nvram.ac_kwh_count = 0; //无效
     return;
   }
   new_kwh_count = (uint32_t) 1000000000 / (p_cs * sets.ac_i_calibration * sets.ac_v_calibration / 3600); //HLW8032手册15页
-  if (new_kwh_count != ac_kwh_count && new_kwh_count > 50000 && new_kwh_count < 2000000) { //0.5m欧-10m欧
+  if (new_kwh_count != nvram.ac_kwh_count && new_kwh_count > 50000 && new_kwh_count < 2000000) { //0.5m欧-10m欧
     update_pf();
-    if (ac_kwh_count > 0)
-      nvram.kwh += (double)(nvram.ac_pf / ac_kwh_count);
+    if (nvram.ac_kwh_count > 0)
+      nvram.kwh += (double)(nvram.ac_pf / nvram.ac_kwh_count);
     nvram.ac_pf = 0;
-    ac_kwh_count = new_kwh_count;
+    nvram.ac_kwh_count = new_kwh_count;
     save_nvram();
   }
 }
