@@ -129,12 +129,12 @@ void http_switch() {
   }
   if (data == "") return;
   if (data.compareTo("ON") == 0) {
-    ssr_change |= 1;
     digitalWrite(SSR, HIGH);
+    play("123");
 
   } else if (data.compareTo("OFF") == 0) {
-    ssr_change &= ~1;
     digitalWrite(SSR, LOW);
+    play("321");
   }
   httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/?" + String(millis()) + "');</script></body></html>");
   yield();

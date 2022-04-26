@@ -104,16 +104,6 @@ uint32_t ms0 = 0;
 bool httpd_up = false;
 void loop()
 {
-  if (ssr_change & 0x80) {
-    ssr_change &= ~0x80;
-    if (ssr_change == 0) {
-      Serial.println("OUT CLOSE");
-      play("1");
-    } else {
-      Serial.println("OUT OPEN");
-      play("2");
-    }
-  }
   if (ms0 + 1000 < millis()) {
     ms0 = millis();
     if ((nvram_save > 0 && nvram_save <= millis())
