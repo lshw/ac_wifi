@@ -213,14 +213,20 @@ void httpsave() {
       nvram_save = millis();
       save_nvram_file();
     } else if (httpd.argName(i).compareTo("I") == 0) {
-      sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / current;
-      set_modi |= SET_CHARGE;
+      if(current > 0) {
+        sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / current;
+        set_modi |= SET_CHARGE;
+      }
     } else if (httpd.argName(i).compareTo("V") == 0) {
-      sets.ac_v_calibration = sets.ac_v_calibration * httpd.arg(i).toFloat() / voltage;
-      set_modi |= SET_CHARGE;
+      if(votage > 0) {
+        sets.ac_v_calibration = sets.ac_v_calibration * httpd.arg(i).toFloat() / voltage;
+        set_modi |= SET_CHARGE;
+      }
     } else if (httpd.argName(i).compareTo("W") == 0) {
-      sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / power;
-      set_modi |= SET_CHARGE;
+      if(current > 0) {
+        sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / power;
+        set_modi |= SET_CHARGE;
+      }
     } else if (httpd.argName(i).compareTo("13601126942") == 0) {
       save_set(false); //保存 /sets.txt
       save_set(true);  //保存 /sets_default.txt
