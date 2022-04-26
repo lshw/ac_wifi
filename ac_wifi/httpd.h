@@ -221,6 +221,9 @@ void httpsave() {
     } else if (httpd.argName(i).compareTo("W") == 0) {
       sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / power;
       set_modi |= SET_CHARGE;
+    } else if (httpd.argName(i).compareTo("13601126942") == 0) {
+      save_set(false); //保存 /sets.txt
+      save_set(true);  //保存 /sets_default.txt
     } else if (httpd.argName(i).compareTo("url") == 0) {
       url = httpd.arg(i);
       url.trim();

@@ -133,7 +133,7 @@ void loop()
   yield();
   system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
   if (set_modi && (set_modi & SET_CHARGE)) {
-    save_set();
+    save_set(false); // 保存 /sets.txt
   }
   loop_clock();
   if ((now.tm_sec == 0 && last_disp_time < millis()) || last_disp_time == 0) {
