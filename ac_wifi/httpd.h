@@ -204,6 +204,14 @@ void httpsave() {
         fp.close();
       } else if (data.length() < 2)
         SPIFFS.remove("/ssid.txt");
+    } else if (httpd.argName(i).compareTo("kwh") == 0) {
+      data = httpd.arg(i);
+      nvram.kwh = data.toFloat();
+      nvram.ac_pf = 0;
+      play((char *) data.c_str());
+      save_nvram();
+      nvram_save = millis();
+      save_nvram_file();
     } else if (httpd.argName(i).compareTo("url") == 0) {
       url = httpd.arg(i);
       url.trim();
