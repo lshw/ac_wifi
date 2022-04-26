@@ -79,11 +79,14 @@ void load_nvram() {
   }
 }
 
-void save_set() {
+void save_set(bool _default) {
   File fp;
   sets.crc32 = calculateCRC32((uint8_t*) &sets, sizeof(sets) - sizeof(sets.crc32));
   SPIFFS.begin();
-  fp = SPIFFS.open("/sets.txt", "w");
+  if (_default)
+    fp = SPIFFS.open("/sets_default.txt", "w");
+  else
+    fp = SPIFFS.open("/sets.txt", "w");
   fp.write((uint8_t *)&sets, sizeof(sets));
   fp.close();
   SPIFFS.end();
@@ -111,7 +114,7 @@ void load_set() {
       sets.reserved1 = 0;
       sets.crc32 = calculateCRC32((uint8_t*) &sets, sizeof(sets) - sizeof(sets.crc32));
     }
-    save_set();
+    save_set(false);
   }
   SPIFFS.end();
 }
