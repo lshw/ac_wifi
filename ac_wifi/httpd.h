@@ -14,7 +14,16 @@ void handleRoot() {
   String wifi_stat, wifi_scan;
   String ssid;
   char ch[8];
+  char time_str[sizeof("2022-05-26 02:33:18")];
   snprintf(ch, sizeof(ch), "%06X", led);
+  snprintf(time_str, sizeof(time_str), "%04d-%02d-%02d %02d:%02d:%02d",
+           now.tm_year + 1900,
+           now.tm_mon + 1,
+           now.tm_mday,
+           now.tm_hour,
+           now.tm_min,
+           now.tm_sec
+          );
   int n = WiFi.scanNetworks();
   if (n > 0) {
     wifi_scan = "自动扫描到如下WiFi,点击连接:<br>";
@@ -59,7 +68,8 @@ void handleRoot() {
              "</head>"
              "<body>"
              "SN:<mark>" + hostname + "</mark> &nbsp; "
-             "版本:<mark>" VER "</mark>"
+             "版本:<mark>" VER "</mark> &nbsp;" +
+             String(time_str) +
              "<br>" + String(ac_raw()) +
              "<br>输出:" + String(digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
              + String(get_kwh()) + "KWh"
