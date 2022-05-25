@@ -72,10 +72,6 @@ bool ntp_get(const char * ServerName) {
   return true;
 }
 
-void setup_clock() {
-  _myTicker.attach(1, dida);
-}
-
 uint8_t ntp_last = 0;
 uint32_t ntp_last_ms = 0;
 void loop_clock() {
