@@ -13,6 +13,8 @@ void http204() {
 void handleRoot() {
   String wifi_stat, wifi_scan;
   String ssid;
+  char ch[8];
+  snprintf(ch, sizeof(ch), "%06X", led);
   int n = WiFi.scanNetworks();
   if (n > 0) {
     wifi_scan = "自动扫描到如下WiFi,点击连接:<br>";
@@ -39,6 +41,10 @@ void handleRoot() {
              "<head>"
              "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
              "<script>"
+             "function modi(url,text,Defaulttext) {"
+             "var data=prompt(text,Defaulttext);"
+             "location.replace(url+data);"
+             "}"
              "function get_passwd(ssid) {"
              "var passwd=prompt('输入 '+ssid+' 的密码:');"
              "if(passwd==null) return false;"
@@ -60,6 +66,7 @@ void handleRoot() {
              + ",测试次数:" + String(ac_ok_count)
              + ",uptime:" + String(millis() / 1000) + "秒"
              + ",最大电流:" + String(i_max) + "A"
+             + ",LED:<button onclick=modi('/switch.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
              + "<hr>"
              + "电压校准参数:" + String(sets.ac_v_calibration)
              + ",电流校准参数:" + String(sets.ac_i_calibration)
@@ -115,15 +122,32 @@ void handleNotFound() {
   httpd.client().stop();
   message = "";
 }
+uint8_t char2int(char ch) {
+  if (ch >= 'A') return ch - 'A' + 10;
+  return ch & 0xf;
+}
 void http_switch() {
   String data;
-  char ch;
+  char ch[7];
   int8_t mh_offset;
   for (uint8_t i = 0; i < httpd.args(); i++) {
     if (httpd.argName(i).compareTo("switch") == 0) {
       data = httpd.arg(i);
       data.trim();
       data.toUpperCase();
+      break;
+    } else if (httpd.argName(i).compareTo("led") == 0) {
+      uint32_t led = 0;
+      data = httpd.arg(i);
+      data.trim();
+      data.toUpperCase();
+      data.toCharArray(ch, 7);
+      led = (char2int(ch[0]) <<  20) | (char2int(ch[1]) << 16); //red
+      led |= (char2int(ch[2]) << 12) | (char2int(ch[3]) << 8); //green
+      led |= (char2int(ch[4]) << 4) | char2int(ch[5]); //blue
+      led_send(led);
+      delay(1);
+      led_send(led);
       break;
     }
   }
@@ -213,17 +237,17 @@ void httpsave() {
       nvram_save = millis();
       save_nvram_file();
     } else if (httpd.argName(i).compareTo("I") == 0) {
-      if(current > 0) {
+      if (current > 0) {
         sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / current;
         set_modi |= SET_CHARGE;
       }
     } else if (httpd.argName(i).compareTo("V") == 0) {
-      if(votage > 0) {
+      if (voltage > 0) {
         sets.ac_v_calibration = sets.ac_v_calibration * httpd.arg(i).toFloat() / voltage;
         set_modi |= SET_CHARGE;
       }
     } else if (httpd.argName(i).compareTo("W") == 0) {
-      if(current > 0) {
+      if (current > 0) {
         sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / power;
         set_modi |= SET_CHARGE;
       }
@@ -265,7 +289,7 @@ void httpsave() {
   httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
   yield();
 }
-
+uint32_t led0;
 void httpd_listen() {
 
   httpd.on("/", handleRoot);
@@ -278,6 +302,7 @@ void httpd_listen() {
   httpd.on("/update.php", HTTP_POST, []() {
     httpd.sendHeader("Connection", "close");
     if (Update.hasError()) {
+      led_send(led0);
       Serial.println("上传失败");
       httpd.send(200, "text/html", "<html>"
                  "<head>"
@@ -289,6 +314,7 @@ void httpd_listen() {
                  "</html>"
                 );
     } else {
+      led_send(led0);
       httpd.send(200, "text/html", "<html>"
                  "<head>"
                  "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
@@ -302,10 +328,16 @@ void httpd_listen() {
       Serial.flush();
       //    ht16c21_cmd(0x88, 1); //闪烁
       delay(5);
+      led_send(0xFF00L);
       ESP.restart();
     }
     yield();
   }, []() {
+    led0 = led;
+    if (led == 0)
+      led_send(0xFF00L);
+    else
+      led_send(0);
     HTTPUpload& upload = httpd.upload();
     if (upload.status == UPLOAD_FILE_START) {
       //  ht16c21_cmd(0x88, 0); //停闪烁
@@ -322,6 +354,7 @@ void httpd_listen() {
         Update.printError(Serial);
       }
     } else if (upload.status == UPLOAD_FILE_END) {
+      led_send(0xFF00L);
       if (Update.end(true)) { //true to set the size to the current progress
         Serial.printf("Update Success: %u\r\nRebooting...\r\n", upload.totalSize);
       } else {
