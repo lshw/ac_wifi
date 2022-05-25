@@ -10,6 +10,7 @@ extern "C" {
 #include "ota.h"
 #include "wifi_client.h"
 #include "httpd.h"
+uint32_t dida0 = 0;
 void run_20ms() {
   key_check();
   sound_20ms();
@@ -19,6 +20,10 @@ void run_20ms() {
     i_over -= 20;
   else
     i_over = 0;
+  if (millis() > dida0) {
+    dida0 += 1000;
+    dida();
+  }
 }
 uint32_t t0 = 0;
 void setup()
@@ -28,7 +33,6 @@ void setup()
   gpio_setup();
   load_nvram(); //从esp8266的nvram载入数据
   load_set(); //从files载入数据
-  setup_clock();
   _myTicker.attach_ms(20, run_20ms);
 
   wifi_country_t mycountry =
