@@ -71,7 +71,7 @@ void handleRoot() {
              "版本:<mark>" VER "</mark> &nbsp;" +
              String(time_str) +
              "<br>" + String(ac_raw()) +
-             "<br>输出:" + String(digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
+             "<br>输出:" + String(!digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
              + String(get_kwh()) + "KWh"
              + ",测试次数:" + String(ac_ok_count)
              + ",uptime:" + String(millis() / 1000) + "秒"
@@ -163,11 +163,11 @@ void http_switch() {
   }
   if (data == "") return;
   if (data.compareTo("ON") == 0) {
-    digitalWrite(SSR, HIGH);
+    digitalWrite(SSR, LOW);
     play("123");
 
   } else if (data.compareTo("OFF") == 0) {
-    digitalWrite(SSR, LOW);
+    digitalWrite(SSR, HIGH);
     play("321");
   }
   httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/?" + String(millis()) + "');</script></body></html>");

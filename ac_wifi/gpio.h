@@ -10,11 +10,11 @@ void key_check() {
     if (last_keygen == LOW) {
       if (keydown_ms + 20 > millis()) return;
       keydown_ms = millis();
-      if (digitalRead(SSR) == HIGH) {
-        digitalWrite(SSR, LOW);
+      if (digitalRead(SSR) == LOW) {
+        digitalWrite(SSR, HIGH);
         play("321");
       } else {
-        digitalWrite(SSR, HIGH);
+        digitalWrite(SSR, LOW);
         play("123");
       }
     }
@@ -23,7 +23,7 @@ void key_check() {
 
 void gpio_setup() {
   pinMode(SSR, OUTPUT);
-  digitalWrite(SSR, HIGH);
+  digitalWrite(SSR, LOW);
   pinMode(KEYWORD, INPUT_PULLUP);
 }
 #endif //__GPIO_H__
