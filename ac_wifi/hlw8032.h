@@ -104,7 +104,7 @@ void ac_decode() { //hlm8032数据解码
       i_cs = ac_int32(&ac_buf[8]);
       current =  (float) i_cs / d32 * sets.ac_i_calibration;
       if (isnan(current) || isinf(current)) current = 0.0;
-      else if (current > 10.0) { //过流保护
+      else if (current > 25.0) { //过流保护
         digitalWrite(SSR, HIGH);
         i_over = 10000; //关机10秒
       }
