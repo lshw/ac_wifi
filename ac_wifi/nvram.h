@@ -109,36 +109,16 @@ void load_set() {
       fp.close();
     }
     if (sets.crc32 != calculateCRC32((uint8_t*) &sets, sizeof(sets) - sizeof(sets.crc32))) {
-      switch (ESP.getChipId()) {
-        case 0x1889D3L:
-          sets.serial = 1;
+      sets.serial = 0;
+      uint32_t chipid = ESP.getChipId();
+      for (uint16_t i = 0; i < sizeof(calibrations) / sizeof(calibration); i++) {
+        if (chipid == calibrations[i].serial) {
+          sets.serial = i;
+          sets.ac_i_calibration = calibrations[i].i;
+          sets.ac_v_calibration = calibrations[i].v;
           break;
-        case 0x19196DL:
-          sets.serial = 2;
-          break;
-        case 0x1888D6L:
-          sets.serial = 3;
-          break;
-        case 0x191941L:
-          sets.serial = 4;
-          break;
-        case 0x521E6CL:
-          sets.serial = 5;
-          break;
-        case 0x1889C2L:
-          sets.serial = 6;
-          break;
-        default:
-          sets.serial = 0;
-          sets.ac_i_calibration = 1.44 / (0.00199 * 1000);
-          sets.ac_v_calibration = 1.881;
-          break;
+        }
       }
-      if (sets.serial < sizeof(calibrations) / sizeof(float) / 2) {
-        sets.ac_i_calibration = calibrations[sets.serial].i;
-        sets.ac_v_calibration = calibrations[sets.serial].v;
-      }
-
       sets.reserved0 = 0;
       sets.color = 0x0f0000L;
       sets.crc32 = calculateCRC32((uint8_t*) &sets, sizeof(sets) - sizeof(sets.crc32));
