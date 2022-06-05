@@ -146,6 +146,19 @@ void http_switch() {
       data.trim();
       data.toUpperCase();
       break;
+    } else if (httpd.argName(i).compareTo("default") == 0) { //恢复出厂设置
+      SPIFFS.begin();
+      SPIFFS.remove("/nvram.txt");
+      SPIFFS.remove("/sets_default.txt");
+      SPIFFS.remove("/sets.txt");
+      SPIFFS.end();
+      nvram.crc32++;
+      ESP.rtcUserMemoryWrite(0, (uint32_t*) &nvram, sizeof(nvram));
+      httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/?" + String(millis()) + "');</script></body></html>");
+      httpd.client().stop();
+      yield();
+      ESP.restart();
+      break;
     } else if (httpd.argName(i).compareTo("led") == 0) {
       uint32_t led = 0;
       data = httpd.arg(i);
