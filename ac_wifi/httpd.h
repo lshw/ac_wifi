@@ -337,7 +337,7 @@ void httpd_listen() {
                  "</html>"
                 );
     } else {
-      led_send(led0);
+      led_send(0xFF00L);
       httpd.send(200, "text/html", "<html>"
                  "<head>"
                  "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
@@ -372,6 +372,10 @@ void httpd_listen() {
         Update.printError(Serial);
       }
     } else if (upload.status == UPLOAD_FILE_WRITE) {
+      if (led == 0)
+        led_send(0xFF00L);
+      else
+        led_send(0);
       Serial.println("size:" + String(upload.totalSize));
       if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
         Update.printError(Serial);
