@@ -165,12 +165,12 @@ void http_switch() {
       data.trim();
       data.toUpperCase();
       data.toCharArray(ch, 7);
-      led = (char2int(ch[0]) <<  20) | (char2int(ch[1]) << 16); //red
-      led |= (char2int(ch[2]) << 12) | (char2int(ch[3]) << 8); //green
-      led |= (char2int(ch[4]) << 4) | char2int(ch[5]); //blue
-      led_send(led);
+      sets.color = (char2int(ch[0]) <<  20) | (char2int(ch[1]) << 16); //red
+      sets.color |= (char2int(ch[2]) << 12) | (char2int(ch[3]) << 8); //green
+      sets.color |= (char2int(ch[4]) << 4) | char2int(ch[5]); //blue
       delay(1);
-      led_send(led);
+      led_send(sets.color);
+      save_set(false);
       break;
     }
   }

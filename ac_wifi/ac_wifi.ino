@@ -47,9 +47,8 @@ void setup()
   wifi_station_connect();
   pinMode(LEDP, OUTPUT);
   play("1"); //滴～～
-  led_send(0x2f0000L);
   delay(1);
-  led_send(0x2f0000L);
+  led_send(sets.color);
   save_nvram();
 #ifdef GIT_VER
   Serial.println(F("Git Ver=" GIT_VER));
