@@ -312,7 +312,6 @@ void httpsave() {
   httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
   yield();
 }
-uint32_t led0;
 void httpd_listen() {
 
   httpd.on("/", handleRoot);
@@ -325,7 +324,7 @@ void httpd_listen() {
   httpd.on("/update.php", HTTP_POST, []() {
     httpd.sendHeader("Connection", "close");
     if (Update.hasError()) {
-      led_send(led0);
+      led_send(sets.color);
       Serial.println("上传失败");
       httpd.send(200, "text/html", "<html>"
                  "<head>"
@@ -337,7 +336,7 @@ void httpd_listen() {
                  "</html>"
                 );
     } else {
-      led_send(0xFF00L);
+      led_send(0xFF0000L);
       httpd.send(200, "text/html", "<html>"
                  "<head>"
                  "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
@@ -351,14 +350,13 @@ void httpd_listen() {
       Serial.flush();
       //    ht16c21_cmd(0x88, 1); //闪烁
       delay(5);
-      led_send(0xFF00L);
+      led_send(0xFF0000L);
       ESP.restart();
     }
     yield();
   }, []() {
-    led0 = led;
     if (led == 0)
-      led_send(0xFF00L);
+      led_send(0xFF0000L);
     else
       led_send(0);
     HTTPUpload& upload = httpd.upload();
@@ -373,7 +371,7 @@ void httpd_listen() {
       }
     } else if (upload.status == UPLOAD_FILE_WRITE) {
       if (led == 0)
-        led_send(0xFF00L);
+        led_send(0xFF0000L);
       else
         led_send(0);
       Serial.println("size:" + String(upload.totalSize));
@@ -381,7 +379,7 @@ void httpd_listen() {
         Update.printError(Serial);
       }
     } else if (upload.status == UPLOAD_FILE_END) {
-      led_send(0xFF00L);
+      led_send(0xFF0000L);
       if (Update.end(true)) { //true to set the size to the current progress
         Serial.printf("Update Success: %u\r\nRebooting...\r\n", upload.totalSize);
       } else {

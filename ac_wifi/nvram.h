@@ -120,7 +120,7 @@ void load_set() {
         }
       }
       sets.reserved0 = 0;
-      sets.color = 0x0f0000L;
+      sets.color = 0x0f00L; //绿色
       sets.crc32 = calculateCRC32((uint8_t*) &sets, sizeof(sets) - sizeof(sets.crc32));
     }
     save_set(false);
