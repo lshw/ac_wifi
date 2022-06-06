@@ -72,14 +72,14 @@ void handleRoot() {
              String(time_str) +
              "<br>" + String(ac_raw()) +
              "<br>输出:" + String(!digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
-             + String(get_kwh()) + "KWh"
+             + String(get_kwh(), 4) + "KWh"
              + ",测试次数:" + String(ac_ok_count)
              + ",uptime:" + String(millis() / 1000) + "秒"
              + ",最大电流:" + String(i_max) + "A"
              + ",LED:<button onclick=modi('/switch.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
              + "<hr>"
-             + "电压校准参数:" + String(sets.ac_v_calibration)
-             + ",电流校准参数:" + String(sets.ac_i_calibration)
+             + "电压校准参数:" + String(sets.ac_v_calibration, 6)
+             + ",电流校准参数:" + String(sets.ac_i_calibration, 6)
              + "<hr>"
              + wifi_stat + "<hr>" + wifi_scan +
              "<hr><form action=/save.php method=post>"
