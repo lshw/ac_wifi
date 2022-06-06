@@ -5,7 +5,7 @@
 #define NVRAM7_UPDATE 0b1000
 
 #define SET_CHARGE 0b1
-
+#include "calibration.h"
 void update_kwh_count(); //更新kwh的脉冲数，
 uint8_t set_modi = 0; //不等于0, 需要保存
 struct {
@@ -21,8 +21,9 @@ struct {
 } __attribute__ ((packed)) nvram;
 uint32_t nvram_save = 0;
 struct { //不会经常变化的设置， 需要保存到文件系统 sets.dat
-  uint32_t reserved0;
-  uint32_t reserved1;
+  uint16_t reserved0;
+  uint16_t serial;
+  uint32_t color;
   float ac_v_calibration;
   float ac_i_calibration;
   uint32_t crc32;
@@ -108,10 +109,38 @@ void load_set() {
       fp.close();
     }
     if (sets.crc32 != calculateCRC32((uint8_t*) &sets, sizeof(sets) - sizeof(sets.crc32))) {
-      sets.ac_i_calibration = 1.44 / (0.00199 * 1000);
-      sets.ac_v_calibration = 1.881;
+      switch (ESP.getChipId()) {
+        case 0x1889D3L:
+          sets.serial = 1;
+          break;
+        case 0x19196DL:
+          sets.serial = 2;
+          break;
+        case 0x1888D6L:
+          sets.serial = 3;
+          break;
+        case 0x191941L:
+          sets.serial = 4;
+          break;
+        case 0x521E6CL:
+          sets.serial = 5;
+          break;
+        case 0x1889C2L:
+          sets.serial = 6;
+          break;
+        default:
+          sets.serial = 0;
+          sets.ac_i_calibration = 1.44 / (0.00199 * 1000);
+          sets.ac_v_calibration = 1.881;
+          break;
+      }
+      if (sets.serial < sizeof(calibrations) / sizeof(float) / 2) {
+        sets.ac_i_calibration = calibrations[sets.serial].i;
+        sets.ac_v_calibration = calibrations[sets.serial].v;
+      }
+
       sets.reserved0 = 0;
-      sets.reserved1 = 0;
+      sets.color = 0x0f0000L;
       sets.crc32 = calculateCRC32((uint8_t*) &sets, sizeof(sets) - sizeof(sets.crc32));
     }
     save_set(false);
