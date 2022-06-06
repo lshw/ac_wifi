@@ -66,7 +66,7 @@ void setup()
   if (__DAY__ < 10) Serial.write('0');
   Serial.print(__DAY__);
   Serial.println(F(" " __TIME__));
-  hostname += String(ESP.getChipId(), HEX);
+  hostname += String(sets.serial) + "_" + String(ESP.getChipId(), HEX);
   hostname.toUpperCase();
   Serial.println("Hostname: " + hostname);
   Serial.flush();
