@@ -93,11 +93,11 @@ void handleRoot() {
                 "</form>"
                 "&nbsp;<input type=submit onclick=\"modi('/switch.php?default=','输入恢复出厂设置的密码(其实就是SN号):','AC_')\" value='恢复出厂设置' title='密码:SN'>"
                 "<hr>"
+                "<div style='height: 400px; width: 700px; background-color: #606060; background-size: 100% 100%' id='container'></div>"
+                "<hr>"
                 "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
                 "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + " target=_blank>https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + "</a>  Ver:" + GIT_VER + "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
-                "<hr>\
-<div style='height: 400px; width: 700px; background-color: #606060; background-size: 100% 100%' id='container'></div>\
-<script>\
+                "<script>\
 var obj = {\
 id:'container',\
 width:700,\
@@ -186,20 +186,20 @@ cvs.strokeStyle = datas[i].color;\
 cvs.moveTo(startX + nameSpace * (j + 1), (startY1 + (maxNum - datas[i].data[j]) * increment ));\
 cvs.lineTo(startX + nameSpace * (j + 2), (startY1 + (maxNum - datas[i].data[j + 1]) * increment));\
 cvs.stroke();\
-}, k += 1);\
+}, k += 5);\
 end = length1 * (i + 1);\
 start = i * length1;\
 }\
 cvs.beginPath();\
 cvs.strokeStyle = datas[i].color;\
-cvs.moveTo(600, 40 + titleSpace * i);\
-cvs.lineTo(650, 40 + titleSpace * i);\
+cvs.moveTo(580, 40 + titleSpace * i);\
+cvs.lineTo(625, 40 + titleSpace * i);\
 cvs.stroke();\
 cvs.closePath();\
 cvs.beginPath();\
 cvs.fillStyle = datas[i].color;\
 cvs.font = '15px 宋体';\
-cvs.fillText(datas[i].name, 650, 45 + titleSpace * i);\
+cvs.fillText(datas[i].name, 630, 45 + titleSpace * i);\
 cvs.stroke();\
 cvs.closePath();\
 }\
