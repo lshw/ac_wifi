@@ -60,52 +60,174 @@ void handleRoot() {
   }
   yield();
   if (connected_is_ok) {
-    wifi_stat = "wifi已连接 ssid:<mark>" + String(WiFi.SSID()) + "</mark> &nbsp; "
-                + "ap:<mark>" + WiFi.BSSIDstr() + "</mark> &nbsp; "
-                + "信号:<mark>" + String(WiFi.RSSI()) + "</mark>dbm &nbsp; "
-                + "ip:<mark>" + WiFi.localIP().toString() + "</mark> &nbsp; ";
+    wifi_stat = "wifi已连接 ssid:<mark>" + String(WiFi.SSID()) + "</mark> &nbsp;"
+                + "ap:<mark>" + WiFi.BSSIDstr() + "</mark> &nbsp;"
+                + "信号:<mark>" + String(WiFi.RSSI()) + "</mark>dbm &nbsp;"
+                + "ip:<mark>" + WiFi.localIP().toString() + "</mark> &nbsp;";
   }
-  httpd_send_200("function get_passwd(ssid) {"
-                 "var passwd=prompt('输入 '+ssid+' 的密码:');"
-                 "if(passwd==null) return false;"
-                 "if(passwd) location.replace('add_ssid.php?data='+ssid+':'+passwd);"
-                 "else return false;"
-                 "return true;"
-                 "}"
-                 "function select_ssid(ssid){"
-                 "if(confirm('连接到['+ssid+']?')) location.replace('add_ssid.php?data='+ssid);"
-                 "}"
-                 ,
-                 "SN:<mark>" + hostname + "</mark> &nbsp; "
-                 "版本:<mark>" VER "</mark> &nbsp;" +
-                 String(time_str) +
-                 "<br>" + String(ac_raw()) +
-                 "<br>输出:" + String(!digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
-                 + String(get_kwh(), 4) + "KWh"
-                 + ",测试次数:" + String(ac_ok_count)
-                 + ",uptime:" + String(millis() / 1000) + "秒"
-                 + ",最大电流:" + String(i_max) + "A"
-                 + ",LED:<button onclick=modi('/switch.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
-                 + "<hr>"
-                 + "电压校准参数:" + String(sets.ac_v_calibration, 6)
-                 + ",电流校准参数:" + String(sets.ac_i_calibration, 6)
-                 + "<hr>"
-                 + wifi_stat + "<hr>" + wifi_scan +
-                 "<hr><form action=/save.php method=post>"
-                 "输入ssid:passwd(可以多行多个)"
-                 "<input type=submit value=save><br>"
-                 "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
-                 "可以设置自己的服务器地址(清空恢复)<br>"
-                 "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
-                 "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
-                 "<input type=submit name=submit value=save>"
-                 "&nbsp;<input type=submit name=reboot value='reboot'>"
-                 "</form>"
-                 "&nbsp;<input type=submit onclick=\"modi('/switch.php?default=','输入恢复出厂设置的密码(其实就是SN号):','AC_')\" value='恢复出厂设置' title='密码:SN'>"
-                 "<hr>"
-                 "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
-                 "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + " target=_blank>https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + "</a>  Ver:" + GIT_VER + "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
-                 "<hr>");
+  String body = "SN:<mark>" + hostname + "</mark> &nbsp;"
+                "版本:<mark>" VER "</mark> &nbsp;" +
+                String(time_str) +
+                "<br>" + String(ac_raw()) +
+                "<br>输出:" + String(!digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
+                + String(get_kwh(), 4) + "KWh"
+                + ",测试次数:" + String(ac_ok_count)
+                + ",uptime:" + String(millis() / 1000) + "秒"
+                + ",data100ms_p:" + String(data100ms_p)
+                + ",最大电流:" + String(i_max) + "A"
+                + ",LED:<button onclick=modi('/switch.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
+                + "<hr>"
+                + "电压校准参数:" + String(sets.ac_v_calibration, 6)
+                + ",电流校准参数:" + String(sets.ac_i_calibration, 6)
+                + "<hr>"
+                + wifi_stat + "<hr>" + wifi_scan +
+                "<hr><form action=/save.php method=post>"
+                "输入ssid:passwd(可以多行多个)"
+                "<input type=submit value=save><br>"
+                "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
+                "可以设置自己的服务器地址(清空恢复)<br>"
+                "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
+                "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
+                "<input type=submit name=submit value=save>"
+                "&nbsp;<input type=submit name=reboot value='reboot'>"
+                "</form>"
+                "&nbsp;<input type=submit onclick=\"modi('/switch.php?default=','输入恢复出厂设置的密码(其实就是SN号):','AC_')\" value='恢复出厂设置' title='密码:SN'>"
+                "<hr>"
+                "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
+                "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + " target=_blank>https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + "</a>  Ver:" + GIT_VER + "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
+                "<hr>\
+<div style='height: 400px; width: 700px; background-color: #606060; background-size: 100% 100%' id='container'></div>\
+<script>\
+var obj = {\
+id:'container',\
+width:700,\
+height:400,\
+datas:[\
+{\
+name:'功率(W)',\
+color:'red',\
+data:[";
+  for (uint16_t i = 0; i < 600; i++) {
+    body += String(data100ms[(i + data100ms_p) % 600], 1);
+    body += ",";
+  }
+  body += "]\
+}\
+],\
+startX:40,\
+startY:380,\
+labelColor:'white',\
+labelCount:10,\
+nameSpace : 1,\
+circleColor:'blue',\
+tip:'最近60秒的功率曲线'\
+};\
+drawLine1(obj);\
+</script>";
+
+  httpd_send_200(
+    "function drawLine1(obj) {\
+var id = obj.id;\
+var datas = obj.datas;\
+var width = obj.width;\
+var height = obj.height;\
+var startX = obj.startX;\
+var startY = obj.startY;\
+var labelColor = obj.labelColor;\
+var labelCount = obj.labelCount;\
+var nameSpace = obj.nameSpace;\
+var tip = obj.tip;\
+var circleColor = obj.circleColor;\
+\
+var container = document.getElementById(id);\
+var canvas = document.createElement('canvas');\
+canvas.width = width;\
+canvas.height = height;\
+canvas.style.border = '1px solid red';\
+container.appendChild(canvas);\
+var cvs = canvas.getContext('2d');\
+cvs.beginPath();\
+cvs.strokeStyle = 'white';\
+var startY1 = 20;\
+cvs.moveTo(startX, startY1);\
+cvs.lineTo(startX, startY);\
+cvs.lineTo(700, startY);\
+cvs.stroke();\
+var length = datas.length;\
+var length1 = datas[0].data.length;\
+var maxNum = 0;\
+for(var i = 0;i < length;i++){\
+for (var j = 0;j < length1;j++){\
+if (maxNum <= datas[i].data[j]) {\
+maxNum = datas[i].data[j];\
+}\
+}\
+}\
+maxNum = maxNum * 1.1;\
+var increment =  (startY - startY1) / maxNum;\
+var labelSpace = (startY - startY1) / labelCount;\
+for (var i = 0; i <= labelCount; i++) {\
+var text = Math.round((maxNum / labelCount) * i);\
+cvs.beginPath();\
+cvs.fillStyle = labelColor;\
+cvs.fillText(text, startX - 30, startY - (labelSpace * i ) );\
+cvs.closePath();\
+cvs.fill();\
+}\
+var start = 0;\
+var end = 0;\
+var titleSpace = 30;\
+for (let i = 0;i < length ;i++) {\
+var k = 100;\
+for (let j = 0; j < length1; j++) {\
+setTimeout(function () {\
+cvs.beginPath();\
+cvs.strokeStyle = datas[i].color;\
+cvs.moveTo(startX + nameSpace * (j + 1), (startY1 + (maxNum - datas[i].data[j]) * increment ));\
+cvs.lineTo(startX + nameSpace * (j + 2), (startY1 + (maxNum - datas[i].data[j + 1]) * increment));\
+cvs.stroke();\
+}, k += 1);\
+end = length1 * (i + 1);\
+start = i * length1;\
+}\
+cvs.beginPath();\
+cvs.strokeStyle = datas[i].color;\
+cvs.moveTo(600, 40 + titleSpace * i);\
+cvs.lineTo(650, 40 + titleSpace * i);\
+cvs.stroke();\
+cvs.closePath();\
+cvs.beginPath();\
+cvs.fillStyle = datas[i].color;\
+cvs.font = '15px 宋体';\
+cvs.fillText(datas[i].name, 650, 45 + titleSpace * i);\
+cvs.stroke();\
+cvs.closePath();\
+}\
+cvs.beginPath();\
+cvs.fillStyle = labelColor;\
+cvs.fillText(tip,100,30);\
+cvs.closePath();\
+cvs.fill();\
+for(var k = 0;k  < length1 + 1;k=k+100){\
+cvs.beginPath();\
+cvs.fillStyle = labelColor;\
+cvs.fillText((k-length1)/10 + '秒', startX + nameSpace * k - 20, startY + 15 );\
+cvs.closePath();\
+cvs.fill();\
+}\
+}"
+    "function get_passwd(ssid) {\
+var passwd = prompt('输入 ' + ssid + ' 的密码:'); "
+    "if (passwd == null) return false; "
+    "if (passwd) location.replace('add_ssid.php?data=' + ssid + ':' + passwd); "
+    "else return false; "
+    "return true; \
+}"
+    "function select_ssid(ssid) {\
+if (confirm('连接到[' + ssid + ']?')) location.replace('add_ssid.php?data=' + ssid); \
+}"
+    , body
+  );
   httpd.client().stop();
 }
 void handleNotFound() {
