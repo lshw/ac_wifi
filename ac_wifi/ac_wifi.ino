@@ -11,6 +11,7 @@ extern "C" {
 #include "wifi_client.h"
 #include "httpd.h"
 uint32_t dida0 = 0;
+uint8_t count_100ms = 0;
 void run_20ms() {
   key_check();
   sound_20ms();
@@ -23,6 +24,12 @@ void run_20ms() {
   if (millis() > dida0) {
     dida0 += 1000;
     dida();
+  }
+  count_100ms++;
+  if (count_100ms >= 5) {
+    count_100ms = 0;
+    data100ms[data100ms_p] = power;
+    data100ms_p = (data100ms_p + 1) % 600;
   }
 }
 uint32_t t0 = 0;

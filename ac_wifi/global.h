@@ -8,6 +8,7 @@
 #include <DNSServer.h>
 #include "ws2813.h"
 #include "pwm_speeker.h"
+#include "datalog.h"
 Ticker _myTicker;
 DNSServer dnsServer;
 extern bool wifi_connected;
