@@ -91,6 +91,7 @@ void handleRoot() {
              "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
              "<input type=submit name=submit value=save>"
              "&nbsp;<input type=submit name=reboot value='reboot'>"
+             "&nbsp;<input type=submit onclick=modi('/switch.php?default=1&passwd=','输入恢复出厂设置的密码(其实就是SN号):','AC_') value='恢复出厂设置'>"
              "</form>"
              "<hr>"
              "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
@@ -145,16 +146,39 @@ void http_switch() {
       data = httpd.arg(i);
       data.trim();
       data.toUpperCase();
+      if (data.compareTo("ON") == 0) {
+        digitalWrite(SSR, LOW);
+        play("123");
+
+      } else if (data.compareTo("OFF") == 0) {
+        digitalWrite(SSR, HIGH);
+        play("321");
+      }
       break;
     } else if (httpd.argName(i).compareTo("default") == 0) { //恢复出厂设置
-      SPIFFS.begin();
-      SPIFFS.remove("/nvram.txt");
-      SPIFFS.remove("/sets_default.txt");
-      SPIFFS.remove("/sets.txt");
-      SPIFFS.end();
-      nvram.crc32++;
-      ESP.rtcUserMemoryWrite(0, (uint32_t*) &nvram, sizeof(nvram));
-      httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/?" + String(millis()) + "');</script></body></html>");
+      if (httpd.arg(i) == hostname || httpd.arg(i) == hostname + "!") {
+        double kwh = 0.0;
+        if (httpd.arg(i) == hostname) {
+          kwh = get_kwh();
+        }
+        SPIFFS.begin();
+        SPIFFS.remove("/nvram.txt");
+        SPIFFS.remove("/sets_default.txt");
+        SPIFFS.remove("/sets.txt");
+        SPIFFS.end();
+        nvram.crc32++;
+        ESP.rtcUserMemoryWrite(0, (uint32_t*) &nvram, sizeof(nvram));
+        nvram.kwh = kwh;
+        save_nvram();
+        last_save = millis() + 1000; //马上保存file
+        save_nvram_file();
+        data = "恢复出厂设置成功!";
+      } else {
+        data = "密码错误!";
+      }
+      httpd.send(200, "text/html", "<html><head></head><body>"
+                 "<script>setTimeout(function(){ alert('" + data + "恢复出厂设置成功!'); window.location.href = '/';}, 1000); </script>"
+                 "</body></html>");
       httpd.client().stop();
       yield();
       ESP.restart();
@@ -174,16 +198,10 @@ void http_switch() {
       break;
     }
   }
-  if (data == "") return;
-  if (data.compareTo("ON") == 0) {
-    digitalWrite(SSR, LOW);
-    play("123");
-
-  } else if (data.compareTo("OFF") == 0) {
-    digitalWrite(SSR, HIGH);
-    play("321");
-  }
-  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/?" + String(millis()) + "');</script></body></html>");
+  httpd.send(200, "text/html", "<html><head></head><body>"
+             "<script>setTimeout(function(){ alert('" + data + "恢复出厂设置成功!'); window.location.href = '/';}, 1000); </script>"
+             "</body></html>");
+  httpd.client().stop();
   yield();
 }
 void http_add_ssid() {
