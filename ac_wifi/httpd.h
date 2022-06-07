@@ -6,6 +6,25 @@
 extern String hostname;
 
 ESP8266WebServer httpd(80);
+void httpd_send_200(String javascript, String body) {
+  httpd.send(200, "text/html", "<html>"
+             "<head>"
+             "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+             "<script>"
+             "function modi(url,text,Defaulttext) {"
+             "var data=prompt(text,Defaulttext);"
+             "if (data==null) {return false;}"
+             "location.replace(url+data);"
+             "}"
+             + javascript +
+             "</script>"
+             "</head>"
+             "<body>"
+             + body +
+             "</body>"
+             "</html>");
+  httpd.client().stop();
+}
 void http204() {
   httpd.send(204, "", "");
   httpd.client().stop();
@@ -46,58 +65,47 @@ void handleRoot() {
                 + "信号:<mark>" + String(WiFi.RSSI()) + "</mark>dbm &nbsp; "
                 + "ip:<mark>" + WiFi.localIP().toString() + "</mark> &nbsp; ";
   }
-  httpd.send(200, "text/html", "<html>"
-             "<head>"
-             "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-             "<script>"
-             "function modi(url,text,Defaulttext) {"
-             "var data=prompt(text,Defaulttext);"
-             "location.replace(url+data);"
-             "}"
-             "function get_passwd(ssid) {"
-             "var passwd=prompt('输入 '+ssid+' 的密码:');"
-             "if(passwd==null) return false;"
-             "if(passwd) location.replace('add_ssid.php?data='+ssid+':'+passwd);"
-             "else return false;"
-             "return true;"
-             "}"
-             "function select_ssid(ssid){"
-             "if(confirm('连接到['+ssid+']?')) location.replace('add_ssid.php?data='+ssid);"
-             "}"
-             "</script>"
-             "</head>"
-             "<body>"
-             "SN:<mark>" + hostname + "</mark> &nbsp; "
-             "版本:<mark>" VER "</mark> &nbsp;" +
-             String(time_str) +
-             "<br>" + String(ac_raw()) +
-             "<br>输出:" + String(!digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
-             + String(get_kwh(), 4) + "KWh"
-             + ",测试次数:" + String(ac_ok_count)
-             + ",uptime:" + String(millis() / 1000) + "秒"
-             + ",最大电流:" + String(i_max) + "A"
-             + ",LED:<button onclick=modi('/switch.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
-             + "<hr>"
-             + "电压校准参数:" + String(sets.ac_v_calibration, 6)
-             + ",电流校准参数:" + String(sets.ac_i_calibration, 6)
-             + "<hr>"
-             + wifi_stat + "<hr>" + wifi_scan +
-             "<hr><form action=/save.php method=post>"
-             "输入ssid:passwd(可以多行多个)"
-             "<input type=submit value=save><br>"
-             "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
-             "可以设置自己的服务器地址(清空恢复)<br>"
-             "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
-             "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
-             "<input type=submit name=submit value=save>"
-             "&nbsp;<input type=submit name=reboot value='reboot'>"
-             "&nbsp;<input type=submit onclick=modi('/switch.php?default=1&passwd=','输入恢复出厂设置的密码(其实就是SN号):','AC_') value='恢复出厂设置'>"
-             "</form>"
-             "<hr>"
-             "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
-             "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + " target=_blank>https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + "</a>  Ver:" + GIT_VER + "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
-             "<hr></body>"
-             "</html>");
+  httpd_send_200("function get_passwd(ssid) {"
+                 "var passwd=prompt('输入 '+ssid+' 的密码:');"
+                 "if(passwd==null) return false;"
+                 "if(passwd) location.replace('add_ssid.php?data='+ssid+':'+passwd);"
+                 "else return false;"
+                 "return true;"
+                 "}"
+                 "function select_ssid(ssid){"
+                 "if(confirm('连接到['+ssid+']?')) location.replace('add_ssid.php?data='+ssid);"
+                 "}"
+                 ,
+                 "SN:<mark>" + hostname + "</mark> &nbsp; "
+                 "版本:<mark>" VER "</mark> &nbsp;" +
+                 String(time_str) +
+                 "<br>" + String(ac_raw()) +
+                 "<br>输出:" + String(!digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
+                 + String(get_kwh(), 4) + "KWh"
+                 + ",测试次数:" + String(ac_ok_count)
+                 + ",uptime:" + String(millis() / 1000) + "秒"
+                 + ",最大电流:" + String(i_max) + "A"
+                 + ",LED:<button onclick=modi('/switch.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
+                 + "<hr>"
+                 + "电压校准参数:" + String(sets.ac_v_calibration, 6)
+                 + ",电流校准参数:" + String(sets.ac_i_calibration, 6)
+                 + "<hr>"
+                 + wifi_stat + "<hr>" + wifi_scan +
+                 "<hr><form action=/save.php method=post>"
+                 "输入ssid:passwd(可以多行多个)"
+                 "<input type=submit value=save><br>"
+                 "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
+                 "可以设置自己的服务器地址(清空恢复)<br>"
+                 "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
+                 "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
+                 "<input type=submit name=submit value=save>"
+                 "&nbsp;<input type=submit name=reboot value='reboot'>"
+                 "</form>"
+                 "&nbsp;<input type=submit onclick=\"modi('/switch.php?default=','输入恢复出厂设置的密码(其实就是SN号):','AC_')\" value='恢复出厂设置' title='密码:SN'>"
+                 "<hr>"
+                 "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
+                 "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + " target=_blank>https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + "</a>  Ver:" + GIT_VER + "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
+                 "<hr>");
   httpd.client().stop();
 }
 void handleNotFound() {
@@ -125,12 +133,7 @@ void handleNotFound() {
   message += "URI: ";
   message += httpd.uri();
   message += "<br><a href=/?" + String(millis()) + "><button>点击进入首页</button></a>";
-  httpd.send(200, "text/html", "<html>"
-             "<head>"
-             "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-             "</html>"
-             "<body>" + message + "</body></html>");
-  httpd.client().stop();
+  httpd_send_200("", message);
   message = "";
 }
 uint8_t char2int(char ch) {
@@ -176,10 +179,7 @@ void http_switch() {
       } else {
         data = "密码错误!";
       }
-      httpd.send(200, "text/html", "<html><head></head><body>"
-                 "<script>setTimeout(function(){ alert('" + data + "恢复出厂设置成功!'); window.location.href = '/';}, 1000); </script>"
-                 "</body></html>");
-      httpd.client().stop();
+      httpd_send_200("setTimeout(function(){ alert('" + data + "'); window.location.href = '/';}, 1000);", data + "....");
       yield();
       ESP.restart();
       break;
@@ -198,10 +198,7 @@ void http_switch() {
       break;
     }
   }
-  httpd.send(200, "text/html", "<html><head></head><body>"
-             "<script>setTimeout(function(){ alert('" + data + "恢复出厂设置成功!'); window.location.href = '/';}, 1000); </script>"
-             "</body></html>");
-  httpd.client().stop();
+  httpd_send_200("setTimeout(function(){ alert('" + data + "); window.location.href = '/';}, 1000);", data + ",进入首页....");
   yield();
 }
 void http_add_ssid() {
@@ -223,20 +220,22 @@ void http_add_ssid() {
   if (mh_offset < 2) return;
 
   wifi_set_add(data.substring(0, mh_offset).c_str(), data.substring(mh_offset + 1).c_str());
-  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/?" + String(millis()) + "');</script></body></html>");
+  httpd_send_200("location.replace('/?" + String(millis()) + "');", "进入首页...");
   yield();
 }
 void sound_play() {
+  String data;
   yield();
   for (uint8_t i = 0; i < httpd.args(); i++) {
     if (httpd.argName(i).compareTo("play") == 0) {
-      play((char *)httpd.arg(i).c_str());
+      data = httpd.arg(i);
+      play((char *)data.c_str());
     } else if (httpd.argName(i).compareTo("vol") == 0) {
       vol = httpd.arg(i).toInt();
       analogWrite(5, vol);
     }
   }
-  httpd.send(200, "text/html", "<html><head></head><body>ok</body></html>");
+  httpd_send_200("", data);
   yield();
 }
 
@@ -256,9 +255,6 @@ void httpsave() {
       data.replace("\xa3\xba", ":"); //gbk :
       data.replace("\xa1\x47", ":"); //big5 :
       if (data.length() > 8) {
-        Serial.println("data:[" + data + "]");
-        //  Serial.print(data);
-        // Serial.println("]");
         fp = SPIFFS.open("/ssid.txt", "w");
         fp.println(data);
         fp.close();
@@ -292,19 +288,12 @@ void httpsave() {
         sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / power;
         set_modi |= SET_CHARGE;
       }
-    } else if (httpd.argName(i).compareTo("13601126942") == 0) {
-      save_set(false); //保存 /sets.txt
-      save_set(true);  //保存 /sets_default.txt
     } else if (httpd.argName(i).compareTo("url") == 0) {
       url = httpd.arg(i);
       url.trim();
       if (url.length() == 0) {
-        Serial.println("删除url0设置");
         SPIFFS.remove("/url.txt");
       } else {
-        Serial.print("url0:[");
-        Serial.print(url);
-        Serial.println("]");
         fp = SPIFFS.open("/url.txt", "w");
         fp.println(url);
         fp.close();
@@ -313,12 +302,8 @@ void httpsave() {
       url = httpd.arg(i);
       url.trim();
       if (url.length() == 0) {
-        Serial.println("删除url1设置");
         SPIFFS.remove("/url1.txt");
       } else {
-        Serial.print("url1:[");
-        Serial.print(url);
-        Serial.println("]");
         fp = SPIFFS.open("/url1.txt", "w");
         fp.println(url);
         fp.close();
@@ -327,7 +312,7 @@ void httpsave() {
   }
   url = "";
   SPIFFS.end();
-  httpd.send(200, "text/html", "<html><head></head><body><script>location.replace('/');</script></body></html>");
+  httpd_send_200("location.replace('/');", "进入首页...");
   yield();
 }
 void httpd_listen() {
@@ -343,28 +328,10 @@ void httpd_listen() {
     httpd.sendHeader("Connection", "close");
     if (Update.hasError()) {
       led_send(sets.color);
-      Serial.println("上传失败");
-      httpd.send(200, "text/html", "<html>"
-                 "<head>"
-                 "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-                 "</head>"
-                 "<body>"
-                 "升级失败 <a href=/>返回</a>"
-                 "</body>"
-                 "</html>"
-                );
+      httpd_send_200("", "升级失败 <a href=/><buttom>返回首页</buttom></a>");
     } else {
       led_send(0xFF0000L);
-      httpd.send(200, "text/html", "<html>"
-                 "<head>"
-                 "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-                 "</head>"
-                 "<body>"
-                 "<script>setTimeout(function(){ alert('升级成功!'); window.location.href = '/';}, 20000); </script>"
-                 "</body>"
-                 "</html>"
-                );
-      Serial.println("上传成功");
+      httpd_send_200("setTimeout(function(){ alert('升级成功!'); window.location.href = '/';}, 20000);", "上传成功，正在刷机.....");
       Serial.flush();
       //    ht16c21_cmd(0x88, 1); //闪烁
       delay(5);
