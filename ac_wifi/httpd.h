@@ -62,6 +62,9 @@ void handleRoot() {
       }
     }
   }
+  if (wifi_scan == "") {
+    wifi_scan = "<a href=/?scan=1><buttom>扫描WiFi</buttom></a>";
+  }
   yield();
   String body = "SN:<mark>" + hostname + "</mark> &nbsp;"
                 "版本:<mark>" VER "</mark> &nbsp;" +
