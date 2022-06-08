@@ -56,6 +56,9 @@ void setup()
   play("1"); //滴～～
   delay(1);
   led_send(sets.color);
+  delay(1);
+  led_send(sets.color);
+  delay(1);
   save_nvram();
 #ifdef GIT_VER
   Serial.println(F("Git Ver=" GIT_VER));

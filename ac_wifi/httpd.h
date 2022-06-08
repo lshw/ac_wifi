@@ -43,28 +43,26 @@ void handleRoot() {
            now.tm_min,
            now.tm_sec
           );
-  int n = WiFi.scanNetworks();
-  if (n > 0) {
-    wifi_scan = "自动扫描到如下WiFi,点击连接:<br>";
-    for (int i = 0; i < n; ++i) {
-      ssid = String(WiFi.SSID(i));
-      if (WiFi.encryptionType(i) != ENC_TYPE_NONE)
-        wifi_scan += "&nbsp;<button onclick=get_passwd('" + ssid + "')>*";
-      else
-        wifi_scan += "&nbsp;<button onclick=select_ssid('" + ssid + "')>";
-      wifi_scan += String(WiFi.SSID(i)) + "(" + String(WiFi.RSSI(i)) + "dbm)";
-      wifi_scan += "</button>";
-      delay(10);
+  for (uint8_t i = 0; i < httpd.args(); i++) {
+    if (httpd.argName(i).compareTo("scan") == 0) {
+      int n = WiFi.scanNetworks();
+      if (n > 0) {
+        wifi_scan = "自动扫描到如下WiFi,点击连接:<br>";
+        for (int i = 0; i < n; ++i) {
+          ssid = String(WiFi.SSID(i));
+          if (WiFi.encryptionType(i) != ENC_TYPE_NONE)
+            wifi_scan += "&nbsp;<button onclick=get_passwd('" + ssid + "')>*";
+          else
+            wifi_scan += "&nbsp;<button onclick=select_ssid('" + ssid + "')>";
+          wifi_scan += String(WiFi.SSID(i)) + "(" + String(WiFi.RSSI(i)) + "dbm)";
+          wifi_scan += "</button>";
+          delay(10);
+        }
+        wifi_scan += "<br>";
+      }
     }
-    wifi_scan += "<br>";
   }
   yield();
-  if (connected_is_ok) {
-    wifi_stat = "wifi已连接 ssid:<mark>" + String(WiFi.SSID()) + "</mark> &nbsp;"
-                + "ap:<mark>" + WiFi.BSSIDstr() + "</mark> &nbsp;"
-                + "信号:<mark>" + String(WiFi.RSSI()) + "</mark>dbm &nbsp;"
-                + "ip:<mark>" + WiFi.localIP().toString() + "</mark> &nbsp;";
-  }
   String body = "SN:<mark>" + hostname + "</mark> &nbsp;"
                 "版本:<mark>" VER "</mark> &nbsp;" +
                 String(time_str) +
@@ -73,31 +71,37 @@ void handleRoot() {
                 + String(get_kwh(), 4) + "KWh"
                 + ",测试次数:" + String(ac_ok_count)
                 + ",uptime:" + String(millis() / 1000) + "秒"
-                + ",data100ms_p:" + String(data100ms_p)
                 + ",最大电流:" + String(i_max) + "A"
                 + ",LED:<button onclick=modi('/switch.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
                 + "<hr>"
                 + "电压校准参数:" + String(sets.ac_v_calibration, 6)
                 + ",电流校准参数:" + String(sets.ac_i_calibration, 6)
-                + "<hr>"
-                + wifi_stat + "<hr>" + wifi_scan +
-                "<hr><form action=/save.php method=post>"
-                "输入ssid:passwd(可以多行多个)"
-                "<input type=submit value=save><br>"
-                "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
-                "可以设置自己的服务器地址(清空恢复)<br>"
-                "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
-                "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
-                "<input type=submit name=submit value=save>"
-                "&nbsp;<input type=submit name=reboot value='reboot'>"
-                "</form>"
-                "&nbsp;<input type=submit onclick=\"modi('/switch.php?default=','输入恢复出厂设置的密码(其实就是SN号):','AC_')\" value='恢复出厂设置' title='密码:SN'>"
-                "<hr>"
-                "<div style='height: 400px; width: 700px; background-color: #606060; background-size: 100% 100%' id='container'></div>"
-                "<hr>"
-                "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
-                "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + " target=_blank>https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + "</a>  Ver:" + GIT_VER + "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
-                "<script>\
+                + "<hr>";
+  if (connected_is_ok) {
+    body += "wifi已连接 ssid:<mark>" + String(WiFi.SSID()) + "</mark> &nbsp;"
+            + "ap:<mark>" + WiFi.BSSIDstr() + "</mark> &nbsp;"
+            + "信号:<mark>" + String(WiFi.RSSI()) + "</mark>dbm &nbsp;"
+            + "ip:<mark>" + WiFi.localIP().toString() + "</mark><hr>";
+  }
+
+  body += wifi_scan +
+          "<hr><form action=/save.php method=post>"
+          "输入ssid:passwd(可以多行多个)"
+          "<input type=submit value=save><br>"
+          "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
+          "可以设置自己的服务器地址(清空恢复)<br>"
+          "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
+          "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
+          "<input type=submit name=submit value=save>"
+          "&nbsp;<input type=submit name=reboot value='reboot'>"
+          "</form>"
+          "&nbsp;<input type=submit onclick=\"modi('/switch.php?default=','输入恢复出厂设置的密码(其实就是SN号):','AC_')\" value='恢复出厂设置' title='密码:SN'>"
+          "<hr>"
+          "<div style='height: 400px; width: 700px; background-color: #606060; background-size: 100% 100%' id='container'></div>"
+          "<hr>"
+          "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
+          "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + " target=_blank>https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + "</a>  Ver:" + GIT_VER + "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
+          "<script>\
 var obj = {\
 id:'container',\
 width:700,\
