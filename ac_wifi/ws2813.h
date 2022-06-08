@@ -17,18 +17,15 @@ static inline uint32_t CycleCount(void) {
 uint32_t led = 0;
 IRAM_ATTR void led_send(uint32_t dat) {
   //dat:0xc0d0e0  => html color #C0D0E0
-
   //红绿蓝 -> 绿红蓝
-  if (sets.serial > 1) { //序号小于2的产品使用的是RGB顺序的led，其它是GRB
-    dat &= 0xffffffL;
-    dat |= ((dat << 8) & 0xffff0000);
-    dat &= 0xffff00ffL;
-    dat |= ((dat >> 16) & 0xff00L);
-    dat &= 0xffffffL;
-  }
-
   if (led == dat) return;
   led = dat;
+  //    if (sets.serial > 2) { //序号小于3的产品使用的是RGB顺序的led，其它是GRB
+  dat &= 0xffL;
+  dat |= ((led << 8) & 0xff0000L);
+  dat |= ((led >> 8) & 0xff00L);
+  dat &= 0xffffffL;
+  //   }
   uint32_t mask = 0x800000;
   uint32_t t0, t1;
   cli();
