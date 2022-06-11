@@ -17,6 +17,9 @@ struct {
   double  kwh; //总度数
   uint32_t  ac_pf; //未换算成度数的pf计数,  超过 sets.ac_kwh_count  就进1到ac_kwh
   uint32_t  ac_pf0; //已统计的HLW8032的pf 如果实际的小于这个数据， 就要把它加上8032的读数， 加到 sets.ac_pf, 并且设置本行为8032读数。
+  double kwh_hour0 = -1.0; //最后一个小时的kwh初值
+  double kwh_day0 = -1.0; //最后一天的kwh初值
+  uint32_t reserved1[5]; //保留以后使用
   uint32_t crc32;
 } __attribute__ ((packed)) nvram;
 uint32_t nvram_save = 0;
