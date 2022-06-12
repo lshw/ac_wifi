@@ -43,29 +43,6 @@ void handleRoot() {
            now.tm_min,
            now.tm_sec
           );
-  for (uint8_t i = 0; i < httpd.args(); i++) {
-    if (httpd.argName(i).compareTo("scan") == 0) {
-      int n = WiFi.scanNetworks();
-      if (n > 0) {
-        wifi_scan = "自动扫描到如下WiFi,点击连接:<br>";
-        for (int i = 0; i < n; ++i) {
-          ssid = String(WiFi.SSID(i));
-          if (WiFi.encryptionType(i) != ENC_TYPE_NONE)
-            wifi_scan += "&nbsp;<button onclick=get_passwd('" + ssid + "')>*";
-          else
-            wifi_scan += "&nbsp;<button onclick=select_ssid('" + ssid + "')>";
-          wifi_scan += String(WiFi.SSID(i)) + "(" + String(WiFi.RSSI(i)) + "dbm)";
-          wifi_scan += "</button>";
-          delay(10);
-        }
-        wifi_scan += "<br>";
-      }
-    }
-  }
-  if (wifi_scan == "") {
-    wifi_scan = "<a href=/?scan=1><buttom>扫描WiFi</buttom></a>";
-  }
-  yield();
   String body = "SN:<mark>" + hostname + "</mark> &nbsp;"
                 "版本:<mark>" VER "</mark> &nbsp;" +
                 String(time_str) +
@@ -86,9 +63,32 @@ void handleRoot() {
             + "信号:<mark>" + String(WiFi.RSSI()) + "</mark>dbm &nbsp;"
             + "ip:<mark>" + WiFi.localIP().toString() + "</mark><hr>";
   }
+  for (uint8_t i = 0; i < httpd.args(); i++) {
+    if (httpd.argName(i).compareTo("scan") == 0) {
+      int n = WiFi.scanNetworks();
+      if (n > 0) {
+        wifi_scan = "自动扫描到如下WiFi,点击连接:<br>";
+        for (int i = 0; i < n; ++i) {
+          ssid = String(WiFi.SSID(i));
+          if (WiFi.encryptionType(i) != ENC_TYPE_NONE)
+            wifi_scan += "&nbsp;<button onclick=get_passwd('" + ssid + "')>*";
+          else
+            wifi_scan += "&nbsp;<button onclick=select_ssid('" + ssid + "')>";
+          wifi_scan += String(WiFi.SSID(i)) + "(" + String(WiFi.RSSI(i)) + "dbm)";
+          wifi_scan += "</button>";
+          delay(10);
+        }
+        wifi_scan += "<br>";
+      }
+    }
+  if (wifi_scan == "") {
+    wifi_scan = "<a href=/?scan=1><buttom>扫描WiFi</buttom></a>";
+  }
+    body += wifi_scan + "<ht>";
+  }
+  yield();
 
-  body += wifi_scan +
-          "<hr><form action=/save.php method=post>"
+  body += "<form action=/save.php method=post>"
           "输入ssid:passwd(可以多行多个)"
           "<input type=submit value=save><br>"
           "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
