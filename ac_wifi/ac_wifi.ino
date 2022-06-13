@@ -23,7 +23,7 @@ void run_20ms() {
     i_over = 0;
   if (millis() > dida0) {
     dida0 += 1000;
-    dida();
+    sec();
   }
   count_100ms++;
   if (count_100ms >= 5) {
@@ -40,6 +40,7 @@ void setup()
   gpio_setup();
   load_nvram(); //从esp8266的nvram载入数据
   load_set(); //从files载入数据
+  memset(&now, 0, sizeof(now));
   _myTicker.attach_ms(20, run_20ms);
 
   wifi_country_t mycountry =
@@ -178,23 +179,29 @@ void loop()
     ESP.restart();
   }
 }
+extern float datamins[60];//240 byte 每分钟最大功率
 void minute() {
   Serial.println("minute()");
+  datamins[now.tm_min] = 0.0;
 }
+extern float datahour[24];//96字节  每一小时的耗电量
 void hour() {
   Serial.println("hour()");
+  datahour[now.tm_hour] = get_kwh() - nvram.kwh_hour0;
+  nvram.kwh_hour0 = get_kwh();
+  save_nvram();
 }
 void day() {
   if (now.tm_year > 2021 - 1900) {
-    if ( dataday.time > 0) {
-      if (SPIFFS.begin()) {
-        File fp;
-        fp = SPIFFS.open(String(now.tm_year + 1900) + ".dat", "a");
-        fp.write((char *) &dataday, sizeof(dataday));
-        fp.close();
-        SPIFFS.end();
-      }
-      dataday.time = 0;
+    dataday.kwh = get_kwh() - nvram.kwh_day0;
+    dataday.time = mktime(&now);
+    nvram.kwh_day0 = get_kwh();
+    if (SPIFFS.begin()) {
+      File fp;
+      fp = SPIFFS.open(String(now.tm_year + 1900) + ".dat", "a");
+      fp.write((char *) &dataday, sizeof(dataday));
+      fp.close();
+      SPIFFS.end();
     }
   }
 }

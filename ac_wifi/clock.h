@@ -8,23 +8,7 @@ uint8_t time_update = 0;
 #define MIN_UP 1
 #define HOUR_UP 2
 #define DAY_UP 4
-void minute_run() {
-  datamins[now.tm_min] = 0.0;
-}
-void hour_run() {
-  if (nvram.kwh_hour0 >= 0)
-    datahour[now.tm_hour] = get_kwh() - nvram.kwh_hour0;
-  nvram.kwh_hour0 = get_kwh();
-  save_nvram();
-}
-void day_run() {
-  if (nvram.kwh_day0 >= 0) {
-    dataday.kwh = get_kwh() - nvram.kwh_day0;
-    dataday.time = mktime(&now);
-  }
-  nvram.kwh_day0 = get_kwh();
-}
-void dida() {
+void sec() {
   now.tm_sec++;
   if (datamins[now.tm_min] < power)
     datamins[now.tm_min] = power;
@@ -33,7 +17,6 @@ void dida() {
     now.tm_min ++;
     time_update |= MIN_UP;
     if (now.tm_min >= 60) {
-      minute_run();
       now.tm_min -= 60;
       now.tm_hour ++;
       time_update |= HOUR_UP;
@@ -42,11 +25,8 @@ void dida() {
         now.tm_mday ++;
         time_update |= DAY_UP;
         mktime(&now); //修正日期
-        day_run();
       }
-      hour_run();
     }
-    minute_run();
   }
 }
 
