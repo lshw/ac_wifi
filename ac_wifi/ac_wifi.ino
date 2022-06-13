@@ -158,6 +158,17 @@ void loop()
   if (time_update & DAY_UP) {
     day();
     time_update &= ~DAY_UP;
+    yield();
+  }
+  if (time_update & HOUR_UP) {
+    hour();
+    time_update &= ~HOUR_UP;
+    yield();
+  }
+  if (time_update & MIN_UP) {
+    minute();
+    time_update &= ~MIN_UP;
+    yield();
   }
   system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
   if (reboot_now) {
@@ -166,6 +177,12 @@ void loop()
     reboot_now = false;
     ESP.restart();
   }
+}
+void minute() {
+  Serial.println("minute()");
+}
+void hour() {
+  Serial.println("hour()");
 }
 void day() {
   if (now.tm_year > 2021 - 1900) {
