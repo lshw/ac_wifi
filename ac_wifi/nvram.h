@@ -4,6 +4,8 @@
 #define NVRAM7_URL    0b10
 #define NVRAM7_UPDATE 0b1000
 
+extern float datahour[24];
+
 #define SET_CHARGE 0b1
 #include "calibration.h"
 void update_kwh_count(); //更新kwh的脉冲数，
@@ -68,14 +70,24 @@ void load_nvram() {
     SPIFFS.begin();
     if (SPIFFS.exists("/nvram.txt")) {
       fp = SPIFFS.open("/nvram.txt", "r");
-      fp.read((uint8_t *)&nvram, sizeof(nvram));
-      fp.close();
+      if (fp) {
+        fp.read((uint8_t *)&nvram, sizeof(nvram));
+        fp.close();
+      }
     }
-    SPIFFS.end();
     if (nvram.crc32 != calculateCRC32((uint8_t*) &nvram, sizeof(nvram) - sizeof(nvram.crc32))) {
       memset(&nvram, 0, sizeof(nvram));
       update_kwh_count(); //校准数据初始化
+      SPIFFS.remove("hours.dat");
+    } else {
+      fp = SPIFFS.open("/hours.dat", "r");
+      if (fp) {
+        fp.read((uint8_t *)&datahour, sizeof(datahour));
+        fp.close();
+      }
+
     }
+    SPIFFS.end();
     save_nvram();
   } else {
     Serial.println("\r\nwifi channel=" + String(nvram.ch) );
