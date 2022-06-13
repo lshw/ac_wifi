@@ -78,7 +78,7 @@ void load_nvram() {
     if (nvram.crc32 != calculateCRC32((uint8_t*) &nvram, sizeof(nvram) - sizeof(nvram.crc32))) {
       memset(&nvram, 0, sizeof(nvram));
       update_kwh_count(); //校准数据初始化
-      SPIFFS.remove("hours.dat");
+      SPIFFS.remove("/hours.dat");
     } else {
       fp = SPIFFS.open("/hours.dat", "r");
       if (fp) {

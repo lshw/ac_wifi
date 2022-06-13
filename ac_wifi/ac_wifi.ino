@@ -194,9 +194,10 @@ void hour() {
   save_nvram();
   if (SPIFFS.begin()) {
     File fp;
-    fp = SPIFFS.open("hours.dat", "a");
+    fp = SPIFFS.open("/hours.dat", "a");
     fp.write((char *) &datahour, sizeof(datahour));
     fp.close();
+    fp = SPIFFS.open("/hours.dat", "r");
     SPIFFS.end();
   }
 }
@@ -207,7 +208,7 @@ void day() {
     nvram.kwh_day0 = get_kwh();
     if (SPIFFS.begin()) {
       File fp;
-      fp = SPIFFS.open(String(now.tm_year + 1900) + ".dat", "a");
+      fp = SPIFFS.open("/" + String(now.tm_year + 1900) + ".dat", "a");
       fp.write((char *) &dataday, sizeof(dataday));
       fp.close();
       SPIFFS.end();
