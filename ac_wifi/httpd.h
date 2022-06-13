@@ -100,13 +100,19 @@ void handleRoot() {
           "</form>"
           "&nbsp;<input type=submit onclick=\"modi('/switch.php?default=','输入恢复出厂设置的密码(其实就是SN号):','AC_')\" value='恢复出厂设置' title='密码:SN'>"
           "<hr>"
-          "<div style='height: 400px; width: 700px; background-color: #606060; background-size: 100% 100%' id='container'></div>"
+          "<div style='width: 700px; height: 400px; background-color: #606060; background-size: 100% 100%' id='power_sec'></div>"
+          "<hr>"
+          "<div style='width: 700px; height: 400px; background-color: #606060; background-size: 100% 100%' id='power_min'></div>"
+          "<hr>"
+          "<div style='width: 700px; height: 400px; background-color: #00a0a0; background-size: 100% 100%' id='wh_hour'></div>"
+          "<hr>"
+          "<div style='width: 700px; height: 400px; background-color: #00a0a0; background-size: 100% 100%' id='kwh_day'></div>"
           "<hr>"
           "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
           "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + " target=_blank>https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + "</a>  Ver:" + GIT_VER + "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
           "<script>\
 var obj = {\
-id:'container',\
+id:'power_sec',\
 width:700,\
 height:400,\
 datas:[\
@@ -129,11 +135,37 @@ nameSpace : 1,\
 circleColor:'blue',\
 tip:'最近60秒的功率曲线'\
 };\
-drawLine1(obj);\
+drawLine(obj);\
+obj.id='power_min';\
+obj.nameSpace=10;\
+obj.datas=[{\
+name:'功率(W)',\
+color:'red',\
+data:[";
+  for (uint16_t i = 0; i < 60; i++) {
+    body += String(datamins[(now.tm_min + i + 1) % 60]);
+    body += ",";
+  }
+  body += "]}];\
+obj.tip='最近1小时功率曲线',\
+drawLine(obj);\
+obj.id='wh_hour';\
+obj.nameSpace=25;\
+obj.datas=[{\
+name:'耗电量(Wh)',\
+color:'red',\
+data:[";
+  for (uint16_t i = 0; i < 24; i++) {
+    body += String(datahour[(now.tm_hour + i + 1) % 24] * 1000.0);
+    body += ",";
+  }
+  body += "]}];\
+obj.tip='最近24小时的耗电量曲线';\
+drawLine(obj);\
 </script>";
 
   httpd_send_200(
-    "function drawLine1(obj) {\
+    "function drawLine(obj) {\
 var id = obj.id;\
 var datas = obj.datas;\
 var width = obj.width;\
@@ -170,7 +202,7 @@ maxNum = datas[i].data[j];\
 }\
 }\
 }\
-maxNum = maxNum * 1.1;\
+maxNum = maxNum * 1.1 + 1;\
 var increment =  (startY - startY1) / maxNum;\
 var labelSpace = (startY - startY1) / labelCount;\
 for (var i = 0; i <= labelCount; i++) {\
@@ -199,14 +231,14 @@ start = i * length1;\
 }\
 cvs.beginPath();\
 cvs.strokeStyle = datas[i].color;\
-cvs.moveTo(580, 40 + titleSpace * i);\
-cvs.lineTo(625, 40 + titleSpace * i);\
+cvs.moveTo(480, 40 + titleSpace * i);\
+cvs.lineTo(525, 40 + titleSpace * i);\
 cvs.stroke();\
 cvs.closePath();\
 cvs.beginPath();\
 cvs.fillStyle = datas[i].color;\
 cvs.font = '15px 宋体';\
-cvs.fillText(datas[i].name, 630, 45 + titleSpace * i);\
+cvs.fillText(datas[i].name, 530, 45 + titleSpace * i);\
 cvs.stroke();\
 cvs.closePath();\
 }\
@@ -215,12 +247,14 @@ cvs.fillStyle = labelColor;\
 cvs.fillText(tip,100,30);\
 cvs.closePath();\
 cvs.fill();\
+if(0) { \
 for(var k = 0;k  < length1 + 1;k=k+100){\
 cvs.beginPath();\
 cvs.fillStyle = labelColor;\
 cvs.fillText((k-length1)/10 + '秒', startX + nameSpace * k - 20, startY + 15 );\
 cvs.closePath();\
 cvs.fill();\
+}\
 }\
 }"
     "function get_passwd(ssid) {\
