@@ -81,9 +81,9 @@ void handleRoot() {
         wifi_scan += "<br>";
       }
     }
-  if (wifi_scan == "") {
-    wifi_scan = "<a href=/?scan=1><buttom>扫描WiFi</buttom></a>";
-  }
+    if (wifi_scan == "") {
+      wifi_scan = "<a href=/?scan=1><buttom>扫描WiFi</buttom></a>";
+    }
     body += wifi_scan + "<ht>";
   }
   yield();

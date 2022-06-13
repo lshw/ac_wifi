@@ -155,15 +155,9 @@ void loop()
     Serial.printf("%s\r\n", asctime(&now));
   }
   yield();
-  if (now.tm_year > 2021 - 1900 && dataday.time > 0) {
-    if (SPIFFS.begin()) {
-      File fp;
-      fp = SPIFFS.open(String(now.tm_year + 1900) + ".dat", "a");
-      fp.write((char *) &dataday, sizeof(dataday));
-      fp.close();
-      SPIFFS.end();
-    }
-    dataday.time = 0;
+  if (time_update & DAY_UP) {
+    day();
+    time_update &= ~DAY_UP;
   }
   system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
   if (reboot_now) {
@@ -173,7 +167,20 @@ void loop()
     ESP.restart();
   }
 }
-
+void day() {
+  if (now.tm_year > 2021 - 1900) {
+    if ( dataday.time > 0) {
+      if (SPIFFS.begin()) {
+        File fp;
+        fp = SPIFFS.open(String(now.tm_year + 1900) + ".dat", "a");
+        fp.write((char *) &dataday, sizeof(dataday));
+        fp.close();
+        SPIFFS.end();
+      }
+      dataday.time = 0;
+    }
+  }
+}
 bool smart_config() {
   //插上电， 等20秒， 如果没有上网成功， 就会进入 CO xx计数， 100秒之内完成下面的操作
   //手机连上2.4G的wifi,然后微信打开网页：http://wx.ai-thinker.com/api/old/wifi/config
