@@ -1,0 +1,137 @@
+<head>
+ <meta charset='UTF-8'>
+ <title>折线图</title>
+</head>
+<body>
+ <div style='width: 700px; height: 400px; background-color: #a0a0a0; background-size: 100% 100%' id='power_sec'></div>
+ <hr>
+ <div style='width: 700px; height: 400px; background-color: #00a0a0; background-size: 100% 100%' id='power_hour'></div>
+</body>
+
+<script>
+ var obj = {
+   id:'power_sec',
+   width:700,
+   height:400,
+   datas:[
+     {
+       name:'功率(W)',
+       color:'red',
+       data:[
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       ]
+      }
+    ],
+   startX:40,
+   startY:380,
+   labelColor:'white',
+   labelCount:10,
+   nameSpace : 1,
+   circleColor:'blue',
+   tip:'最近1分钟的功率曲线'
+  };
+ drawLine(obj);
+  obj.tip = '最近一天功率变化';
+  obj.id = 'power_hour';
+  obj.datas = [{name:'功率(W)',color:'red',data:[10.1,10.2,10,2]}]; 
+  obj.nameSpace = 100;
+ drawLine(obj);
+
+ function drawLine(obj) {
+   var id = obj.id;
+   var datas = obj.datas;
+   var width = obj.width;
+   var height = obj.height;
+   var startX = obj.startX;
+   var startY = obj.startY;
+   var labelColor = obj.labelColor;
+   var labelCount = obj.labelCount;
+   var nameSpace = obj.nameSpace;
+   var tip = obj.tip;
+   var circleColor = obj.circleColor;
+
+   var container = document.getElementById(id);
+   var canvas = document.createElement('canvas');
+   canvas.width = width;
+   canvas.height = height;
+   canvas.style.border = '1px solid red';
+   container.appendChild(canvas);
+   var cvs = canvas.getContext('2d');
+   cvs.beginPath();
+   cvs.strokeStyle = 'white';
+   var startY1 = 20;
+   cvs.moveTo(startX, startY1);
+   cvs.lineTo(startX, startY);
+   cvs.lineTo(700, startY);
+   cvs.stroke();
+   var length = datas.length;
+   var length1 = datas[0].data.length;
+   var maxNum = 0;
+   for(var i = 0;i < length;i++){
+     for (var j = 0;j < length1;j++){
+       if (maxNum <= datas[i].data[j]) {
+	 maxNum = datas[i].data[j];
+	}
+      }
+    }
+   maxNum = maxNum * 1.1;
+   var increment =  (startY - startY1) / maxNum;
+   var labelSpace = (startY - startY1) / labelCount;
+   for (var i = 0; i <= labelCount; i++) {
+     var text = Math.round((maxNum / labelCount) * i);
+     cvs.beginPath();
+     cvs.fillStyle = labelColor;
+     cvs.fillText(text, startX - 30, startY - (labelSpace * i ) );
+     cvs.closePath();
+     cvs.fill();
+    }
+   var start = 0;
+   var end = 0;
+   var titleSpace = 30;
+   for (let i = 0;i < length ;i++) {
+     var k = 100;
+     for (let j = 0; j < length1; j++) {
+       setTimeout(function () {
+	 cvs.beginPath();
+	 cvs.strokeStyle = datas[i].color;
+	 cvs.moveTo(startX + nameSpace * (j + 1), (startY1 + (maxNum - datas[i].data[j]) * increment ));
+	 cvs.lineTo(startX + nameSpace * (j + 2), (startY1 + (maxNum - datas[i].data[j + 1]) * increment));
+	 cvs.stroke();
+	}, k += 3);
+       end = length1 * (i + 1);
+       start = i * length1;
+      }
+     cvs.beginPath();
+     cvs.strokeStyle = datas[i].color;
+     cvs.moveTo(580, 40 + titleSpace * i);
+     cvs.lineTo(625, 40 + titleSpace * i);
+     cvs.stroke();
+     cvs.closePath();
+     cvs.beginPath();
+     cvs.fillStyle = datas[i].color;
+     cvs.font = '15px 宋体';
+     cvs.fillText(datas[i].name, 630, 45 + titleSpace * i);
+     cvs.stroke();
+     cvs.closePath();
+    }
+   cvs.beginPath();
+   cvs.fillStyle = labelColor;
+   cvs.fillText(tip,100,30);
+   cvs.closePath();
+   cvs.fill();
+   for(var k = 0;k  < length1 + 1;k=k+100){
+     cvs.beginPath();
+     cvs.fillStyle = labelColor;
+     cvs.fillText((k-length1)/10 + '秒', startX + nameSpace * k - 20, startY + 15 );
+     cvs.closePath();
+     cvs.fill();
+    }
+  }
+</script>

@@ -1,0 +1,142 @@
+<head>
+ <meta charset='UTF-8'>
+ <title>折线图</title>
+ <style>
+#container{
+ height: 600px;
+ background-color: #606060;
+ background-size: 100% 100%;
+}
+ </style>
+
+</head>
+<body>
+ <div style='height: 600px;background-color: #606060; background-size: 100% 100%' id='container'></div>
+</body>
+
+<script>
+ var obj = {
+   id:'container',
+   width:1200,
+   height:500,
+   datas:[
+     {
+       name:'电流',
+       color:'red',
+       data:[
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       30,20,40,21,23,16,33,20,13,21,10,1,
+       ]
+      }
+    ],
+   startX:60,
+   startY:450,
+   labelColor:'white',
+   labelCount:10,
+   nameSpace : 80,
+   circleColor:'blue',
+   tip:'最近60秒的电流变化'
+  };
+
+ drawLine1(obj);
+ function drawLine1(obj) {
+   var id = obj.id;
+   var datas = obj.datas;
+   var width = obj.width;
+   var height = obj.height;
+   var startX = obj.startX;
+   var startY = obj.startY;
+   var labelColor = obj.labelColor;
+   var labelCount = obj.labelCount;
+   var nameSpace = obj.nameSpace;
+   var tip = obj.tip;
+   var circleColor = obj.circleColor;
+
+   var container = document.getElementById(id);
+   var canvas = document.createElement('canvas');
+   canvas.width = width;
+   canvas.height = height;
+   canvas.style.border = '1px solid red';
+   container.appendChild(canvas);
+   var cvs = canvas.getContext('2d');
+   cvs.beginPath();
+   cvs.strokeStyle = 'white';
+   var startY1 = 50;
+   cvs.moveTo(startX, startY1);
+   cvs.lineTo(startX, startY);
+   cvs.lineTo(1200, startY);
+   cvs.stroke();
+   var length = datas.length;
+   var length1 = datas[0].data.length;
+   var maxNum = 0;
+   for(var i = 0;i < length;i++){
+     for (var j = 0;j < length1;j++){
+       if (maxNum <= datas[i].data[j]) {
+	 maxNum = datas[i].data[j];
+	}
+      }
+    }
+   maxNum = maxNum * 1.1;
+   var increment =  (startY - startY1) / maxNum;
+   var labelSpace = (startY - startY1) / labelCount;
+   for (var i = 0; i <= labelCount; i++) {
+     var text = Math.round((maxNum / labelCount) * i);
+     cvs.beginPath();
+     cvs.fillStyle = labelColor;
+     cvs.fillText(text, startX - 40, startY - (labelSpace * i ) );
+     cvs.closePath();
+     cvs.fill();
+    }
+   var start = 0;
+   var end = 0;
+   var titleSpace = 30;
+   for (let i = 0;i < length ;i++) {
+     var k = 100;
+     for (let j = 0; j < length1; j++) {
+       setTimeout(function () {
+	 cvs.beginPath();
+	 cvs.strokeStyle = datas[i].color;
+	 cvs.moveTo(startX + nameSpace * (j + 1), (startY1 + (maxNum - datas[i].data[j]) * increment ));
+	 cvs.lineTo(startX + nameSpace * (j + 2), (startY1 + (maxNum - datas[i].data[j + 1]) * increment));
+	 cvs.stroke();
+	}, k += 100);
+       end = length1 * (i + 1);
+       start = i * length1;
+       /*圆点*/
+       cvs.beginPath();
+       cvs.fillStyle = circleColor;
+       cvs.arc(startX + nameSpace * (j + 1), (startY1 + (maxNum - datas[i].data[j]) * increment ), 4, 0, Math.PI * 2);
+       cvs.closePath();
+       cvs.fill();
+      }
+     cvs.beginPath();
+     cvs.strokeStyle = datas[i].color;
+     cvs.moveTo(1050, 40 + titleSpace * i);
+     cvs.lineTo(1100, 40 + titleSpace * i);
+     cvs.stroke();
+     cvs.closePath();
+     cvs.beginPath();
+     cvs.fillStyle = datas[i].color;
+     cvs.font = '15px 宋体';
+     cvs.fillText(datas[i].name, 1130, 45 + titleSpace * i);
+     cvs.stroke();
+     cvs.closePath();
+    }
+   cvs.beginPath();
+   cvs.fillStyle = labelColor;
+   cvs.fillText(tip,20,30);
+   cvs.closePath();
+   cvs.fill();
+   for(var k = 0;k < length1;k++){
+     cvs.beginPath();
+     cvs.fillStyle = labelColor;
+     cvs.fillText(((k + 1)-length1)/10 + '秒', startX + nameSpace * (k + 1) - 10, startY + 30 );
+     cvs.closePath();
+     cvs.fill();
+    }
+  }
+</script>
