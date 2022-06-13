@@ -183,6 +183,8 @@ extern float datamins[60];//240 byte 每分钟最大功率
 void minute() {
   Serial.println("minute()");
   datamins[now.tm_min] = 0.0;
+  if ((now.tm_min % 10) == 0)
+    save_nvram();
 }
 extern float datahour[24];//96字节  每一小时的耗电量
 void hour() {
@@ -190,6 +192,13 @@ void hour() {
   datahour[now.tm_hour] = get_kwh() - nvram.kwh_hour0;
   nvram.kwh_hour0 = get_kwh();
   save_nvram();
+  if (SPIFFS.begin()) {
+    File fp;
+    fp = SPIFFS.open("hours.dat", "a");
+    fp.write((char *) &datahour, sizeof(datahour));
+    fp.close();
+    SPIFFS.end();
+  }
 }
 void day() {
   if (now.tm_year > 2021 - 1900) {
