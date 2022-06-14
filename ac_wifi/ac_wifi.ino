@@ -195,6 +195,7 @@ void hour() {
   loop_clock();
 }
 void day() {
+  dataday dataday;
   if (now.tm_year > 2021 - 1900) {
     dataday.kwh = get_kwh() - nvram.kwh_day0;
     dataday.time = mktime(&now);

@@ -2,7 +2,11 @@
 struct dataday {
   time_t time; //4
   float kwh; //4
-} dataday; //日数据
+};
+
+#define KWH_DAYS 100
+dataday kwh_days[KWH_DAYS];
+uint8_t kwh_days_p = 0;
 
 uint16_t data100ms_p = 0;
 float data100ms[600]; //2400 bytes 瞬时功率

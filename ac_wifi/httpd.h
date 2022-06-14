@@ -3,6 +3,7 @@
 #include <ESP8266WebServer.h>
 #include <ArduinoOTA.h>
 #include "wifi_client.h"
+#include "global.h"
 extern String hostname;
 
 ESP8266WebServer httpd(80);
@@ -161,6 +162,54 @@ data:[";
   }
   body += "]}];\
 obj.tip='最近24小时的耗电量曲线';\
+drawLine(obj);\
+obj.id='kwh_day';\
+obj.nameSpace=6;\
+obj.datas=[{\
+name:'耗电量(KWh)',\
+color:'red',\
+data:[";
+  File fp;
+  if (SPIFFS.begin()) {
+    String fn = "/" + String(now.tm_year + 1900 - 1) + ".dat";
+    Serial.println(fn);
+    if (SPIFFS.exists(fn)) {
+      Serial.println("exists");
+      fp = SPIFFS.open(fn, "r");
+      if (fp) {
+        Serial.println("open ok");
+        while (fp.available()) {
+          Serial.print("read()=");
+          Serial.println(fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)));
+          kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
+        }
+        fp.close();
+      }
+    }
+    fn = "/" + String(now.tm_year + 1900) + ".dat";
+    Serial.println(fn);
+    if (SPIFFS.exists(fn)) {
+      Serial.println("exists");
+      fp = SPIFFS.open(fn, "r");
+      if (fp) {
+        Serial.println("open ok");
+        while (fp.available()) {
+          Serial.print("read()=");
+          Serial.println(fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)));
+          kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
+        }
+        fp.close();
+      }
+    }
+    fn = "";
+    SPIFFS.end();
+  }
+  for (uint16_t i = 0; i < KWH_DAYS; i++) {
+    body += String(kwh_days[(kwh_days_p + i) % KWH_DAYS].kwh, 4);
+    body += ",";
+  }
+  body += "]}];\
+obj.tip='日耗电量曲线';\
 drawLine(obj);\
 </script>";
 
