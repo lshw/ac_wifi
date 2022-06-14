@@ -115,6 +115,7 @@ void wput() {
   uint16_t httpCode = wget();
 }
 bool httpd_up = false;
+uint32_t last_wput = 0;
 void loop()
 {
   ESP.wdtFeed();
@@ -128,11 +129,14 @@ void loop()
   if (connected_is_ok) {
     if (!httpd_up) {
       play("3");
-      wput();
       httpd_up = true;
       httpd_listen();
       if (!ntp_get("ntp.anheng.com.cn"))
         ntp_get("1.debian.pool.ntp.org");
+    }
+    if (millis() > last_wput) {
+      last_wput = millis() + 1000 * 3600 * 4; //4小时上传一次服务器
+      wput();
     }
   }
   yield();
