@@ -52,7 +52,7 @@ void handleRoot() {
                 + ",测试次数:" + String(ac_ok_count)
                 + ",uptime:" + String(millis() / 1000) + "秒"
                 + ",最大电流:" + String(i_max) + "A"
-                + ",LED:<button onclick=modi('/switch.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
+                + ",LED:<button onclick=modi('/save.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
                 + "<hr>"
                 + "电压校准参数:" + String(sets.ac_v_calibration, 6)
                 + ",电流校准参数:" + String(sets.ac_i_calibration, 6)
@@ -98,7 +98,7 @@ void handleRoot() {
           "<input type=submit name=submit value=save>"
           "&nbsp;<input type=submit name=reboot value='reboot'>"
           "</form>"
-          "&nbsp;<input type=submit onclick=\"modi('/switch.php?default=','输入恢复出厂设置的密码(其实就是SN号):','AC_')\" value='恢复出厂设置' title='密码:SN'>"
+          "&nbsp;<input type=submit onclick=\"modi('/save.php?default=','输入恢复出厂设置的密码(其实就是SN号):','AC_')\" value='恢复出厂设置' title='密码:SN'>"
           "<hr>"
           "<div style='width: 700px; height: 400px; background-color: #606060; background-size: 100% 100%' id='power_sec'></div>"
           "<hr>"
@@ -303,67 +303,6 @@ uint8_t char2int(char ch) {
   if (ch >= 'A') return ch - 'A' + 10;
   return ch & 0xf;
 }
-void http_switch() {
-  String data;
-  char ch[7];
-  int8_t mh_offset;
-  for (uint8_t i = 0; i < httpd.args(); i++) {
-    if (httpd.argName(i).compareTo("switch") == 0) {
-      data = httpd.arg(i);
-      data.trim();
-      data.toUpperCase();
-      if (data.compareTo("ON") == 0) {
-        digitalWrite(SSR, LOW);
-        play("123");
-
-      } else if (data.compareTo("OFF") == 0) {
-        digitalWrite(SSR, HIGH);
-        play("321");
-      }
-      break;
-    } else if (httpd.argName(i).compareTo("default") == 0) { //恢复出厂设置
-      if (httpd.arg(i) == hostname || httpd.arg(i) == hostname + "!") {
-        double kwh = 0.0;
-        if (httpd.arg(i) == hostname) {
-          kwh = get_kwh();
-        }
-        SPIFFS.begin();
-        SPIFFS.remove("/nvram.txt");
-        SPIFFS.remove("/sets_default.txt");
-        SPIFFS.remove("/sets.txt");
-        SPIFFS.end();
-        nvram.crc32++;
-        ESP.rtcUserMemoryWrite(0, (uint32_t*) &nvram, sizeof(nvram));
-        nvram.kwh = kwh;
-        save_nvram();
-        last_save = millis() + 1000; //马上保存file
-        save_nvram_file();
-        data = "恢复出厂设置成功!";
-      } else {
-        data = "密码错误!";
-      }
-      httpd_send_200("setTimeout(function(){ alert('" + data + "'); window.location.href = '/';}, 1000);", data + "....");
-      yield();
-      ESP.restart();
-      break;
-    } else if (httpd.argName(i).compareTo("led") == 0) {
-      uint32_t led = 0;
-      data = httpd.arg(i);
-      data.trim();
-      data.toUpperCase();
-      data.toCharArray(ch, 7);
-      sets.color = (char2int(ch[0]) <<  20) | (char2int(ch[1]) << 16); //red
-      sets.color |= (char2int(ch[2]) << 12) | (char2int(ch[3]) << 8); //green
-      sets.color |= (char2int(ch[4]) << 4) | char2int(ch[5]); //blue
-      delay(1);
-      led_send(sets.color);
-      save_set(false);
-      break;
-    }
-  }
-  httpd_send_200("setTimeout(function(){ alert('" + data + "); window.location.href = '/';}, 1000);", data + ",进入首页....");
-  yield();
-}
 void http_add_ssid() {
   String data;
   char ch;
@@ -404,12 +343,12 @@ void sound_play() {
 
 void httpsave() {
   File fp;
-  String url, data;
+  String data;
   SPIFFS.begin();
   for (uint8_t i = 0; i < httpd.args(); i++) {
     if (httpd.argName(i).compareTo("reboot") == 0) {
       reboot_now = true;
-      continue;
+      data = "重启";
     }
     if (httpd.argName(i).compareTo("data") == 0) {
       data = httpd.arg(i);
@@ -428,6 +367,7 @@ void httpsave() {
         fp.close();
       } else if (data.length() < 2)
         SPIFFS.remove("/ssid.txt");
+      data = "";
     } else if (httpd.argName(i).compareTo("kwh") == 0) {
       data = httpd.arg(i);
       nvram.kwh = data.toFloat();
@@ -436,59 +376,120 @@ void httpsave() {
       save_nvram();
       nvram_save = millis();
       save_nvram_file();
+      data = "";
+      break;
     } else if (httpd.argName(i).compareTo("I") == 0) {
       if (current > 0) {
         sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / current;
         set_modi |= SET_CHARGE;
       }
+      break;
     } else if (httpd.argName(i).compareTo("BZD") == 0) {//输入白炽灯功率，需要根据电压，换算成当前功率，进行校准
       if (power > 0) {
         sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / 220.0 * voltage / 220.0 * voltage / power;
         set_modi |= SET_CHARGE;
         set_modi |= SET_CHARGE;
       }
+      break;
     } else if (httpd.argName(i).compareTo("V") == 0) {
       if (voltage > 0) {
         sets.ac_v_calibration = sets.ac_v_calibration * httpd.arg(i).toFloat() / voltage;
         set_modi |= SET_CHARGE;
       }
+      break;
     } else if (httpd.argName(i).compareTo("W") == 0) {
       if (power > 0) {
         sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / power;
         set_modi |= SET_CHARGE;
       }
+      break;
     } else if (httpd.argName(i).compareTo("url") == 0) {
-      url = httpd.arg(i);
-      url.trim();
-      if (url.length() == 0) {
+      data = httpd.arg(i);
+      data.trim();
+      if (data.length() == 0) {
         SPIFFS.remove("/url.txt");
       } else {
         fp = SPIFFS.open("/url.txt", "w");
-        fp.println(url);
+        fp.println(data);
         fp.close();
       }
+      data = "";
     } else if (httpd.argName(i).compareTo("url1") == 0) {
-      url = httpd.arg(i);
-      url.trim();
-      if (url.length() == 0) {
+      data = httpd.arg(i);
+      data.trim();
+      if (data.length() == 0) {
         SPIFFS.remove("/url1.txt");
       } else {
         fp = SPIFFS.open("/url1.txt", "w");
-        fp.println(url);
+        fp.println(data);
         fp.close();
       }
+      data = "";
+    } else if (httpd.argName(i).compareTo("switch") == 0) {
+      data = httpd.arg(i);
+      data.trim();
+      data.toUpperCase();
+      if (data.compareTo("ON") == 0) {
+        digitalWrite(SSR, LOW);
+        play("123");
+
+      } else if (data.compareTo("OFF") == 0) {
+        digitalWrite(SSR, HIGH);
+        play("321");
+      }
+      break;
+    } else if (httpd.argName(i).compareTo("default") == 0) { //恢复出厂设置
+      if (httpd.arg(i) == hostname || httpd.arg(i) == hostname + "!") {
+        double kwh = 0.0;
+        if (httpd.arg(i) == hostname) {
+          kwh = get_kwh();
+        }
+        SPIFFS.remove("/nvram.txt");
+        SPIFFS.remove("/sets_default.txt");
+        SPIFFS.remove("/sets.txt");
+        nvram.crc32++;
+        ESP.rtcUserMemoryWrite(0, (uint32_t*) &nvram, sizeof(nvram));
+        nvram.kwh = kwh;
+        save_nvram();
+        last_save = millis() + 1000; //马上保存file
+        save_nvram_file();
+        data = "恢复出厂设置成功!";
+      } else {
+        data = "密码错误!";
+      }
+      SPIFFS.end();
+      httpd_send_200("setTimeout(function(){ alert('" + data + "'); window.location.href = '/';}, 1000);", data + "....");
+      yield();
+      ESP.restart();
+      break;
+    } else if (httpd.argName(i).compareTo("led") == 0) {
+      uint32_t led = 0;
+      char ch[7];
+      data = httpd.arg(i);
+      data.trim();
+      data.toUpperCase();
+      data.toCharArray(ch, 7);
+      sets.color = (char2int(ch[0]) <<  20) | (char2int(ch[1]) << 16); //red
+      sets.color |= (char2int(ch[2]) << 12) | (char2int(ch[3]) << 8); //green
+      sets.color |= (char2int(ch[4]) << 4) | char2int(ch[5]); //blue
+      delay(1);
+      led_send(sets.color);
+      save_set(false);
+      data = "";
+      break;
     }
   }
-  url = "";
   SPIFFS.end();
-  httpd_send_200("location.replace('/');", "进入首页...");
+  if (data != "")
+    httpd_send_200("setTimeout(function(){ alert('" + data + "'); window.location.href = '/';}, 1000);", data + "....");
+  else
+    httpd_send_200("window.location.href = '/';", "返回首页....");
   yield();
 }
 void httpd_listen() {
 
   httpd.on("/", handleRoot);
   httpd.on("/save.php", httpsave); //保存设置
-  httpd.on("/switch.php", http_switch); //保存设置
   httpd.on("/sound.php", sound_play); //播放音乐  http://xxxx/sound.php?play=123
   httpd.on("/add_ssid.php", http_add_ssid); //保存设置
   httpd.on("/generate_204", http204);//安卓上网检测
