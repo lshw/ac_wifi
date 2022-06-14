@@ -78,13 +78,14 @@ bool ntp_get(const char * ServerName) {
 uint8_t ntp_last = 0;
 uint32_t ntp_last_ms = 0;
 void loop_clock() {
-  time_t t;
+  if ((millis() % 60) != 0) return; //随机进行授时
   if (ntp_last != now.tm_mday) {
     if (wifi_connected) {
       if (ntp_last_ms + 60000 < millis() && ntp_last_ms  == 0) {
         ntp_last_ms = millis();
         if (!ntp_get("ntp.anheng.com.cn"))
           ntp_get("1.debian.pool.ntp.org");
+        ntp_last = now.tm_mday;
       }
     }
   }

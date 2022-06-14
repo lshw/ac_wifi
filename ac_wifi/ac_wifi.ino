@@ -114,18 +114,9 @@ void setup()
 void wput() {
   uint16_t httpCode = wget();
 }
-uint32_t last_disp_time = 0;
-uint32_t ms0 = 0;
 bool httpd_up = false;
 void loop()
 {
-  if (ms0 + 1000 < millis()) {
-    ms0 = millis();
-    if ((nvram_save > 0 && nvram_save <= millis())
-        || (last_save + 120000 < millis())
-        || last_save > millis())
-      save_nvram_file();
-  }
   ESP.wdtFeed();
   last_check_connected = millis() + 1000; //1秒检查一次connected;
   if (ap_client_linked || connected_is_ok) {
@@ -142,18 +133,12 @@ void loop()
       httpd_listen();
       if (!ntp_get("ntp.anheng.com.cn"))
         ntp_get("1.debian.pool.ntp.org");
-      last_disp_time = 0;
     }
   }
   yield();
   system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
   if (set_modi && (set_modi & SET_CHARGE)) {
     save_set(false); // 保存 /sets.txt
-  }
-  loop_clock();
-  if ((now.tm_sec == 0 && last_disp_time < millis()) || last_disp_time == 0) {
-    last_disp_time = millis() + 60000 - now.tm_sec * 1000;
-    Serial.printf("%s\r\n", asctime(&now));
   }
   yield();
   if (time_update & DAY_UP) {
@@ -181,14 +166,17 @@ void loop()
 }
 extern float datamins[60];//240 byte 每分钟最大功率
 void minute() {
-  Serial.println("minute()");
   datamins[now.tm_min] = 0.0;
   if ((now.tm_min % 10) == 0)
     save_nvram();
+  if ((nvram_save > 0 && nvram_save <= millis())
+      || (last_save + 120000 < millis())
+      || last_save > millis())
+    save_nvram_file();
+  Serial.printf("%s\r\n", asctime(&now));
 }
 extern float datahour[24];//96字节  每一小时的耗电量
 void hour() {
-  Serial.println("hour()");
   datahour[now.tm_hour] = get_kwh() - nvram.kwh_hour0;
   nvram.kwh_hour0 = get_kwh();
   save_nvram();
@@ -200,6 +188,7 @@ void hour() {
     fp = SPIFFS.open("/hours.dat", "r");
     SPIFFS.end();
   }
+  loop_clock();
 }
 void day() {
   if (now.tm_year > 2021 - 1900) {
