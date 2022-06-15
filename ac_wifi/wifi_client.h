@@ -155,7 +155,7 @@ uint16_t http_get(uint8_t no) {
   http.begin(client, url0 ); //HTTP提交
   http.setTimeout(4000);
   int httpCode;
-  for (uint8_t i = 0; i < 10; i++) {
+  for (uint8_t i = 0; i < 3; i++) {
     httpCode = http.GET();
     if (httpCode < 0) {
       Serial.write('E');
