@@ -107,6 +107,7 @@ void setup()
     ota_setup();
   }
   ESP.wdtEnable(5000);
+  Serial.printf("空闲ram:%ld\r\n", ESP.getFreeHeap());
 }
 
 void wput() {
@@ -210,7 +211,8 @@ void minute() {
       || (last_save + 120000 < millis())
       || last_save > millis())
     save_nvram_file();
-  Serial.printf("%s\r\n", asctime(&now));
+  Serial.println(asctime(&now));
+  Serial.printf("空闲ram:%ld\r\n", ESP.getFreeHeap());
 }
 extern float datahour[24];//96字节  每一小时的耗电量
 void hour() {
