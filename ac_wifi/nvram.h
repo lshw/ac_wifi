@@ -79,13 +79,13 @@ void load_nvram() {
       memset(&nvram, 0, sizeof(nvram));
       update_kwh_count(); //校准数据初始化
       SPIFFS.remove("/hours.dat");
+      memset(datahour, 0, sizeof(datahour));
     } else {
       fp = SPIFFS.open("/hours.dat", "r");
       if (fp) {
         fp.read((uint8_t *)&datahour, sizeof(datahour));
         fp.close();
       }
-
     }
     SPIFFS.end();
     save_nvram();

@@ -80,8 +80,6 @@ void setup()
   hostname.toUpperCase();
   Serial.println("Hostname: " + hostname);
   Serial.flush();
-
-  Serial.flush();
   wdt_disable();
   wifi_setup();
   if (wifi_station_get_connect_status() != STATION_GOT_IP) {
@@ -167,6 +165,49 @@ void loop()
     reboot_now = false;
     ESP.restart();
   }
+  if (kwh_days_p == -1 && now.tm_year > 121) {
+    load_kwh_days();
+  }
+}
+
+void load_kwh_days() {
+  File fp;
+  kwh_days_p = 0;
+  memset(kwh_days, 0, sizeof(kwh_days));
+  if (SPIFFS.begin()) {
+    String fn = "/" + String(now.tm_year + 1900 - 1) + ".dat";
+    Serial.println(fn);
+    if (SPIFFS.exists(fn)) {
+      Serial.println("exists");
+      fp = SPIFFS.open(fn, "r");
+      if (fp) {
+        Serial.println("open ok");
+        while (fp.available()) {
+          Serial.print("read()=");
+          Serial.println(fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)));
+          kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
+        }
+        fp.close();
+      }
+    }
+    fn = "/" + String(now.tm_year + 1900) + ".dat";
+    Serial.println(fn);
+    if (SPIFFS.exists(fn)) {
+      Serial.println("exists");
+      fp = SPIFFS.open(fn, "r");
+      if (fp) {
+        Serial.println("open ok");
+        while (fp.available()) {
+          Serial.print("read()=");
+          Serial.println(fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)));
+          kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
+        }
+        fp.close();
+      }
+    }
+    fn = "";
+    SPIFFS.end();
+  }
 }
 extern float datamins[60];//240 byte 每分钟最大功率
 void minute() {
@@ -195,18 +236,18 @@ void hour() {
   loop_clock();
 }
 void day() {
-  dataday dataday;
   if (now.tm_year > 2021 - 1900) {
-    dataday.kwh = get_kwh() - nvram.kwh_day0;
-    dataday.time = mktime(&now);
+    kwh_days[kwh_days_p].kwh = get_kwh() - nvram.kwh_day0;
+    kwh_days[kwh_days_p].time = mktime(&now);
     nvram.kwh_day0 = get_kwh();
     if (SPIFFS.begin()) {
       File fp;
       fp = SPIFFS.open("/" + String(now.tm_year + 1900) + ".dat", "a");
-      fp.write((char *) &dataday, sizeof(dataday));
+      fp.write((char *) &kwh_days[kwh_days_p], sizeof(dataday));
       fp.close();
       SPIFFS.end();
     }
+    kwh_days_p = (kwh_days_p + 1 ) % KWH_DAYS;
   }
 }
 bool smart_config() {

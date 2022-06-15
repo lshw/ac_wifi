@@ -169,41 +169,6 @@ obj.datas=[{\
 name:'耗电量(KWh)',\
 color:'red',\
 data:[";
-  File fp;
-  if (SPIFFS.begin()) {
-    String fn = "/" + String(now.tm_year + 1900 - 1) + ".dat";
-    Serial.println(fn);
-    if (SPIFFS.exists(fn)) {
-      Serial.println("exists");
-      fp = SPIFFS.open(fn, "r");
-      if (fp) {
-        Serial.println("open ok");
-        while (fp.available()) {
-          Serial.print("read()=");
-          Serial.println(fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)));
-          kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
-        }
-        fp.close();
-      }
-    }
-    fn = "/" + String(now.tm_year + 1900) + ".dat";
-    Serial.println(fn);
-    if (SPIFFS.exists(fn)) {
-      Serial.println("exists");
-      fp = SPIFFS.open(fn, "r");
-      if (fp) {
-        Serial.println("open ok");
-        while (fp.available()) {
-          Serial.print("read()=");
-          Serial.println(fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)));
-          kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
-        }
-        fp.close();
-      }
-    }
-    fn = "";
-    SPIFFS.end();
-  }
   for (uint16_t i = 0; i < KWH_DAYS; i++) {
     body += String(kwh_days[(kwh_days_p + i) % KWH_DAYS].kwh, 4);
     body += ",";
@@ -596,11 +561,8 @@ void httpd_listen() {
   httpd.onNotFound(handleNotFound);
   httpd.begin();
 
-  Serial.printf("HTTP服务器启动! 用浏览器打开 http://%s.local\r\n", hostname.c_str());
+  // Serial.printf("HTTP服务器启动! 用浏览器打开 http://%s.local\r\n", hostname.c_str());
 }
 #define httpd_loop() httpd.handleClient()
 
-void ota_loop() {
-
-}
 #endif //__AP_WEB_H__
