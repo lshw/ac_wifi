@@ -176,30 +176,22 @@ void load_kwh_days() {
   memset(kwh_days, 0, sizeof(kwh_days));
   if (SPIFFS.begin()) {
     String fn = "/" + String(now.tm_year + 1900 - 1) + ".dat";
-    Serial.println(fn);
     if (SPIFFS.exists(fn)) {
-      Serial.println("exists");
       fp = SPIFFS.open(fn, "r");
       if (fp) {
-        Serial.println("open ok");
         while (fp.available()) {
-          Serial.print("read()=");
-          Serial.println(fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)));
+          fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday));
           kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
         }
         fp.close();
       }
     }
     fn = "/" + String(now.tm_year + 1900) + ".dat";
-    Serial.println(fn);
     if (SPIFFS.exists(fn)) {
-      Serial.println("exists");
       fp = SPIFFS.open(fn, "r");
       if (fp) {
-        Serial.println("open ok");
         while (fp.available()) {
-          Serial.print("read()=");
-          Serial.println(fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)));
+          fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday));
           kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
         }
         fp.close();
@@ -230,7 +222,6 @@ void hour() {
     fp = SPIFFS.open("/hours.dat", "a");
     fp.write((char *) &datahour, sizeof(datahour));
     fp.close();
-    fp = SPIFFS.open("/hours.dat", "r");
     SPIFFS.end();
   }
   loop_clock();
