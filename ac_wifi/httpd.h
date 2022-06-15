@@ -10,6 +10,7 @@ ESP8266WebServer httpd(80);
 void httpd_send_200(String javascript, String body) {
   httpd.send(200, "text/html", "<html>"
              "<head>"
+             "<title>" + hostname + " " + GIT_VER + "</title>"
              "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
              "<script>"
              "function modi(url,text,Defaulttext) {"
