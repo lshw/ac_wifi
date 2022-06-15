@@ -5,9 +5,9 @@
 #include "wifi_client.h"
 #include "global.h"
 extern String hostname;
-
+String body;
 ESP8266WebServer httpd(80);
-void httpd_send_200(String javascript, String body) {
+void httpd_send_200(String javascript) {
   httpd.send(200, "text/html", "<html>"
              "<head>"
              "<title>" + hostname + " " + GIT_VER + "</title>"
@@ -26,6 +26,7 @@ void httpd_send_200(String javascript, String body) {
              "</body>"
              "</html>");
   httpd.client().stop();
+  Serial.printf("free ram:%ld\r\n", ESP.getFreeHeap());
 }
 void http204() {
   httpd.send(204, "", "");
@@ -45,20 +46,21 @@ void handleRoot() {
            now.tm_min,
            now.tm_sec
           );
-  String body = "SN:<mark>" + hostname + "</mark> &nbsp;"
-                "版本:<mark>" VER "</mark> &nbsp;" +
-                String(time_str) +
-                "<br>" + String(ac_raw()) +
-                "<br>输出:" + String(!digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
-                + String(get_kwh(), 4) + "KWh"
-                + ",测试次数:" + String(ac_ok_count)
-                + ",uptime:" + String(millis() / 1000) + "秒"
-                + ",最大电流:" + String(i_max) + "A"
-                + ",LED:<button onclick=modi('/save.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
-                + "<hr>"
-                + "电压校准参数:" + String(sets.ac_v_calibration, 6)
-                + ",电流校准参数:" + String(sets.ac_i_calibration, 6)
-                + "<hr>";
+  body.reserve(8192);
+  body = "SN:<mark>" + hostname + "</mark> &nbsp;"
+         "版本:<mark>" VER "</mark> &nbsp;" +
+         String(time_str) +
+         "<br>" + String(ac_raw()) +
+         "<br>输出:" + String(!digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
+         + String(get_kwh(), 4) + "KWh"
+         + ",测试次数:" + String(ac_ok_count)
+         + ",uptime:" + String(millis() / 1000) + "秒"
+         + ",最大电流:" + String(i_max) + "A"
+         + ",LED:<button onclick=modi('/save.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
+         + "<hr>"
+         + "电压校准参数:" + String(sets.ac_v_calibration, 6)
+         + ",电流校准参数:" + String(sets.ac_i_calibration, 6)
+         + "<hr>";
   if (connected_is_ok) {
     body += "wifi已连接 ssid:<mark>" + String(WiFi.SSID()) + "</mark> &nbsp;"
             + "ap:<mark>" + WiFi.BSSIDstr() + "</mark> &nbsp;"
@@ -282,14 +284,13 @@ var passwd = prompt('输入 ' + ssid + ' 的密码:'); "
     "function select_ssid(ssid) {\
 if (confirm('连接到[' + ssid + ']?')) location.replace('add_ssid.php?data=' + ssid); \
 }"
-    , body
   );
-  httpd.client().stop();
+  body = "";
 }
 void handleNotFound() {
   File fp;
   int ch;
-  String message;
+  body = "";
   SPIFFS.begin();
   if (SPIFFS.exists(httpd.uri().c_str())) {
     fp = SPIFFS.open(httpd.uri().c_str(), "r");
@@ -297,22 +298,20 @@ void handleNotFound() {
       while (1) {
         ch = fp.read();
         if (ch == -1) break;
-        message += (char)ch;
+        body += (char)ch;
       }
       fp.close();
-      httpd.send ( 200, "text/plain", message );
+      httpd.send ( 200, "text/plain", body );
       httpd.client().stop();
-      message = "";
+      body = "";
       return;
     }
   }
   yield();
-  message = "404 File Not Found\n\n";
-  message += "URI: ";
-  message += httpd.uri();
-  message += "<br><a href=/?" + String(millis()) + "><button>点击进入首页</button></a>";
-  httpd_send_200("", message);
-  message = "";
+  body = "404 File Not Found\n\nURI: " + httpd.uri();
+  + "<br><a href=/?" + String(millis()) + "><button>点击进入首页</button></a>";
+  httpd_send_200("");
+  body = "";
 }
 uint8_t char2int(char ch) {
   if (ch >= 'A') return ch - 'A' + 10;
@@ -337,22 +336,22 @@ void http_add_ssid() {
   if (mh_offset < 2) return;
 
   wifi_set_add(data.substring(0, mh_offset).c_str(), data.substring(mh_offset + 1).c_str());
-  httpd_send_200("location.replace('/?" + String(millis()) + "');", "进入首页...");
+  body = "进入首页...";
+  httpd_send_200("location.replace('/?" + String(millis()) + "');");
   yield();
 }
 void sound_play() {
-  String data;
   yield();
   for (uint8_t i = 0; i < httpd.args(); i++) {
     if (httpd.argName(i).compareTo("play") == 0) {
-      data = httpd.arg(i);
-      play((char *)data.c_str());
+      body = httpd.arg(i);
+      play((char *)body.c_str());
     } else if (httpd.argName(i).compareTo("vol") == 0) {
       vol = httpd.arg(i).toInt();
       analogWrite(5, vol);
     }
   }
-  httpd_send_200("", data);
+  httpd_send_200("");
   yield();
 }
 
@@ -473,7 +472,8 @@ void httpsave() {
         data = "密码错误!";
       }
       SPIFFS.end();
-      httpd_send_200("setTimeout(function(){ alert('" + data + "'); window.location.href = '/';}, 1000);", data + "....");
+      body = data + "....";
+      httpd_send_200("setTimeout(function(){ alert('" + data + "'); window.location.href = '/';}, 1000);");
       yield();
       ESP.restart();
       break;
@@ -495,10 +495,13 @@ void httpsave() {
     }
   }
   SPIFFS.end();
-  if (data != "")
-    httpd_send_200("setTimeout(function(){ alert('" + data + "'); window.location.href = '/';}, 1000);", data + "....");
-  else
-    httpd_send_200("window.location.href = '/';", "返回首页....");
+  if (data != "") {
+    body = data + "....";
+    httpd_send_200("setTimeout(function(){ alert('" + data + "'); window.location.href = '/';}, 1000);");
+  } else {
+    body = "返回首页....";
+    httpd_send_200("window.location.href = '/';");
+  }
   yield();
 }
 void httpd_listen() {
@@ -513,10 +516,12 @@ void httpd_listen() {
     httpd.sendHeader("Connection", "close");
     if (Update.hasError()) {
       led_send(sets.color);
-      httpd_send_200("", "升级失败 <a href=/><buttom>返回首页</buttom></a>");
+      body = "升级失败 <a href=/><buttom>返回首页</buttom></a>";
+      httpd_send_200("");
     } else {
       led_send(0xFF0000L);
-      httpd_send_200("setTimeout(function(){ alert('升级成功!'); window.location.href = '/';}, 20000);", "上传成功，正在刷机.....");
+      body = "上传成功，正在刷机.....";
+      httpd_send_200("setTimeout(function(){ alert('升级成功!'); window.location.href = '/';}, 20000);");
       Serial.flush();
       //    ht16c21_cmd(0x88, 1); //闪烁
       delay(5);
