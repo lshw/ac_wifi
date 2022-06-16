@@ -9,6 +9,8 @@
 #include "ws2813.h"
 #include "pwm_speeker.h"
 #include "datalog.h"
+#include "CRC32.h"
+
 Ticker _myTicker;
 DNSServer dnsServer;
 extern bool wifi_connected;
@@ -173,6 +175,10 @@ void dump_hex(char * msg, uint16_t len) {
     Serial.printf(" %02X", msg[i]);
   }
   Serial.println();
+}
+
+uint32_t calculateCRC32(const uint8_t *data, size_t length) {
+  return CRC32::calculate(data, length);
 }
 
 #endif
