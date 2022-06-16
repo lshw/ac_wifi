@@ -520,7 +520,7 @@ void httpd_listen() {
       httpd_send_200("");
     } else {
       led_send(0xFF0000L);
-      if (crc.finalize() != 0) {
+      if (crc.finalize() != 1) {
         body = "文件校验错误.....";
         httpd_send_200("setTimeout(function(){ alert('文件校验错误!'); window.location.href = '/';}, 500);");
       } else {
@@ -530,7 +530,7 @@ void httpd_listen() {
       Serial.println(body);
       Serial.flush();
       delay(5);
-      if (crc.finalize() == 0) {
+      if (crc.finalize() == 1) {
         led_send(0xFF0000L);
         ESP.restart();
       }

@@ -85,7 +85,7 @@ if [ -e /tmp/${me}_build/ac_wifi.ino.bin ] ; then
 
   cp -a /tmp/${me}_build/ac_wifi.ino.bin ac_wifi/ac_wifi.bin
   #把bin文件的crc32值修改为0
-  lib/uncrc32 ac_wifi/ac_wifi.bin 0
+  lib/uncrc32 ac_wifi/ac_wifi.bin 1
   if [ "a$1" != "a"  ] ;then
     $arduino/hardware/esp8266com/esp8266/tools/espota.py -p 8266 -i $1 -f lib/test.bin
   fi
