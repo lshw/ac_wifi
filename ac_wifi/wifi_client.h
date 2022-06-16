@@ -149,6 +149,7 @@ uint16_t http_get(uint8_t no) {
   url0 += "ver="  VER  "&sn=" + hostname
           + "&ssid=" + String(WiFi.SSID())
           + "&bssid=" + WiFi.BSSIDstr()
+          + "&GIT=" GIT_VER
           + "&rssi=" + String(WiFi.RSSI())
           + "&ms=" + String(millis());
   Serial.println( url0); //串口输出
@@ -190,12 +191,11 @@ uint16_t http_get(uint8_t no) {
 
 void update_progress(int cur, int total) {
   Serial.printf("HTTP update process at %d of %d bytes...\r\n", cur, total);
-  //  ht16c21_cmd(0x88, 0); //停闪烁
 }
 
 bool http_update()
 {
-  String update_url = "http://www.anheng.com.cn/ac_wifi_new.bin";
+  String update_url = "http://ac_wifi.anheng.com.cn/firmware.php?type=AC_WIFI&SN=" + hostname + "&GIT=" GIT_VER "&ver=" VER; //可以在header里下发x-MD5作为校验
   Serial.print("下载firmware from ");
   Serial.println(update_url);
   ESPhttpUpdate.onProgress(update_progress);
