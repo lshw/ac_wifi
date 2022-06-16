@@ -520,13 +520,20 @@ void httpd_listen() {
       httpd_send_200("");
     } else {
       led_send(0xFF0000L);
-      body = "上传成功，正在刷机.....";
-      httpd_send_200("setTimeout(function(){ alert('升级成功!'); window.location.href = '/';}, 20000);");
+      if (crc.finalize() != 0) {
+        body = "文件校验错误.....";
+        httpd_send_200("setTimeout(function(){ alert('文件校验错误!'); window.location.href = '/';}, 500);");
+      } else {
+        body = "上传成功，正在刷机.....";
+        httpd_send_200("setTimeout(function(){ alert('升级成功!'); window.location.href = '/';}, 20000);");
+      }
+      Serial.println(body);
       Serial.flush();
-      //    ht16c21_cmd(0x88, 1); //闪烁
       delay(5);
-      led_send(0xFF0000L);
-      ESP.restart();
+      if (crc.finalize() == 0) {
+        led_send(0xFF0000L);
+        ESP.restart();
+      }
     }
     yield();
   }, []() {
@@ -544,23 +551,29 @@ void httpd_listen() {
       if (!Update.begin(maxSketchSpace)) { //start with max available size
         Update.printError(Serial);
       }
+      crc.reset();
     } else if (upload.status == UPLOAD_FILE_WRITE) {
       if (led == 0)
         led_send(0xFF0000L);
       else
         led_send(0);
-      Serial.println("size:" + String(upload.totalSize));
+      crc.update((uint8_t*)upload.buf, upload.currentSize);
+      Serial.printf("size:%d,crc=%08x\r\n", upload.totalSize, crc.finalize());
       if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
         Update.printError(Serial);
       }
     } else if (upload.status == UPLOAD_FILE_END) {
       led_send(0xFF0000L);
       if (Update.end(true)) { //true to set the size to the current progress
-        Serial.printf("Update Success: %u\r\nRebooting...\r\n", upload.totalSize);
+        if (crc.finalize() != 0)
+          Serial.printf("File Update : %u\r\nCRC32 error ...\r\n", upload.totalSize);
+        else
+          Serial.printf("Update Success: %u\r\nRebooting...\r\n", upload.totalSize);
       } else {
         Update.printError(Serial);
       }
       Serial.setDebugOutput(false);
+      Serial.printf("crc=%08x\r\n", crc.finalize());
     }
     yield();
   });

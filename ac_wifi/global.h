@@ -10,7 +10,7 @@
 #include "pwm_speeker.h"
 #include "datalog.h"
 #include "CRC32.h"
-
+CRC32 crc;
 Ticker _myTicker;
 DNSServer dnsServer;
 extern bool wifi_connected;
