@@ -13,6 +13,7 @@
 *.bin
 *.bom
 *.xy
+lib/uncrc32
 
 # Prerequisites
 *.d

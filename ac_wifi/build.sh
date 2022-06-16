@@ -15,6 +15,10 @@ else
 fi
 
 cd ..
+
+if ! [ -x lib/uncrc32 ] ; then
+gcc -o lib/uncrc32 lib/uncrc32.c
+fi
 branch=`git branch |grep "^\*" |awk '{print $2}'`
 a=`git rev-parse --short HEAD`
 date=`git log --date=short -1 |grep ^Date: |awk '{print $2}' |tr -d '-'`
@@ -27,6 +31,7 @@ astyle  --options=$arduino/lib/formatter.conf ac_wifi/*.h ac_wifi/*.ino ac_wifi/
 
 arduinoset=$home/.arduino15
 mkdir -p /tmp/${me}_build /tmp/${me}_cache
+rm -f /tmp/${me}_build/ac_wifi.ino.bin
 
 #传递宏定义 GIT_COMMIT_ID 到源码中，源码git版本
 CXXFLAGS="-DGIT_COMMIT_ID=\"$git_id\" -DGIT_VER=\"$ver\" "
@@ -74,12 +79,14 @@ $arduino/arduino-builder \
 -verbose \
 ./ac_wifi/ac_wifi.ino |tee /tmp/${me}_info.log
 
-if [ $? == 0 ] ; then
+if [ -e /tmp/${me}_build/ac_wifi.ino.bin ] ; then
   grep "Global vari" /tmp/${me}_info.log |sed -n "s/^.* \[\([0-9]*\) \([0-9]*\) \([0-9]*\) \([0-9]*\)\].*$/RAM:使用\1字节(\3%),剩余\4字节/p"
   grep "Sketch uses" /tmp/${me}_info.log |sed -n "s/^.* \[\([0-9]*\) \([0-9]*\) \([0-9]*\)\].*$/ROM:使用\1字节(\3%)/p"
 
   cp -a /tmp/${me}_build/ac_wifi.ino.bin ac_wifi/ac_wifi.bin
- if [ "a$1" != "a"  ] ;then
-  $arduino/hardware/esp8266com/esp8266/tools/espota.py -p 8266 -i $1 -f lib/test.bin
- fi
+  #把bin文件的crc32值修改为0
+  lib/uncrc32 ac_wifi/ac_wifi.bin 0
+  if [ "a$1" != "a"  ] ;then
+    $arduino/hardware/esp8266com/esp8266/tools/espota.py -p 8266 -i $1 -f lib/test.bin
+  fi
 fi
