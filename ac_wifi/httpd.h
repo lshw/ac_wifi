@@ -565,7 +565,7 @@ void httpd_listen() {
     } else if (upload.status == UPLOAD_FILE_END) {
       led_send(0xFF0000L);
       if (Update.end(true)) { //true to set the size to the current progress
-        if (crc.finalize() != 0)
+        if (crc.finalize() != 1)
           Serial.printf("File Update : %u\r\nCRC32 error ...\r\n", upload.totalSize);
         else
           Serial.printf("Update Success: %u\r\nRebooting...\r\n", upload.totalSize);
