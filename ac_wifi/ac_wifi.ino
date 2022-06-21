@@ -244,22 +244,28 @@ void day() {
   }
 }
 bool smart_config() {
-  //插上电， 等20秒， 如果没有上网成功， 就会进入 CO xx计数， 100秒之内完成下面的操作
+  uint32_t colors[3] = {0xf00000, 0x00f000, 0x0000f0};
   //手机连上2.4G的wifi,然后微信打开网页：http://wx.ai-thinker.com/api/old/wifi/config
   save_nvram();
   if (wifi_connected_is_ok()) return true;
   WiFi.mode(WIFI_STA);
   WiFi.beginSmartConfig();
   Serial.println("SmartConfig start");
-  for (uint8_t i = 0; i < 100; i++) {
+  for (uint8_t i = 0; i < 200; i++) {
     if (WiFi.smartConfigDone()) {
       wifi_set_clean();
       wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
       Serial.println("OK");
+      led_send(sets.color);
       return true;
     }
     Serial.write('.');
-    delay(1000);
+    yield();
+    system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
+    delay(500);
+    led_send(colors[i % 3]);
+    yield();
   }
+  led_send(0xf00000);
   return false;
 }
