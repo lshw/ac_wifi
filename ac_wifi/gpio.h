@@ -8,6 +8,10 @@ void key_check() {//20ms检查一次
   if (last_keygen != digitalRead(KEYWORD)) { //按键状态有变化
     last_keygen = digitalRead(KEYWORD);
     if (last_keygen == HIGH) { //松开按键
+      if (in_smart) { //正在配网的话， 就完成退出配网模式
+        in_smart = false;
+        return;
+      }
       if (keydown_ms + 20 > millis()) return; //按下短于20ms 算抖动
       if (in_smart) { //正在配网的话， 就完成退出配网模式
         Serial.println("按键退出配网");
