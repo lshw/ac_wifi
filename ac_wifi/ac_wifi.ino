@@ -169,6 +169,11 @@ void loop()
   if (kwh_days_p == -1 && now.tm_year > 121) {
     load_kwh_days();
   }
+  if (keydown_ms > 0 && millis() - keydown_ms > 5000 && digitalRead(KEYWORD) == LOW) {
+    keydown_ms = 0;
+    Serial.println("smart_config()");
+    smart_config();
+  }
 }
 
 void load_kwh_days() {
@@ -243,29 +248,37 @@ void day() {
     kwh_days_p = (kwh_days_p + 1 ) % KWH_DAYS;
   }
 }
-bool smart_config() {
+void smart_config() {
   uint32_t colors[3] = {0xf00000, 0x00f000, 0x0000f0};
   //手机连上2.4G的wifi,然后微信打开网页：http://wx.ai-thinker.com/api/old/wifi/config
   save_nvram();
-  if (wifi_connected_is_ok()) return true;
-  WiFi.mode(WIFI_STA);
+  // if (wifi_connected_is_ok()) return true;
+  WiFi.mode(WIFI_STA); //开AP
   WiFi.beginSmartConfig();
   Serial.println("SmartConfig start");
-  for (uint8_t i = 0; i < 200; i++) {
+  for (uint8_t i = 0; i < 500; i++) {
     if (WiFi.smartConfigDone()) {
       wifi_set_clean();
       wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
       Serial.println("OK");
       led_send(sets.color);
-      return true;
+      return;
     }
-    Serial.write('.');
+    if (i % 5 == 0)
+      Serial.write('.');
+    if (i % 100 == 0)
+      Serial.println();
     yield();
     system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
-    delay(500);
+    delay(200);
     led_send(colors[i % 3]);
     yield();
+    if (connected_is_ok) {
+      httpd_loop();
+      ArduinoOTA.handle();
+    }
+    yield();
+    system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
   }
   led_send(0xf00000);
-  return false;
 }
