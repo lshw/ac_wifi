@@ -90,3 +90,4 @@ if [ -e /tmp/${me}_build/ac_wifi.ino.bin ] ; then
     $arduino/hardware/esp8266com/esp8266/tools/espota.py -p 8266 -i $1 -f lib/test.bin
   fi
 fi
+echo $ver
