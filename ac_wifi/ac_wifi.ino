@@ -67,7 +67,7 @@ void setup()
   Serial.print(F("SDK Ver="));
   Serial.println(ESP.getSdkVersion());
 
-  Serial.print("Software Ver=" VER "\r\nBuildtime=");
+  Serial.print(F("Software Ver=" VER "\r\nBuildtime="));
   Serial.print(__YEAR__);
   Serial.write('-');
   if (__MONTH__ < 10) Serial.write('0');
@@ -78,7 +78,7 @@ void setup()
   Serial.println(F(" " __TIME__));
   hostname += String(sets.serial) + "_" + String(ESP.getChipId(), HEX);
   hostname.toUpperCase();
-  Serial.println("Hostname: " + hostname);
+  Serial.println(F("Hostname: ") + hostname);
   Serial.flush();
   wdt_disable();
   wifi_setup();
@@ -107,7 +107,7 @@ void setup()
     ota_setup();
   }
   ESP.wdtEnable(5000);
-  Serial.printf("空闲ram:%ld\r\n", ESP.getFreeHeap());
+  Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
 }
 
 void wput() {
@@ -115,6 +115,7 @@ void wput() {
 }
 bool httpd_up = false;
 uint32_t last_wput = 0;
+uint8_t smart_status = 0; //=0 smart未运行， =1 正在进行 尚未松开按键, =2 正在进行，已经松开按键, =3退出中， 检查松开就变成0
 void loop()
 {
   ESP.wdtFeed();
@@ -161,6 +162,8 @@ void loop()
   }
   system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
   if (reboot_now) {
+    Serial.println(F("reboot..."));
+    Serial.flush();
     nvram_save = millis();
     save_nvram_file();
     reboot_now = false;
@@ -169,10 +172,17 @@ void loop()
   if (kwh_days_p == -1 && now.tm_year > 121) {
     load_kwh_days();
   }
-  if (keydown_ms > 0 && millis() - keydown_ms > 5000 && digitalRead(KEYWORD) == LOW) {
+  if ( smart_status == 0 && keydown_ms > 0 && millis() - keydown_ms > 5000 && digitalRead(KEYWORD) == LOW) {
     keydown_ms = 0;
-    Serial.println("smart_config()");
+    Serial.println(F("smart_config() begin"));
+    smart_status = 1;
     smart_config();
+    smart_status = 3; //退出进行中
+    Serial.println(F("smart_config() end"));
+  }
+  if (smart_status == 3  && digitalRead(KEYWORD)) { //等待松开按键就结束过程
+    Serial.println(F("smart_config 结束"));
+    smart_status = 0;
   }
 }
 
@@ -217,7 +227,7 @@ void minute() {
       || last_save > millis())
     save_nvram_file();
   Serial.println(asctime(&now));
-  Serial.printf("空闲ram:%ld\r\n", ESP.getFreeHeap());
+  Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
 }
 extern float datahour[24];//96字节  每一小时的耗电量
 void hour() {
@@ -248,26 +258,26 @@ void day() {
     kwh_days_p = (kwh_days_p + 1 ) % KWH_DAYS;
   }
 }
-bool in_smart = false;
 void smart_config() {
   uint32_t colors[3] = {0xf00000, 0x00f000, 0x0000f0};
   //手机连上2.4G的wifi,然后微信打开网页：http://wx.ai-thinker.com/api/old/wifi/config
   save_nvram();
-  in_smart = true;
+  smart_status = 1;
   // if (wifi_connected_is_ok()) return true;
   WiFi.mode(WIFI_STA); //开AP
   WiFi.beginSmartConfig();
-  Serial.println("SmartConfig start");
   for (uint16_t i = 0; i < 500; i++) {
+    if (smart_status == 2 && digitalRead(KEYWORD) == LOW) { //松开按键后，又按下按键
+      Serial.println(F("key down exit"));
+      led_send(sets.color);
+      return;
+    }
+    if (smart_status == 1 && digitalRead(KEYWORD) == HIGH)
+      smart_status = 2; //按键已经松开
     if (WiFi.smartConfigDone()) {
       wifi_set_clean();
       wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
-      Serial.println("OK");
-      led_send(sets.color);
-      in_smart = false;
-      return;
-    }
-    if (!in_smart) { //按键退出
+      Serial.println(F("OK"));
       led_send(sets.color);
       return;
     }
@@ -288,5 +298,4 @@ void smart_config() {
     system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
   }
   led_send(sets.color);
-  in_smart = false;
 }

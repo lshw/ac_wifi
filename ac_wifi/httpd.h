@@ -26,7 +26,6 @@ void httpd_send_200(String javascript) {
              "</body>"
              "</html>");
   httpd.client().stop();
-  Serial.printf("free ram:%ld\r\n", ESP.getFreeHeap());
 }
 void http204() {
   httpd.send(204, "", "");
@@ -375,7 +374,7 @@ void httpsave() {
         fp.println(data);
         fp.close();
         fp = SPIFFS.open("/ssid.txt", "r");
-        Serial.print("保存wifi设置到文件/ssid.txt ");
+        Serial.print(F("保存wifi设置到文件/ssid.txt "));
         Serial.print(fp.size());
         Serial.println("字节");
         fp.close();
@@ -546,7 +545,7 @@ void httpd_listen() {
       //  ht16c21_cmd(0x88, 0); //停闪烁
       Serial.setDebugOutput(true);
       WiFiUDP::stopAll();
-      Serial.printf("Update: %s\r\n", upload.filename.c_str());
+      Serial.printf(PSTR("Update: %s\r\n"), upload.filename.c_str());
       uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
       if (!Update.begin(maxSketchSpace)) { //start with max available size
         Update.printError(Serial);
@@ -558,7 +557,7 @@ void httpd_listen() {
       else
         led_send(0);
       crc.update((uint8_t*)upload.buf, upload.currentSize);
-      Serial.printf("size:%d,crc=%08x\r\n", upload.totalSize, crc.finalize());
+      Serial.printf(PSTR("size:%d,crc=%08x\r\n"), upload.totalSize, crc.finalize());
       if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
         Update.printError(Serial);
       }
@@ -566,21 +565,21 @@ void httpd_listen() {
       led_send(0xFF0000L);
       if (Update.end(true)) { //true to set the size to the current progress
         if (crc.finalize() != 1)
-          Serial.printf("File Update : %u\r\nCRC32 error ...\r\n", upload.totalSize);
+          Serial.printf(PSTR("File Update : %u\r\nCRC32 error ...\r\n"), upload.totalSize);
         else
-          Serial.printf("Update Success: %u\r\nRebooting...\r\n", upload.totalSize);
+          Serial.printf(PSTR("Update Success: %u\r\nRebooting...\r\n"), upload.totalSize);
       } else {
         Update.printError(Serial);
       }
       Serial.setDebugOutput(false);
-      Serial.printf("crc=%08x\r\n", crc.finalize());
+      Serial.printf(PSTR("crc=%08x\r\n"), crc.finalize());
     }
     yield();
   });
   httpd.onNotFound(handleNotFound);
   httpd.begin();
 
-  // Serial.printf("HTTP服务器启动! 用浏览器打开 http://%s.local\r\n", hostname.c_str());
+  // Serial.printf(PSTR("HTTP服务器启动! 用浏览器打开 http://%s.local\r\n"), hostname.c_str());
 }
 #define httpd_loop() httpd.handleClient()
 

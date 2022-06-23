@@ -13,34 +13,34 @@ void ota_setup() {
       type = "filesystem";
     }
     // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-    Serial.println("Start updating " + type);
+    Serial.println(F("Start updating ") + type);
     type = "";
   });
   ArduinoOTA.onEnd([]() {
     //ht16c21_cmd(0x88, 1); //闪烁
-    Serial.println("\nEnd");
+    Serial.println(F("\nEnd"));
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    Serial.printf(PSTR("Progress: %u%%\r"), (progress / (total / 100)));
     //ht16c21_cmd(0x88, 0); //停闪烁
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
+    Serial.printf(PSTR("Error[%u]: "), error);
     if (error == OTA_AUTH_ERROR) {
-      Serial.println("Auth Failed");
+      Serial.println(F("Auth Failed"));
     } else if (error == OTA_BEGIN_ERROR) {
-      Serial.println("Begin Failed");
+      Serial.println(F("Begin Failed"));
     } else if (error == OTA_CONNECT_ERROR) {
-      Serial.println("Connect Failed");
+      Serial.println(F("Connect Failed"));
     } else if (error == OTA_RECEIVE_ERROR) {
-      Serial.println("Receive Failed");
+      Serial.println(F("Receive Failed"));
     } else if (error == OTA_END_ERROR) {
-      Serial.println("End Failed");
+      Serial.println(F("End Failed"));
     }
   });
   ArduinoOTA.begin();
   wifi_set_sleep_type(LIGHT_SLEEP_T);
-  Serial.println("OTA Ready");
+  Serial.println(F("OTA Ready"));
 }
 
 #endif //__OTA_H__

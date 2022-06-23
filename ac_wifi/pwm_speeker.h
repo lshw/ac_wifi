@@ -54,7 +54,7 @@ void sound_20ms() {
       pwm_on = true;
     }
     sound(sound_buf[0], 500);
-    Serial.printf("sound(%c)\r\n", sound_buf[0]);
+    Serial.printf(PSTR("sound(%c)\r\n"), sound_buf[0]);
     strncpy((char *)sound_buf, (char *)&sound_buf[1], sizeof(sound_buf) - 1);
   } else if (pwm_on) {
     analogWrite(5, 0);
