@@ -256,7 +256,7 @@ void smart_config() {
   WiFi.mode(WIFI_STA); //开AP
   WiFi.beginSmartConfig();
   Serial.println("SmartConfig start");
-  for (uint8_t i = 0; i < 500; i++) {
+  for (uint16_t i = 0; i < 500; i++) {
     if (WiFi.smartConfigDone()) {
       wifi_set_clean();
       wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
