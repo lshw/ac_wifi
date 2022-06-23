@@ -248,10 +248,12 @@ void day() {
     kwh_days_p = (kwh_days_p + 1 ) % KWH_DAYS;
   }
 }
+bool in_smart = false;
 void smart_config() {
   uint32_t colors[3] = {0xf00000, 0x00f000, 0x0000f0};
   //手机连上2.4G的wifi,然后微信打开网页：http://wx.ai-thinker.com/api/old/wifi/config
   save_nvram();
+  in_smart = true;
   // if (wifi_connected_is_ok()) return true;
   WiFi.mode(WIFI_STA); //开AP
   WiFi.beginSmartConfig();
@@ -261,6 +263,11 @@ void smart_config() {
       wifi_set_clean();
       wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
       Serial.println("OK");
+      led_send(sets.color);
+      in_smart = false;
+      return;
+    }
+    if (!in_smart) { //按键退出
       led_send(sets.color);
       return;
     }
@@ -280,5 +287,6 @@ void smart_config() {
     yield();
     system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
   }
-  led_send(0xf00000);
+  led_send(sets.color);
+  in_smart = false;
 }
