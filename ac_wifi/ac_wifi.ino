@@ -80,32 +80,7 @@ void setup()
   hostname.toUpperCase();
   Serial.println(F("Hostname: ") + hostname);
   Serial.flush();
-  wdt_disable();
   wifi_setup();
-  if (wifi_station_get_connect_status() != STATION_GOT_IP) {
-    ap_on_time = millis() + 30000;  //WPS 20秒
-    if (WiFi.beginWPSConfig()) {
-      delay(1000);
-      uint8_t ap_id = wifi_station_get_current_ap_id();
-      char wps_ssid[33], wps_password[65];
-      memset(wps_ssid, 0, sizeof(wps_ssid));
-      memset(wps_password, 0, sizeof(wps_password));
-      struct station_config config[5];
-      wifi_station_get_ap_info(config);
-      strncpy(wps_ssid, (char *)config[ap_id].ssid, 32);
-      strncpy(wps_password, (char *)config[ap_id].password, 64);
-      config[ap_id].bssid_set = 1; //同名ap，mac地址不同
-      wifi_station_set_config(&config[ap_id]); //保存成功的ssid,用于下次通讯
-      wifi_set_add(wps_ssid, wps_password);
-    }
-    ESP.wdtFeed();
-  }
-  if (wifi_station_get_connect_status() != STATION_GOT_IP) {
-    AP();
-    ota_status = 1;
-    httpd_listen();
-    ota_setup();
-  }
   ESP.wdtEnable(5000);
   Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
 }
@@ -120,12 +95,10 @@ void loop()
 {
   ESP.wdtFeed();
   last_check_connected = millis() + 1000; //1秒检查一次connected;
-  if (ap_client_linked || connected_is_ok) {
+  if (connected_is_ok) {
     httpd_loop();
     ArduinoOTA.handle();
   }
-  if (ap_client_linked)
-    dnsServer.processNextRequest();
   if (connected_is_ok) {
     if (!httpd_up) {
       play("3");
@@ -140,7 +113,7 @@ void loop()
     }
   }
   yield();
-  system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
+  system_soft_wdt_feed ();
   if (set_modi && (set_modi & SET_CHARGE)) {
     save_set(false); // 保存 /sets.txt
   }
@@ -160,7 +133,7 @@ void loop()
     time_update &= ~MIN_UP;
     yield();
   }
-  system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
+  system_soft_wdt_feed ();
   if (reboot_now) {
     Serial.println(F("reboot..."));
     Serial.flush();
@@ -267,9 +240,14 @@ void smart_config() {
   WiFi.mode(WIFI_STA); //开AP
   WiFi.beginSmartConfig();
   for (uint16_t i = 0; i < 500; i++) {
+    delay(200);
+    system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
+    led_send(colors[i % 3]);
+    yield();
     if (smart_status == 2 && digitalRead(KEYWORD) == LOW) { //松开按键后，又按下按键
       Serial.println(F("key down exit"));
       led_send(sets.color);
+      WiFi.stopSmartConfig();
       return;
     }
     if (smart_status == 1 && digitalRead(KEYWORD) == HIGH)
@@ -277,8 +255,10 @@ void smart_config() {
     if (WiFi.smartConfigDone()) {
       wifi_set_clean();
       wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
+      WiFi.setAutoConnect(true);
       Serial.println(F("OK"));
       led_send(sets.color);
+      WiFi.stopSmartConfig();
       return;
     }
     if (i % 5 == 0)
@@ -287,9 +267,6 @@ void smart_config() {
       Serial.println();
     yield();
     system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
-    delay(200);
-    led_send(colors[i % 3]);
-    yield();
     if (connected_is_ok) {
       httpd_loop();
       ArduinoOTA.handle();
@@ -298,4 +275,5 @@ void smart_config() {
     system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
   }
   led_send(sets.color);
+  WiFi.stopSmartConfig();
 }

@@ -6,13 +6,11 @@
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266httpUpdate.h>
 bool wifi_connected = false;
-void AP();
 bool http_update();
 ESP8266WiFiMulti WiFiMulti;
 WiFiClient client;
 HTTPClient http;
 String ssid, passwd;
-bool ap_client_linked = false;
 uint8_t hex2ch(char dat) {
   dat |= 0x20; //41->61 A->a
   if (dat >= 'a') return dat - 'a' + 10;
@@ -21,33 +19,6 @@ uint8_t hex2ch(char dat) {
 void hexprint(uint8_t dat) {
   if (dat < 0x10) Serial.write('0');
   Serial.print(dat, HEX);
-}
-void onClientConnected(const WiFiEventSoftAPModeStationConnected& evt) {
-  ap_client_linked = true;
-  Serial.begin(115200);
-  Serial.print(F("\r\nclient linked:"));
-  for (uint8_t i = 0; i < 6; i++)
-    hexprint(evt.mac[i]);
-  Serial.println();
-  Serial.flush();
-  //  ht16c21_cmd(0x88, 0); //停止闪烁
-  ap_on_time = millis() + 200000; //不插电AP模式200秒
-}
-
-WiFiEventHandler ConnectedHandler;
-
-void AP() {
-  WiFi.mode(WIFI_AP_STA); //开AP
-  WiFi.softAP("disp", "");
-  Serial.print(F("IP地址: "));
-  Serial.println(WiFi.softAPIP());
-  Serial.flush();
-  ConnectedHandler = WiFi.onSoftAPModeStationConnected(&onClientConnected);
-  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-  dnsServer.start(53, "*", WiFi.softAPIP());
-  Serial.println(F("泛域名dns服务器启动"));
-  wifi_set_sleep_type(LIGHT_SLEEP_T);
-  yield();
 }
 
 void wifi_setup() {
@@ -118,7 +89,6 @@ bool connected_is_ok = false;
 bool wifi_connected_is_ok() {
   if (connected_is_ok)
     return connected_is_ok;
-  if (ap_client_linked  && millis() > 10000) return false; //ota有wifi客户连上来，或者超过10秒没有连上上游AP， 就不再尝试链接AP了
   if (wifi_station_get_connect_status() == STATION_GOT_IP) {
     Serial.println("ip:" + WiFi.localIP().toString());
     connected_is_ok = true;

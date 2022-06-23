@@ -5,14 +5,14 @@
 #include <time.h>
 #include "Ticker.h"
 #include <ESP8266WiFiMulti.h>
-#include <DNSServer.h>
+#include <WiFiUdp.h>
+
 #include "ws2813.h"
 #include "pwm_speeker.h"
 #include "datalog.h"
 #include "CRC32.h"
 CRC32 crc;
 Ticker _myTicker;
-DNSServer dnsServer;
 extern bool wifi_connected;
 extern float i_max;
 int16_t update_timeok = 0; //0-马上wget ，-1 关闭，>0  xx分钟后wget
@@ -24,8 +24,6 @@ bool wifi_connected_is_ok();
 extern bool connected_is_ok;
 extern uint8_t sound_buf[100];
 uint16_t http_get(uint8_t);
-extern bool ap_client_linked ;
-uint32_t ap_on_time = 200000;
 bool reboot_now = false;
 uint16_t wget() {
   uint16_t httpCode = http_get( nvram.nvram7 & NVRAM7_URL); //先试试上次成功的url
