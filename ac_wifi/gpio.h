@@ -9,10 +9,11 @@ void key_check() {//20ms检查一次
     last_keygen = digitalRead(KEYWORD);
     if (last_keygen == HIGH) { //松开按键
       if (keydown_ms + 20 > millis()) return; //按下短于20ms 算抖动
-      if (keydown_ms == 0) return;
+      if (keydown_ms >= 0) {
       keydown_ms = 0;
       if (millis() - keydown_ms > 5000) {
         return; //按下超过 10秒， 是进入smartconf状态;
+      }
       }
       if (digitalRead(SSR) == LOW) {
         digitalWrite(SSR, HIGH);
