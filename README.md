@@ -7,5 +7,18 @@
 可以上传数据到apache2/nginx服务器, 
 
 设置wifi上网的方式：  
-https://github.com/EspressifApp/EsptouchForAndroid/releases 下载配置工具app， 使用v1协议，   
+https://github.com/EspressifApp/EsptouchForAndroid/releases 下载配置工具esptool V2.0版本， 使用v1协议，   
 按住智能插座的按键5秒，led开始闪烁, 进入smartconfig配网模式   
+手机要连接2.4G的AP, 因为智能插座, 不支持5G  
+控制开关:  
+http://192.168.x.x/save.php?switch=on  
+http://192.168.x.x/save.php?switch=off  
+  
+控制led(RRGGBB)颜色:  
+http://192.168.x.x/save.php?LED=000F00  
+http://192.168.x.x/save.php?LED=0F0000    
+  
+播放简谱，控制音量:  
+http://192.168.x.x/save.php?play=abcdefg1234567ABCDEFG&vol=50  
+  
+
