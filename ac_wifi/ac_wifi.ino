@@ -13,7 +13,6 @@ extern "C" {
 uint32_t dida0 = 0;
 uint8_t count_100ms = 0;
 void run_20ms() {
-  key_check();
   sound_20ms();
   ac_20ms();
   ac_decode();
@@ -150,6 +149,7 @@ void loop()
     Serial.println(F("smart_config() begin"));
     smart_status = 1;
     smart_config();
+    led_send(sets.color);
     smart_status = 3; //退出进行中
     Serial.println(F("smart_config() end"));
   }
@@ -246,7 +246,6 @@ void smart_config() {
     yield();
     if (smart_status == 2 && digitalRead(KEYWORD) == LOW) { //松开按键后，又按下按键
       Serial.println(F("key down exit"));
-      led_send(sets.color);
       WiFi.stopSmartConfig();
       return;
     }
@@ -257,7 +256,6 @@ void smart_config() {
       wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
       WiFi.setAutoConnect(true);
       Serial.println(F("OK"));
-      led_send(sets.color);
       WiFi.stopSmartConfig();
       return;
     }
@@ -274,6 +272,5 @@ void smart_config() {
     yield();
     system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
   }
-  led_send(sets.color);
   WiFi.stopSmartConfig();
 }
