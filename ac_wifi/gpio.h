@@ -1,9 +1,7 @@
 #ifndef __GPIO_H__
 #define __GPIO_H__
 extern uint8_t smart_status;
-uint32_t last_check_connected;
 uint32_t keydown_ms = 0;
-uint32_t last_int_ms = 0;
 void ICACHE_RAM_ATTR key_int() {
   if (smart_status > 0) //正在配网的话，关闭按键，
     return;

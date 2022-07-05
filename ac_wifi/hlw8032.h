@@ -2,12 +2,10 @@
 #define __HLW8032_H__
 uint8_t ac_buf[30];
 char ac_str[120];
-uint32_t last_ac = 0;
 int32_t pf = -1;
 bool ac_init = false;
 float current = 0.0, voltage = 0.0, power = 0.0, power_ys = 0.0; //上次测量
 uint32_t v_cs = 0, i_cs = 0, p_cs = 0;
-float voltage0 = 0.0; //上次测量的电压值
 float i_max = 0.0;
 uint32_t ac_int32( uint8_t * dat) { //从hlw8032的数据中获取32位整数
   uint32_t ret = 0;
@@ -82,7 +80,6 @@ void ac_20ms() {
   if (ac_buf[23] != 0) {
     return;
   }
-  last_ac = millis();
   ac_ok = true;
   ac_ok_count++;
 }

@@ -7,7 +7,6 @@ extern "C" {
 #include "hlw8032.h"
 #include "gpio.h"
 #include "clock.h"
-#include "ota.h"
 #include "wifi_client.h"
 #include "httpd.h"
 uint32_t dida0 = 0;
@@ -31,7 +30,6 @@ void run_20ms() {
     data100ms_p = (data100ms_p + 1) % 600;
   }
 }
-uint32_t t0 = 0;
 void setup()
 {
   ESP.wdtEnable(50000);
@@ -84,16 +82,12 @@ void setup()
   Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
 }
 
-void wput() {
-  uint16_t httpCode = wget();
-}
 bool httpd_up = false;
-uint32_t last_wput = 0;
+uint32_t last_wget = 0;
 uint8_t smart_status = 0; //=0 smart未运行， =1 正在进行 尚未松开按键, =2 正在进行，已经松开按键, =3退出中， 检查松开就变成0
 void loop()
 {
   ESP.wdtFeed();
-  last_check_connected = millis() + 1000; //1秒检查一次connected;
   if (connected_is_ok) {
     httpd_loop();
     ArduinoOTA.handle();
@@ -106,9 +100,9 @@ void loop()
       if (!ntp_get("ntp.anheng.com.cn"))
         ntp_get("1.debian.pool.ntp.org");
     }
-    if (millis() > last_wput) {
-      last_wput = millis() + 1000 * 3600 * 4; //4小时上传一次服务器
-      wput();
+    if (millis() > last_wget) {
+      last_wget = millis() + 1000 * 3600 * 4; //4小时上传一次服务器
+      wget();
     }
   }
   yield();
