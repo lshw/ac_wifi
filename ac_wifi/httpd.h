@@ -339,6 +339,19 @@ void http_add_ssid() {
   httpd_send_200("location.replace('/?" + String(millis()) + "');");
   yield();
 }
+
+void api() {
+  httpd.send(200, "application/json", "{"
+             "\"KWH\":" + String(get_kwh())
+             + ",\"V\":" + String(voltage)
+             + ",\"I\":" + String(current)
+             + ",\"W\":" + String(power)
+             + ",\"PF\":" + String(power_ys)
+             + "}");
+  httpd.client().stop();
+  yield();
+}
+
 void sound_play() {
   yield();
   for (uint8_t i = 0; i < httpd.args(); i++) {
@@ -507,6 +520,7 @@ void httpd_listen() {
 
   httpd.on("/", handleRoot);
   httpd.on("/save.php", httpsave); //保存设置
+  httpd.on("/api.php", api); //api服务
   httpd.on("/sound.php", sound_play); //播放音乐  http://xxxx/sound.php?play=123
   httpd.on("/add_ssid.php", http_add_ssid); //保存设置
   httpd.on("/generate_204", http204);//安卓上网检测
