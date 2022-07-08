@@ -50,16 +50,19 @@ void handleRoot() {
          "版本:<mark>" VER "</mark> &nbsp;" +
          String(time_str) +
          "<br>" + String(ac_raw()) +
-         "<br>输出:" + String(!digitalRead(SSR)) + ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
-         + String(get_kwh(), 4) + "KWh"
-         + ",测试次数:" + String(ac_ok_count)
-         + ",uptime:" + String(millis() / 1000) + "秒"
-         + ",最大电流:" + String(i_max) + "A"
-         + ",LED:<button onclick=modi('/save.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
-         + "<hr>"
-         + "电压校准参数:" + String(sets.ac_v_calibration, 6)
-         + ",电流校准参数:" + String(sets.ac_i_calibration, 6)
-         + "<hr>";
+         "<br>输出状态:";
+  if (digitalRead(SSR) == HIGH)  body += "<button onclick=gotoif('/save.php?switch=on','输出开启?');>关闭</button>";
+  else body += "<button onclick=gotoif('/save.php?switch=off','输出关闭?');>开启</button>";
+  body += ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
+          + String(get_kwh(), 4) + "KWh"
+          + ",测试次数:" + String(ac_ok_count)
+          + ",uptime:" + String(millis() / 1000) + "秒"
+          + ",最大电流:" + String(i_max) + "A"
+          + ",LED:<button onclick=modi('/save.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
+          + "<hr>"
+          + "电压校准参数:" + String(sets.ac_v_calibration, 6)
+          + ",电流校准参数:" + String(sets.ac_i_calibration, 6)
+          + "<hr>";
   if (connected_is_ok) {
     body += "wifi已连接 ssid:<mark>" + String(WiFi.SSID()) + "</mark> &nbsp;"
             + "ap:<mark>" + WiFi.BSSIDstr() + "</mark> &nbsp;"
@@ -280,6 +283,19 @@ var passwd = prompt('输入 ' + ssid + ' 的密码:'); "
     "else return false; "
     "return true; \
 }"
+    "function gotoif(url,msg)"
+    "{"
+    "if (url!='') {"
+    "if (msg!='') {"
+    "if (confirm(msg)) {"
+    "location.replace(url);"
+    "}"
+    "} else {"
+    "location.replace(url);"
+    "}"
+    "}"
+    "}"
+
     "function select_ssid(ssid) {\
 if (confirm('连接到[' + ssid + ']?')) location.replace('add_ssid.php?data=' + ssid); \
 }"
