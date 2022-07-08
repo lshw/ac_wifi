@@ -376,6 +376,8 @@ void sound_play() {
       play((char *)body.c_str());
     } else if (httpd.argName(i).compareTo("vol") == 0) {
       vol = httpd.arg(i).toInt();
+      if (vol > 1023) vol = 0;
+      if (vol > 512) vol = 1024 - 512;
       analogWrite(5, vol);
     }
   }
@@ -467,6 +469,11 @@ void httpsave() {
         fp.close();
       }
       data = "";
+    } else if (httpd.argName(i).compareTo("vol") == 0) {
+      vol = httpd.arg(i).toInt();
+      if (vol > 1023) vol = 0;
+      if (vol > 512) vol = 1024 - 512;
+      analogWrite(5, vol);
     } else if (httpd.argName(i).compareTo("switch") == 0) {
       data = httpd.arg(i);
       data.trim();
