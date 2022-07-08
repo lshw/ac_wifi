@@ -432,7 +432,6 @@ void httpsave() {
       if (power > 0) {
         sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / 220.0 * voltage / 220.0 * voltage / power;
         set_modi |= SET_CHARGE;
-        set_modi |= SET_CHARGE;
       }
       break;
     } else if (httpd.argName(i).compareTo("V") == 0) {
