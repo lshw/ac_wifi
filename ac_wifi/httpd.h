@@ -54,7 +54,7 @@ void handleRoot() {
   if (digitalRead(SSR) == HIGH)  body += "<button onclick=gotoif('/save.php?switch=on','输出开启?');>关闭</button>";
   else body += "<button onclick=gotoif('/save.php?switch=off','输出关闭?');>开启</button>";
   body += ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
-          + String(get_kwh(), 4) + "KWh"
+          + String(get_kwh(), 8) + "KWh"
           + ",测试次数:" + String(ac_ok_count)
           + ",uptime:" + String(millis() / 1000) + "秒"
           + ",最大电流:" + String(i_max) + "A"
@@ -358,7 +358,7 @@ void http_add_ssid() {
 
 void api() {
   httpd.send(200, "application/json", "{"
-             "\"KWH\":" + String(get_kwh())
+             "\"KWH\":" + String(get_kwh(), 8)
              + ",\"V\":" + String(voltage)
              + ",\"I\":" + String(current)
              + ",\"W\":" + String(power)
