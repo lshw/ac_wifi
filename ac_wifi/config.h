@@ -5,8 +5,8 @@
 
 String hostname = "AC_";
 
-#define DEFAULT_URL0 "http://liuxiaoyang.wf163.com/ac_wifi.php"
-#define DEFAULT_URL1 "http://lxy.wf163.com/ac_wifi.php"
+#define DEFAULT_URL0 "http://ac_wifi.cfido.com:808/ac_wifi.php"
+#define DEFAULT_URL1 "http://ac_wifi.wf163.com:808/ac_wifi.php"
 
 #define SSR 4 //SSD
 #define KEYWORD 0  //按键
