@@ -9,6 +9,7 @@ void ICACHE_RAM_ATTR key_int() {
   if (key == LOW) { //按下按键
     keydown_ms = millis(); //开始计时
   } else {//松开按键
+    if (keydown_ms == 0) return; //忽略
     if (keydown_ms + 20 > millis()) return; //按下时长短于20ms 算抖动
     if (keydown_ms >= 0 && millis() - keydown_ms > 5000) {
       keydown_ms = 0;
@@ -21,6 +22,7 @@ void ICACHE_RAM_ATTR key_int() {
       digitalWrite(SSR, LOW);
       play("123");
     }
+  keydown_ms = 0;
   }
 }
 void gpio_setup() {
