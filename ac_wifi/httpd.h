@@ -10,7 +10,7 @@ ESP8266WebServer httpd(80);
 void httpd_send_200(String javascript) {
   httpd.send(200, "text/html", "<html>"
              "<head>"
-             "<title>" + hostname + " " + GIT_VER + "</title>"
+             "<title>" + ac_name + " " + GIT_VER + "</title>"
              "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
              "<script>"
              "function modi(url,text,Defaulttext) {"
@@ -46,7 +46,8 @@ void handleRoot() {
            now.tm_sec
           );
   body.reserve(8192);
-  body = "SN:<mark>" + hostname + "</mark> &nbsp;"
+  body = "name:<mark onclick=modi('/save.php?ac_name=','修改标识?','" + ac_name + "')>" + ac_name + "</mark> &nbsp;"
+         "SN:<mark>" + hostname + "</mark> &nbsp;"
          "版本:<mark>" VER "</mark> &nbsp;" +
          String(time_str) +
          "<br>" + String(ac_raw()) +
@@ -412,6 +413,12 @@ void httpsave() {
       } else if (data.length() < 2)
         SPIFFS.remove("/ssid.txt");
       data = "";
+    } else if (httpd.argName(i).compareTo("ac_name") == 0) {
+      ac_name = httpd.arg(i);
+      ac_name.trim();
+      fp = SPIFFS.open("/ac_name.txt", "w");
+      fp.println(ac_name);
+      fp.close();
     } else if (httpd.argName(i).compareTo("kwh") == 0) {
       data = httpd.arg(i);
       nvram.kwh = data.toFloat();

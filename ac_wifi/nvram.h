@@ -5,6 +5,7 @@
 #define NVRAM7_UPDATE 0b1000
 
 extern float datahour[24];
+String ac_name;
 
 #define SET_CHARGE 0b1
 #include "calibration.h"
@@ -112,6 +113,13 @@ void save_set(bool _default) {
 void load_set() {
   File fp;
   SPIFFS.begin();
+  if (ac_name == "") {
+    if (SPIFFS.exists("/ac_name.txt")) {
+      fp = SPIFFS.open("/ac_name.txt", "r");
+      ac_name = fp.readString();
+      fp.close();
+    }
+  }
   if (SPIFFS.exists("/sets.txt")) {
     fp = SPIFFS.open("/sets.txt", "r");
     fp.read((uint8_t *)&sets, sizeof(sets));
