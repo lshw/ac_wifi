@@ -61,6 +61,10 @@ void setup()
 #ifdef GIT_VER
   Serial.println(F("Git Ver=" GIT_VER));
 #endif
+  hostname += String(sets.serial) + "_" + String(ESP.getChipId(), HEX);
+  hostname.toUpperCase();
+  if (ac_name == "")
+    ac_name = hostname;
   Serial.print(F("SDK Ver="));
   Serial.println(ESP.getSdkVersion());
 
@@ -73,9 +77,8 @@ void setup()
   if (__DAY__ < 10) Serial.write('0');
   Serial.print(__DAY__);
   Serial.println(F(" " __TIME__));
-  hostname += String(sets.serial) + "_" + String(ESP.getChipId(), HEX);
-  hostname.toUpperCase();
-  Serial.println(F("Hostname: ") + hostname);
+  Serial.println(F("Hostname: ") + ac_name);
+  Serial.println(F("SN: ") + hostname);
   Serial.flush();
   wifi_setup();
   ESP.wdtEnable(5000);
