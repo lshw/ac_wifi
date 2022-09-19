@@ -8,6 +8,7 @@ extern String hostname;
 String body;
 ESP8266WebServer httpd(80);
 void httpd_send_200(String javascript) {
+  httpd.sendHeader( "charset", "utf-8" );
   httpd.send(200, "text/html", "<html>"
              "<head>"
              "<title>" + ac_name + " " + GIT_VER + "</title>"
@@ -317,6 +318,7 @@ void handleNotFound() {
         body += (char)ch;
       }
       fp.close();
+      httpd.sendHeader( "charset", "utf-8" );
       httpd.send ( 200, "text/plain", body );
       httpd.client().stop();
       body = "";
