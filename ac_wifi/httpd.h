@@ -360,9 +360,12 @@ void http_add_ssid() {
 }
 
 void api() {
+  ac_name.trim();
   httpd.send(200, "application/json", "{"
-             "\"KWH\":" + String(get_kwh(), 8)
-             + ",\"V\":" + String(voltage)
+             "\"NAME\":\"" + ac_name
+             + "\",\"SN\":\"" + hostname
+             + "\",\"KWH\":" + String(get_kwh(), 8)
+             + "\",\"V\":" + String(voltage)
              + ",\"I\":" + String(current)
              + ",\"W\":" + String(power)
              + ",\"PF\":" + String(power_ys)

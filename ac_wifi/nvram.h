@@ -117,6 +117,7 @@ void load_set() {
     if (SPIFFS.exists("/ac_name.txt")) {
       fp = SPIFFS.open("/ac_name.txt", "r");
       ac_name = fp.readString();
+      ac_name.trim();
       fp.close();
     }
   }
