@@ -365,7 +365,7 @@ void api() {
              "\"NAME\":\"" + ac_name
              + "\",\"SN\":\"" + hostname
              + "\",\"KWH\":" + String(get_kwh(), 8)
-             + "\",\"V\":" + String(voltage)
+             + ",\"V\":" + String(voltage)
              + ",\"I\":" + String(current)
              + ",\"W\":" + String(power)
              + ",\"PF\":" + String(power_ys)
