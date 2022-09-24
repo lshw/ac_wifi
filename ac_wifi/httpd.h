@@ -364,6 +364,7 @@ void api() {
   httpd.send(200, "application/json", "{"
              "\"NAME\":\"" + ac_name
              + "\",\"SN\":\"" + hostname
+             + "\",\"VER\":\"" + VER + "-" + GIT_VER
              + "\",\"KWH\":" + String(get_kwh(), 8)
              + ",\"V\":" + String(voltage)
              + ",\"I\":" + String(current)
