@@ -86,7 +86,7 @@ String get_ssid() {
       fp.close();
     }
   } else
-    Serial.print(F("载入ssid设置:"));
+    Serial.print("载入ssid设置:");
   Serial.println(ssid);
   SPIFFS.end();
   return ssid;

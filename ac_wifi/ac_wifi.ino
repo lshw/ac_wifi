@@ -59,16 +59,16 @@ void setup()
   delay(1);
   save_nvram();
 #ifdef GIT_VER
-  Serial.println(F("Git Ver=" GIT_VER));
+  Serial.println("Git Ver=" GIT_VER);
 #endif
   hostname += String(sets.serial) + "_" + String(ESP.getChipId(), HEX);
   hostname.toUpperCase();
   if (ac_name == "")
     ac_name = hostname;
-  Serial.print(F("SDK Ver="));
+  Serial.print("SDK Ver=");
   Serial.println(ESP.getSdkVersion());
 
-  Serial.print(F("Software Ver=" VER "\r\nBuildtime="));
+  Serial.print("Software Ver=" VER "\r\nBuildtime=");
   Serial.print(__YEAR__);
   Serial.write('-');
   if (__MONTH__ < 10) Serial.write('0');
@@ -76,9 +76,9 @@ void setup()
   Serial.write('-');
   if (__DAY__ < 10) Serial.write('0');
   Serial.print(__DAY__);
-  Serial.println(F(" " __TIME__));
-  Serial.println(F("Hostname: ") + ac_name);
-  Serial.println(F("SN: ") + hostname);
+  Serial.println(" " __TIME__);
+  Serial.println("Hostname: " + ac_name);
+  Serial.println("SN: " + hostname);
   Serial.flush();
   wifi_setup();
   ESP.wdtEnable(5000);
@@ -131,7 +131,7 @@ void loop()
   }
   system_soft_wdt_feed ();
   if (reboot_now) {
-    Serial.println(F("reboot..."));
+    Serial.println("reboot...");
     Serial.flush();
     nvram_save = millis();
     save_nvram_file();
@@ -143,15 +143,15 @@ void loop()
   }
   if ( smart_status == 0 && keydown_ms > 0 && millis() - keydown_ms > 5000 && digitalRead(KEYWORD) == LOW) {
     keydown_ms = 0;
-    Serial.println(F("smart_config() begin"));
+    Serial.println("smart_config() begin");
     smart_status = 1;
     smart_config();
     led_send(sets.color);
     smart_status = 3; //退出进行中
-    Serial.println(F("smart_config() end"));
+    Serial.println("smart_config() end");
   }
   if (smart_status == 3  && digitalRead(KEYWORD)) { //等待松开按键就结束过程
-    Serial.println(F("smart_config 结束"));
+    Serial.println("smart_config 结束");
     smart_status = 0;
   }
 }
@@ -242,7 +242,7 @@ void smart_config() {
     led_send(colors[i % 3]);
     yield();
     if (smart_status == 2 && digitalRead(KEYWORD) == LOW) { //松开按键后，又按下按键
-      Serial.println(F("key down exit"));
+      Serial.println("key down exit");
       WiFi.stopSmartConfig();
       return;
     }
@@ -252,7 +252,7 @@ void smart_config() {
       wifi_set_clean();
       wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
       WiFi.setAutoConnect(true);
-      Serial.println(F("OK"));
+      Serial.println("OK");
       WiFi.stopSmartConfig();
       return;
     }

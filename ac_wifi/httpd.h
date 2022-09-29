@@ -412,7 +412,7 @@ void httpsave() {
         fp.println(data);
         fp.close();
         fp = SPIFFS.open("/ssid.txt", "r");
-        Serial.print(F("保存wifi设置到文件/ssid.txt "));
+        Serial.print("保存wifi设置到文件/ssid.txt ");
         Serial.print(fp.size());
         Serial.println("字节");
         fp.close();

@@ -91,7 +91,7 @@ void load_nvram() {
     SPIFFS.end();
     save_nvram();
   } else {
-    Serial.println(F("\r\nwifi channel=") + String(nvram.ch) );
+    Serial.println("\r\nwifi channel=" + String(nvram.ch) );
     WRITE_PERI_REG(0x600011f4, 1 << 16 | nvram.ch);
   }
 }
