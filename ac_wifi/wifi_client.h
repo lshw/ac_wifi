@@ -34,25 +34,25 @@ void wifi_setup() {
   if (SPIFFS.begin()) {
     if (!SPIFFS.exists("/ssid.txt")) {
       fp = SPIFFS.open("/ssid.txt", "w");
-      fp.println("test:cfido.com");
+      fp.println(F("test:cfido.com"));
       fp.close();
     }
     fp = SPIFFS.open("/ssid.txt", "r");
-    Serial.print("载入wifi设置文件:/ssid.txt");
+    Serial.print(F("载入wifi设置文件:/ssid.txt"));
     ssid = "";
     passwd = "";
     if (fp) {
       uint16_t Fsize = fp.size();
       Serial.print(Fsize);
-      Serial.println("字节");
+      Serial.println(F("字节"));
       for (i = 0; i < Fsize; i++) {
         ch = fp.read();
         switch (ch) {
           case 0xd:
           case 0xa:
             if (ssid != "") {
-              Serial.print("Ssid:"); Serial.println(ssid);
-              Serial.print("Passwd:"); Serial.println(passwd);
+              Serial.print(F("Ssid:")); Serial.println(ssid);
+              Serial.print(F("Passwd:")); Serial.println(passwd);
               WiFiMulti.addAP(ssid.c_str(), passwd.c_str());
             }
             is_ssid = true;
@@ -72,8 +72,8 @@ void wifi_setup() {
       }
       if (ssid != "" && passwd != "") {
         if (count < 5) count ++;
-        Serial.print("Ssid:"); Serial.println(ssid);
-        Serial.print("Passwd:"); Serial.println(passwd);
+        Serial.print(F("Ssid:")); Serial.println(ssid);
+        Serial.print(F("Passwd:")); Serial.println(passwd);
         WiFiMulti.addAP(ssid.c_str(), passwd.c_str());
       }
     }
@@ -136,7 +136,7 @@ uint16_t http_get(uint8_t no) {
     // httpCode will be negative on error
     if (httpCode >= 200 && httpCode <= 299) {
       // HTTP header has been send and Server response header has been handled
-      Serial.print("[HTTP] GET... code:");
+      Serial.print(F("[HTTP] GET... code:"));
       Serial.println(httpCode);
       // file found at server
       if (httpCode == HTTP_CODE_OK) {
@@ -149,7 +149,7 @@ uint16_t http_get(uint8_t no) {
       }
       break;
     } else {
-      Serial.print("http error code ");
+      Serial.print(F("http error code "));
       Serial.println(httpCode);
       break;
     }
@@ -166,7 +166,7 @@ void update_progress(int cur, int total) {
 bool http_update()
 {
   String update_url = "http://ac_wifi.anheng.com.cn/firmware.php?type=AC_WIFI&SN=" + hostname + "&GIT=" GIT_VER "&ver=" VER; //可以在header里下发x-MD5作为校验
-  Serial.print("下载firmware from ");
+  Serial.print(F("下载firmware from "));
   Serial.println(update_url);
   ESPhttpUpdate.onProgress(update_progress);
   t_httpUpdate_return  ret = ESPhttpUpdate.update(client, update_url);
@@ -179,11 +179,11 @@ bool http_update()
       break;
 
     case HTTP_UPDATE_NO_UPDATES:
-      Serial.println("HTTP_UPDATE_NO_UPDATES");
+      Serial.println(F("HTTP_UPDATE_NO_UPDATES"));
       break;
 
     case HTTP_UPDATE_OK:
-      Serial.println("HTTP_UPDATE_OK");
+      Serial.println(F("HTTP_UPDATE_OK"));
       return true;
       break;
   }
