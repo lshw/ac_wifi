@@ -31,6 +31,8 @@ void wifi_setup() {
   WiFi.mode(WIFI_STA);
   WiFi.hostname(hostname);
   wifi_set_sleep_type(LIGHT_SLEEP_T);
+  WiFi.setAutoConnect(true); //自动链接上次
+  WiFi.setAutoReconnect(true);//断线自动重连
   if (SPIFFS.begin()) {
     if (!SPIFFS.exists("/ssid.txt")) {
       fp = SPIFFS.open("/ssid.txt", "w");
