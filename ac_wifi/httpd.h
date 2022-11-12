@@ -443,7 +443,7 @@ void httpsave() {
       break;
     } else if (httpd.argName(i).compareTo("BZD") == 0) {//输入白炽灯功率，需要根据电压，换算成当前功率，进行校准
       if (power > 0) {
-        sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / 220.0 * voltage / 220.0 * voltage / power;
+        sets.ac_i_calibration = sets.ac_i_calibration * (httpd.arg(i).toFloat() + 1.0) / 220.0 * voltage / 220.0 * voltage / power;
         set_modi |= SET_CHARGE;
       }
       break;
