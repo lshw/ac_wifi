@@ -27,7 +27,8 @@ struct {
 } __attribute__ ((packed)) nvram;
 uint32_t nvram_save = 0;
 struct { //不会经常变化的设置， 需要保存到文件系统 sets.dat
-  uint16_t reserved0;
+  uint8_t reserved0;
+  uint8_t i_max;
   uint16_t serial;
   uint32_t color;
   float ac_v_calibration;
@@ -141,14 +142,22 @@ void load_set() {
           sets.serial = i;
           sets.ac_i_calibration = calibrations[i].i;
           sets.ac_v_calibration = calibrations[i].v;
+          sets.i_max = calibrations[i].i_max;
           break;
         }
       }
       sets.reserved0 = 0;
       sets.color = 0x0f00L; //绿色
-      sets.crc32 = calculateCRC32((uint8_t*) &sets, sizeof(sets) - sizeof(sets.crc32));
     }
     save_set(false);
+  }
+  for (uint16_t i = 0; i < sizeof(calibrations) / sizeof(calibration); i++) {
+    if (chipid == calibrations[i].serial) {
+      if(sets.i_max != calibrations[i].i_max) {
+        sets.i_max = calibrations[i].i_max;
+        save_set(false);
+      }
+    }
   }
   SPIFFS.end();
 }
