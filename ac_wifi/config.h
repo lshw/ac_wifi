@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define VER "1.9"
+#define VER "2.0"
 
 String hostname = "AC_";
 
