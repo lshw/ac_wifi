@@ -27,14 +27,6 @@ void sound(uint8_t range, uint16_t len) {
   sound_delay = millis() + len;
 }
 
-void sound(uint8_t range) {
-  sound(range, 500);
-  while (sound_delay > millis()) {
-    yield();
-    system_soft_wdt_feed (); //喂狗命令
-  }
-}
-
 uint8_t sound_buf[100];
 void play(char * qz) {
   strncpy((char *)sound_buf, qz, sizeof(sound_buf));

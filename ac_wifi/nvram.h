@@ -128,6 +128,7 @@ void load_set() {
     fp.read((uint8_t *)&sets, sizeof(sets));
     fp.close();
   }
+  uint32_t chipid = ESP.getChipId();
   if (sets.crc32 != calculateCRC32((uint8_t*) &sets, sizeof(sets) - sizeof(sets.crc32))) {
     if (SPIFFS.exists("/sets_default.txt")) {
       fp = SPIFFS.open("/sets_default.txt", "r");
@@ -136,7 +137,6 @@ void load_set() {
     }
     if (sets.crc32 != calculateCRC32((uint8_t*) &sets, sizeof(sets) - sizeof(sets.crc32))) {
       sets.serial = 0;
-      uint32_t chipid = ESP.getChipId();
       for (uint16_t i = 0; i < sizeof(calibrations) / sizeof(calibration); i++) {
         if (chipid == calibrations[i].serial) {
           sets.serial = i;
@@ -153,7 +153,7 @@ void load_set() {
   }
   for (uint16_t i = 0; i < sizeof(calibrations) / sizeof(calibration); i++) {
     if (chipid == calibrations[i].serial) {
-      if(sets.i_max != calibrations[i].i_max) {
+      if (sets.i_max != calibrations[i].i_max) {
         sets.i_max = calibrations[i].i_max;
         save_set(false);
       }
