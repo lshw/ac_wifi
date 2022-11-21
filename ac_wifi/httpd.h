@@ -568,7 +568,7 @@ void httpd_listen() {
       httpd_send_200("");
     } else {
       led_send(0xFF0000L);
-      if (crc.finalize() != 1) {
+      if (crc.finalize() != CRC_MAGIC) {
         body = "文件校验错误.....";
         httpd_send_200("setTimeout(function(){ alert('文件校验错误!'); window.location.href = '/';}, 500);");
       } else {
@@ -578,7 +578,7 @@ void httpd_listen() {
       Serial.println(body);
       Serial.flush();
       delay(5);
-      if (crc.finalize() == 1) {
+      if (crc.finalize() == CRC_MAGIC) {
         led_send(0xFF0000L);
         ESP.restart();
       }
@@ -613,7 +613,7 @@ void httpd_listen() {
     } else if (upload.status == UPLOAD_FILE_END) {
       led_send(0xFF0000L);
       if (Update.end(true)) { //true to set the size to the current progress
-        if (crc.finalize() != 1)
+        if (crc.finalize() != CRC_MAGIC)
           Serial.printf(PSTR("File Update : %u\r\nCRC32 error ...\r\n"), upload.totalSize);
         else
           Serial.printf(PSTR("Update Success: %u\r\nRebooting...\r\n"), upload.totalSize);

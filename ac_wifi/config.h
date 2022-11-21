@@ -2,7 +2,7 @@
 #define _CONFIG_H_
 
 #define VER "2.0"
-
+#define CRC_MAGIC 1
 String hostname = "AC_";
 
 #define DEFAULT_URL0 "http://ac_wifi.cfido.com:808/ac_wifi.php"

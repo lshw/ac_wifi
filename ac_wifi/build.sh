@@ -13,7 +13,7 @@ if [ -x $home/sketchbook/libraries ] ; then
 else
  sketchbook=$home/Arduino
 fi
-
+CRC_MAGIC=$( grep CRC_MAGIC config.h | awk '{printf $3}' )
 cd ..
 
 if ! [ -x lib/uncrc32 ] ; then
@@ -85,7 +85,7 @@ if [ -e /tmp/${me}_build/ac_wifi.ino.bin ] ; then
 
   cp -a /tmp/${me}_build/ac_wifi.ino.bin ac_wifi/ac_wifi.bin
   #把bin文件的crc32值修改为0
-  lib/uncrc32 ac_wifi/ac_wifi.bin 1
+  lib/uncrc32 ac_wifi/ac_wifi.bin $CRC_MAGIC
   if [ "a$1" != "a"  ] ;then
     $arduino/hardware/esp8266com/esp8266/tools/espota.py -p 8266 -i $1 -f lib/test.bin
   fi
