@@ -22,7 +22,7 @@ void httpd_send_200(String javascript) {
              + javascript +
              "</script>"
              "</head>"
-             "<body>"
+             "<body bgcolor='#ffffff'>"
              + body +
              "</body>"
              "</html>");
