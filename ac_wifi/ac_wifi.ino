@@ -51,7 +51,7 @@ void setup()
   wifi_set_country(&mycountry);
   wifi_station_connect();
   pinMode(LEDP, OUTPUT);
-  play("1"); //滴～～
+  play((char *) "1"); //滴～～
   delay(1);
   led_send(sets.color);
   delay(1);
@@ -99,7 +99,7 @@ void loop()
   }
   if (connected_is_ok) {
     if (!httpd_up) {
-      play("3");
+      play((char *) "3");
       httpd_up = true;
       httpd_listen();
       if (!ntp_get("ntp.anheng.com.cn"))

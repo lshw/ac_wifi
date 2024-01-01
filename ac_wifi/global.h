@@ -177,4 +177,9 @@ uint32_t calculateCRC32(const uint8_t *data, size_t length) {
   return CRC32::calculate(data, length);
 }
 
+uint32_t led_half() {
+  return ((sets.color / 4) & 0xff0000)
+         | (((sets.color & 0xff00) / 4) & 0xff00 )
+         | ((sets.color & 0xff) / 4);
+}
 #endif

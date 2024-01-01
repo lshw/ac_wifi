@@ -492,11 +492,12 @@ void httpsave() {
       data.toUpperCase();
       if (data.compareTo("ON") == 0) {
         digitalWrite(SSR, LOW);
-        play("123");
-
+        play((char *) "123");
+        led_send(sets.color);
       } else if (data.compareTo("OFF") == 0) {
         digitalWrite(SSR, HIGH);
-        play("321");
+        play((char *) "321");
+        led_send(led_half());
       }
       break;
     } else if (httpd.argName(i).compareTo("default") == 0) { //恢复出厂设置

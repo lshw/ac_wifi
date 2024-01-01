@@ -17,10 +17,12 @@ void ICACHE_RAM_ATTR key_int() {
     }
     if (digitalRead(SSR) == LOW) {
       digitalWrite(SSR, HIGH);
-      play("321");
+      play((char *)"321");
+      led_send(led_half());
     } else {
       digitalWrite(SSR, LOW);
-      play("123");
+      play((char *)"123");
+      led_send(sets.color);
     }
     keydown_ms = 0;
   }
