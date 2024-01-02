@@ -32,6 +32,11 @@ void http204() {
   httpd.send(204, "", "");
   httpd.client().stop();
 }
+String switch_mode(uint16_t t) {
+  if (t == 0)
+    return String(F("保持"));
+  return String(t) + F(" 秒");
+}
 void handleRoot() {
   String wifi_stat, wifi_scan;
   String ssid;
@@ -52,19 +57,22 @@ void handleRoot() {
          "版本:<mark>" VER "</mark> &nbsp;" +
          String(time_str) +
          "<br>" + String(ac_raw()) +
-         "<br>输出状态:";
+         "<br>开关状态:";
   if (digitalRead(SSR) == HIGH)  body += "<button onclick=gotoif('/save.php?switch=on','输出开启?');>关闭</button>";
-  else body += "<button onclick=gotoif('/save.php?switch=off','输出关闭?');>开启</button>";
-  body += ",电压:" + String(voltage) + "V, 电流:" + String(current) + "A, 功率:" + String(power) + "W, 功率因数:" + String(power_ys * 100.0) + "%, 累积电量:"
-          + String(get_kwh(), 8) + "KWh"
-          + ",测试次数:" + String(ac_ok_count)
-          + ",uptime:" + String(millis() / 1000) + "秒"
-          + ",最大电流:" + String(i_max) + "A"
-          + ",LED:<button onclick=modi('/save.php?led=','输入新的html色值编号:','" + String(ch) + "')>#" + String(ch) + "</button>"
-          + "<hr>"
-          + "电压校准参数:" + String(sets.ac_v_calibration, 6)
-          + ",电流校准参数:" + String(sets.ac_i_calibration, 6)
-          + "<hr>";
+  else body += F("<button onclick=gotoif('/save.php?switch=off','输出关闭?');>开启</button>");
+  body += String(switch_change_time)
+          + F("秒, 开机时长:<mark onclick=modi('/save.php?switch_on_time=','修改开机秒数,0为保持','") + String(sets.switch_on_time) + F("')>") + switch_mode(sets.switch_on_time) + F("</mark>&nbsp;&nbsp;"
+              "关机时长:<mark onclick=modi('/save.php?switch_off_time=','修改关机秒数,0为保持','") + String(sets.switch_off_time) + F("')>") + switch_mode(sets.switch_off_time) + F("</mark><br>"
+                  "电压:") + String(voltage) + F("V, 电流:") + String(current) + F("A, 功率:") + String(power) + F("W, 功率因数:") + String(power_ys * 100.0) + F("%, 累积电量:")
+          + String(get_kwh(), 8) + F("KWh"
+                                     ",测试次数:") + String(ac_ok_count)
+          + F(",uptime:") + String(millis() / 1000) + F("秒"
+              ",最大电流:") + String(i_max) + F("A"
+                  ",LED:<button onclick=modi('/save.php?led=','输入新的html色值编号:','") + String(ch) + F("')>#") + String(ch) + F("</button>"
+                      "<hr>"
+                      "电压校准参数:") + String(sets.ac_v_calibration, 6)
+          + F(",电流校准参数:") + String(sets.ac_i_calibration, 6)
+          + F("<hr>");
   if (connected_is_ok) {
     body += "wifi已连接 ssid:<mark>" + String(WiFi.SSID()) + "</mark> &nbsp;"
             + "ap:<mark>" + WiFi.BSSIDstr() + "</mark> &nbsp;"
@@ -481,10 +489,22 @@ void httpsave() {
         fp.close();
       }
       data = "";
+    } else if (httpd.argName(i).compareTo("switch_on_time") == 0) {
+      if (sets.switch_off_time != httpd.arg(i).toInt()) {
+        sets.switch_on_time = httpd.arg(i).toInt();
+        save_set(false);
+      }
+    } else if (httpd.argName(i).compareTo("switch_off_time") == 0) {
+      if (sets.switch_off_time != httpd.arg(i).toInt()) {
+        sets.switch_off_time = httpd.arg(i).toInt();
+        save_set(false);
+      }
     } else if (httpd.argName(i).compareTo("vol") == 0) {
       vol = httpd.arg(i).toInt();
       if (vol > 1023) vol = 0;
       if (vol > 512) vol = 1024 - 512;
+      sets.vol = vol;
+      save_nvram();
       analogWrite(5, vol);
     } else if (httpd.argName(i).compareTo("switch") == 0) {
       data = httpd.arg(i);
