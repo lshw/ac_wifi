@@ -214,10 +214,10 @@ void hour() {
   loop_clock();
 }
 void day() {
+  kwh_days[kwh_days_p].kwh = get_kwh() - nvram.kwh_day0;
+  kwh_days[kwh_days_p].time = mktime(&now);
+  nvram.kwh_day0 = get_kwh();
   if (now.tm_year > 2021 - 1900) {
-    kwh_days[kwh_days_p].kwh = get_kwh() - nvram.kwh_day0;
-    kwh_days[kwh_days_p].time = mktime(&now);
-    nvram.kwh_day0 = get_kwh();
     if (SPIFFS.begin()) {
       File fp;
       fp = SPIFFS.open("/" + String(now.tm_year + 1900) + ".dat", "a");
