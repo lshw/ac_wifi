@@ -9,23 +9,23 @@ String body;
 ESP8266WebServer httpd(80);
 void httpd_send_200(String javascript) {
   httpd.sendHeader( "charset", "utf-8" );
-  httpd.send(200, "text/html", "<html>"
-             "<head>"
-             "<title>" + ac_name + " " + GIT_VER + "</title>"
-             "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
-             "<script>"
-             "function modi(url,text,Defaulttext) {"
-             "var data=prompt(text,Defaulttext);"
-             "if (data==null) {return false;}"
-             "location.replace(url+data);"
-             "}"
+  httpd.send(200, "text/html", F("<html>"
+                                 "<head>"
+                                 "<title>") + ac_name + F(" "  GIT_VER  "</title>"
+                                     "<meta http-equiv=Content-Type content='text/html;charset=utf-8'>"
+                                     "<script>"
+                                     "function modi(url,text,Defaulttext) {"
+                                     "var data=prompt(text,Defaulttext);"
+                                     "if (data==null) {return false;}"
+                                     "location.replace(url+data);"
+                                     "}")
              + javascript +
-             "</script>"
-             "</head>"
-             "<body bgcolor='#ffffff'>"
+             F("</script>"
+               "</head>"
+               "<body bgcolor='#ffffff'>")
              + body +
-             "</body>"
-             "</html>");
+             F("</body>"
+               "</html>"));
   httpd.client().stop();
 }
 void http204() {
@@ -52,8 +52,8 @@ void handleRoot() {
            now.tm_sec
           );
   //body.reserve(8192 + 2048);
-  body = "name:<mark onclick=modi('/save.php?ac_name=','修改标识?','" + ac_name + "')>" + ac_name + "</mark> &nbsp;"
-         "SN:<mark>" + hostname + "</mark> &nbsp;"
+  body = F("name:<mark onclick=modi('/save.php?ac_name=','修改标识?','") + ac_name + F("')>") + ac_name + F("</mark> &nbsp;"
+         "SN:<mark>") + hostname + "</mark> &nbsp;"
          "版本:<mark>" VER "</mark> &nbsp;" +
          String(time_str) +
          "<br>" + String(ac_raw()) +
@@ -74,59 +74,59 @@ void handleRoot() {
           + F(",电流校准参数:") + String(sets.ac_i_calibration, 6)
           + F("<hr>");
   if (connected_is_ok) {
-    body += "wifi已连接 ssid:<mark>" + String(WiFi.SSID()) + "</mark> &nbsp;"
-            + "ap:<mark>" + WiFi.BSSIDstr() + "</mark> &nbsp;"
-            + "信号:<mark>" + String(WiFi.RSSI()) + "</mark>dbm &nbsp;"
-            + "ip:<mark>" + WiFi.localIP().toString() + "</mark><hr>";
+    body += F("wifi已连接 ssid:<mark>") + String(WiFi.SSID()) + F("</mark> &nbsp;"
+            "ap:<mark>") + WiFi.BSSIDstr() + F("</mark> &nbsp;"
+                "信号:<mark>") + String(WiFi.RSSI()) + F("</mark>dbm &nbsp;"
+                    "ip:<mark>") + WiFi.localIP().toString() + F("</mark><hr>");
   }
   for (uint8_t i = 0; i < httpd.args(); i++) {
     if (httpd.argName(i).compareTo("scan") == 0) {
       int n = WiFi.scanNetworks();
       if (n > 0) {
-        wifi_scan = "自动扫描到如下WiFi,点击连接:<br>";
+        wifi_scan = F("自动扫描到如下WiFi,点击连接:<br>");
         for (int i = 0; i < n; ++i) {
           ssid = String(WiFi.SSID(i));
           if (WiFi.encryptionType(i) != ENC_TYPE_NONE)
-            wifi_scan += "&nbsp;<button onclick=get_passwd('" + ssid + "')>*";
+            wifi_scan += F("&nbsp;<button onclick=get_passwd('") + ssid + F("')>*");
           else
-            wifi_scan += "&nbsp;<button onclick=select_ssid('" + ssid + "')>";
-          wifi_scan += String(WiFi.SSID(i)) + "(" + String(WiFi.RSSI(i)) + "dbm)";
-          wifi_scan += "</button>";
+            wifi_scan += F("&nbsp;<button onclick=select_ssid('") + ssid + F("')>");
+          wifi_scan += String(WiFi.SSID(i)) + F("(") + String(WiFi.RSSI(i)) + F("dbm)");
+          wifi_scan += F("</button>");
           delay(10);
         }
-        wifi_scan += "<br>";
+        wifi_scan += F("<br>");
       }
     }
   }
   if (wifi_scan == "") {
-    wifi_scan = "<a href=/?scan=1><buttom>扫描WiFi</buttom></a>";
+    wifi_scan = F("<a href=/?scan=1><buttom>扫描WiFi</buttom></a>");
   }
-  body += wifi_scan + "<ht>";
+  body += wifi_scan + F("<ht>");
   yield();
 
-  body += "<form action=/save.php method=post>"
-          "输入ssid:passwd(可以多行多个)"
-          "<input type=submit value=save><br>"
-          "<textarea  style='width:500px;height:80px;' name=data>" + get_ssid() + "</textarea><br>"
-          "可以设置自己的服务器地址(清空恢复)<br>"
-          "url0:<input maxlength=100  size=30 type=text value='" + get_url(0) + "' name=url><br>"
-          "url1:<input maxlength=100  size=30 type=text value='" + get_url(1) + "' name=url1><br>"
-          "<input type=submit name=submit value=save>"
-          "&nbsp;<input type=submit name=reboot value='reboot'>"
-          "</form>"
-          "&nbsp;<input type=submit onclick=\"modi('/save.php?default=','输入恢复出厂设置的密码(其实就是SN号):','AC_')\" value='恢复出厂设置' title='密码:SN'>"
-          "<hr>"
-          "<div style='width: 700px; height: 400px; background-color: #606060; background-size: 100% 100%' id='power_sec'></div>"
-          "<hr>"
-          "<div style='width: 700px; height: 400px; background-color: #606060; background-size: 100% 100%' id='power_min'></div>"
-          "<hr>"
-          "<div style='width: 700px; height: 400px; background-color: #00a0a0; background-size: 100% 100%' id='wh_hour'></div>"
-          "<hr>"
-          "<div style='width: 700px; height: 400px; background-color: #00a0a0; background-size: 100% 100%' id='kwh_day'></div>"
-          "<hr>"
-          "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
-          "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + " target=_blank>https://github.com/lshw/ac_wifi/tree/" + GIT_COMMIT_ID + "</a>  Ver:" + GIT_VER + "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
-          "<script>\
+  body += F("<form action=/save.php method=post>"
+            "输入ssid:passwd(可以多行多个)"
+            "<input type=submit value=save><br>"
+            "<textarea  style='width:500px;height:80px;' name=data>") + get_ssid() + F("</textarea><br>"
+                "可以设置自己的服务器地址(清空恢复)<br>"
+                "url0:<input maxlength=100  size=30 type=text value='") + get_url(0) + F("' name=url><br>"
+                    "url1:<input maxlength=100  size=30 type=text value='") + get_url(1) + F("' name=url1><br>"
+                        "<input type=submit name=submit value=save>"
+                        "&nbsp;<input type=submit name=reboot value='reboot'>"
+                        "</form>"
+                        "&nbsp;<input type=submit onclick=\"modi('/save.php?default=','输入恢复出厂设置的密码(其实就是SN号):','AC_')\" value='恢复出厂设置' title='密码:SN'>"
+                        "<hr>"
+                        "<div style='width: 700px; height: 400px; background-color: #606060; background-size: 100% 100%' id='power_sec'></div>"
+                        "<hr>"
+                        "<div style='width: 700px; height: 400px; background-color: #606060; background-size: 100% 100%' id='power_min'></div>"
+                        "<hr>"
+                        "<div style='width: 700px; height: 400px; background-color: #00a0a0; background-size: 100% 100%' id='wh_hour'></div>"
+                        "<hr>"
+                        "<div style='width: 700px; height: 400px; background-color: #00a0a0; background-size: 100% 100%' id='kwh_day'></div>"
+                        "<hr>"
+                        "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
+                        "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/"  GIT_COMMIT_ID  " target=_blank>https://github.com/lshw/ac_wifi/tree/"  GIT_COMMIT_ID  "</a>  Ver:"  GIT_VER  "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
+                        "<script>\
 var obj = {\
 id:'power_sec',\
 width:700,\
@@ -135,12 +135,12 @@ datas:[\
 {\
 name:'功率(W)',\
 color:'red',\
-data:[";
+data:[");
   for (uint16_t i = 0; i < 600; i++) {
     body += String(data100ms[(i + data100ms_p) % 600], 1);
     body += ",";
   }
-  body += "]\
+  body += F("]\
 }\
 ],\
 startX:40,\
@@ -157,12 +157,12 @@ obj.nameSpace=10;\
 obj.datas=[{\
 name:'功率(W)',\
 color:'red',\
-data:[";
+data:[");
   for (uint16_t i = 0; i < 60; i++) {
     body += String(datamins[(now.tm_min + i + 1) % 60]);
     body += ",";
   }
-  body += "]}];\
+  body += F("]}];\
 obj.tip='最近1小时功率曲线',\
 drawLine(obj);\
 obj.id='wh_hour';\
@@ -170,12 +170,12 @@ obj.nameSpace=25;\
 obj.datas=[{\
 name:'耗电量(Wh)',\
 color:'red',\
-data:[";
+data:[");
   for (uint16_t i = 0; i < 24; i++) {
     body += String(datahour[(now.tm_hour + i + 1) % 24] * 1000.0);
     body += ",";
   }
-  body += "]}];\
+  body += F("]}];\
 obj.tip='最近24小时的耗电量曲线';\
 drawLine(obj);\
 obj.id='kwh_day';\
@@ -183,18 +183,21 @@ obj.nameSpace=6;\
 obj.datas=[{\
 name:'耗电量(KWh)',\
 color:'red',\
-data:[";
+data:[");
+  float kwh0;
   for (uint16_t i = 0; i < KWH_DAYS; i++) {
-    body += String(kwh_days[(kwh_days_p + i) % KWH_DAYS].kwh, 4);
+    kwh0 = kwh_days[(kwh_days_p + i) % KWH_DAYS].kwh;
+    if (kwh0 > 3.0 * 24) continue;
+    body += String(kwh0, 4);
     body += ",";
   }
-  body += "]}];\
+  body += F("]}];\
 obj.tip='日耗电量曲线';\
 drawLine(obj);\
-</script>";
+</script>");
 
   httpd_send_200(
-    "function drawLine(obj) {\
+    F("function drawLine(obj) {\
 var id = obj.id;\
 var datas = obj.datas;\
 var width = obj.width;\
@@ -286,29 +289,29 @@ cvs.fill();\
 }\
 }\
 }"
-    "function get_passwd(ssid) {\
+      "function get_passwd(ssid) {\
 var passwd = prompt('输入 ' + ssid + ' 的密码:'); "
-    "if (passwd == null) return false; "
-    "if (passwd) location.replace('add_ssid.php?data=' + ssid + ':' + passwd); "
-    "else return false; "
-    "return true; \
+      "if (passwd == null) return false; "
+      "if (passwd) location.replace('add_ssid.php?data=' + ssid + ':' + passwd); "
+      "else return false; "
+      "return true; \
 }"
-    "function gotoif(url,msg)"
-    "{"
-    "if (url!='') {"
-    "if (msg!='') {"
-    "if (confirm(msg)) {"
-    "location.replace(url);"
-    "}"
-    "} else {"
-    "location.replace(url);"
-    "}"
-    "}"
-    "}"
+      "function gotoif(url,msg)"
+      "{"
+      "if (url!='') {"
+      "if (msg!='') {"
+      "if (confirm(msg)) {"
+      "location.replace(url);"
+      "}"
+      "} else {"
+      "location.replace(url);"
+      "}"
+      "}"
+      "}"
 
-    "function select_ssid(ssid) {\
+      "function select_ssid(ssid) {\
 if (confirm('连接到[' + ssid + ']?')) location.replace('add_ssid.php?data=' + ssid); \
-}"
+}")
   );
   body = "";
 }
@@ -334,8 +337,8 @@ void handleNotFound() {
     }
   }
   yield();
-  body = "404 File Not Found\n\nURI: " + httpd.uri();
-  + "<br><a href=/?" + String(millis()) + "><button>点击进入首页</button></a>";
+  body = F("404 File Not Found\n\nURI: ") + httpd.uri()
+         + F("<br><a href=/?") + String(millis()) + F("><button>点击进入首页</button></a>");
   httpd_send_200("");
   body = "";
 }
@@ -362,23 +365,66 @@ void http_add_ssid() {
   if (mh_offset < 2) return;
 
   wifi_set_add(data.substring(0, mh_offset).c_str(), data.substring(mh_offset + 1).c_str());
-  body = "进入首页...";
-  httpd_send_200("location.replace('/?" + String(millis()) + "');");
+  body = F("进入首页...");
+  httpd_send_200(F("location.replace('/?") + String(millis()) + F("');"));
+  body = "";
   yield();
 }
-
+String time_ymd(time_t t) {
+  struct tm tm0;
+  char ymd[sizeof("2024-01-02") + 1];
+  gmtime_r(&t, &tm0);
+  snprintf_P(ymd, sizeof(ymd), PSTR("%04d-%02d-%02d"), tm0.tm_year + 1900, tm0.tm_mon + 1, tm0.tm_mday);
+  return String(ymd);
+}
 void api() {
-  ac_name.trim();
-  httpd.send(200, "application/json", "{"
-             "\"NAME\":\"" + ac_name
-             + "\",\"SN\":\"" + hostname
-             + "\",\"VER\":\"" + VER + "-" + GIT_VER
-             + "\",\"KWH\":" + String(get_kwh(), 8)
-             + ",\"V\":" + String(voltage)
-             + ",\"I\":" + String(current)
-             + ",\"W\":" + String(power)
-             + ",\"PF\":" + String(power_ys)
-             + "}");
+  String body;
+  if (httpd.argName(0).compareTo("type") == 0) {
+    if (httpd.arg(0) == "days") {
+      File fp;
+      struct dataday kwh_day;
+      if (SPIFFS.begin()) {
+        String fn = "/" + String(now.tm_year + 1900 - 1) + ".dat";
+        if (SPIFFS.exists(fn)) {
+          fp = SPIFFS.open(fn, "r");
+          if (fp) {
+            while (fp.available()) {
+              fp.read((uint8_t *)&kwh_day, sizeof(kwh_day));
+              body += time_ymd(kwh_day.time) + "," + String(kwh_day.kwh, 4) + "\r\n";
+            }
+            fp.close();
+          }
+        }
+        fn = "/" + String(now.tm_year + 1900) + ".dat";
+        if (SPIFFS.exists(fn)) {
+          fp = SPIFFS.open(fn, "r");
+          if (fp) {
+            while (fp.available()) {
+              fp.read((uint8_t *)&kwh_day, sizeof(kwh_day));
+              body += time_ymd(kwh_day.time) + "," + String(kwh_day.kwh, 4) + "\r\n";
+            }
+            fp.close();
+          }
+        }
+      }
+      //    }else if(httpd.arg(0)=="hours") {
+    }
+    httpd.send(200, "text/csv", body);
+  } else {
+    ac_name.trim();
+    httpd.send(200, F("application/json"), F("{"
+               "\"NAME\":\"") + ac_name
+               + F("\",\"SN\":\"") + hostname
+               + F("\",\"VER\":\"") + VER + "-" + GIT_VER
+               + F("\",\"KWH\":") + String(get_kwh(), 8)
+               + F(",\"V\":") + String(voltage)
+               + F(",\"I\":") + String(current)
+               + F(",\"W\":") + String(power)
+               + F(",\"PF\":") + String(power_ys)
+               + F(",\"SWITCH\":") + String(digitalRead(SSR))
+               + F(",\"SWITCH_CHANGE_TIME\":") + String(switch_change_time)
+               + "}");
+  }
   httpd.client().stop();
   yield();
 }
@@ -531,13 +577,13 @@ void httpsave() {
         save_nvram();
         last_save = millis() + 1000; //马上保存file
         save_nvram_file();
-        data = "恢复出厂设置成功!";
+        data = F("恢复出厂设置成功!");
       } else {
-        data = "密码错误!";
+        data = F("密码错误!");
       }
       SPIFFS.end();
-      body = data + "....";
-      httpd_send_200("setTimeout(function(){ alert('" + data + "'); window.location.href = '/';}, 1000);");
+      body = data + F("....");
+      httpd_send_200(F("setTimeout(function(){ alert('") + data + F("'); window.location.href = '/';}, 1000);"));
       yield();
       ESP.restart();
       break;
@@ -560,11 +606,11 @@ void httpsave() {
   }
   SPIFFS.end();
   if (data != "") {
-    body = data + "....";
-    httpd_send_200("setTimeout(function(){ alert('" + data + "'); window.location.href = '/';}, 1000);");
+    body = data + F("....");
+    httpd_send_200(F("setTimeout(function(){ alert('") + data + F("'); window.location.href = '/';}, 1000);"));
   } else {
-    body = "返回首页....";
-    httpd_send_200("window.location.href = '/';");
+    body = F("返回首页....");
+    httpd_send_200(F("window.location.href = '/';"));
   }
   yield();
 }
@@ -581,16 +627,16 @@ void httpd_listen() {
     httpd.sendHeader("Connection", "close");
     if (Update.hasError()) {
       led_send(sets.color);
-      body = "升级失败 <a href=/><buttom>返回首页</buttom></a>";
+      body = F("升级失败 <a href=/><buttom>返回首页</buttom></a>");
       httpd_send_200("");
     } else {
       led_send(0xFF0000L);
       if (crc.finalize() != CRC_MAGIC) {
-        body = "文件校验错误.....";
-        httpd_send_200("setTimeout(function(){ alert('文件校验错误!'); window.location.href = '/';}, 500);");
+        body = F("文件校验错误.....");
+        httpd_send_200(F("setTimeout(function(){ alert('文件校验错误!'); window.location.href = '/';}, 500);"));
       } else {
-        body = "上传成功，正在刷机.....";
-        httpd_send_200("setTimeout(function(){ alert('升级成功!'); window.location.href = '/';}, 20000);");
+        body = F("上传成功，正在刷机.....");
+        httpd_send_200(F("setTimeout(function(){ alert('升级成功!'); window.location.href = '/';}, 20000);"));
       }
       Serial.println(body);
       Serial.flush();
