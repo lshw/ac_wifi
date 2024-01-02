@@ -46,7 +46,7 @@ void handleRoot() {
            now.tm_min,
            now.tm_sec
           );
-  body.reserve(8192);
+  //body.reserve(8192 + 2048);
   body = "name:<mark onclick=modi('/save.php?ac_name=','修改标识?','" + ac_name + "')>" + ac_name + "</mark> &nbsp;"
          "SN:<mark>" + hostname + "</mark> &nbsp;"
          "版本:<mark>" VER "</mark> &nbsp;" +

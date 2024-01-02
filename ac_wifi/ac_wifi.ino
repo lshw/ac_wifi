@@ -93,11 +93,7 @@ uint8_t smart_status = 0; //=0 smart未运行， =1 正在进行 尚未松开按
 void loop()
 {
   ESP.wdtFeed();
-  if (connected_is_ok) {
-    httpd_loop();
-    ArduinoOTA.handle();
-  }
-  if (connected_is_ok) {
+  if (wifi_connected_is_ok()) {
     if (!httpd_up) {
       play((char *) "3");
       httpd_up = true;
@@ -105,6 +101,8 @@ void loop()
       if (!ntp_get("ntp.anheng.com.cn"))
         ntp_get("2.debian.pool.ntp.org");
     }
+    httpd_loop();
+    ArduinoOTA.handle();
     if (millis() > last_wget) {
       last_wget = millis() + 1000 * 3600 * 4; //4小时上传一次服务器
       wget();
@@ -264,12 +262,10 @@ void smart_config() {
       Serial.println();
     yield();
     system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
-    if (connected_is_ok) {
+    if (wifi_connected_is_ok()) {
       httpd_loop();
       ArduinoOTA.handle();
     }
-    yield();
-    system_soft_wdt_feed (); //各loop里要根据需要执行喂狗命令
   }
   WiFi.stopSmartConfig();
 }
