@@ -33,6 +33,10 @@ struct { //不会经常变化的设置， 需要保存到文件系统 sets.dat
   uint32_t color;
   float ac_v_calibration;
   float ac_i_calibration;
+  uint32_t switch_on_time; //ms
+  uint32_t switch_off_time; //ms
+  uint16_t released1;
+  uint16_t vol;  //音量
   uint32_t crc32;
 } __attribute__ ((packed)) sets; //字节紧凑格式， 不做字对齐
 

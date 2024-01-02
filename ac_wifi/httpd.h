@@ -491,13 +491,9 @@ void httpsave() {
       data.trim();
       data.toUpperCase();
       if (data.compareTo("ON") == 0) {
-        digitalWrite(SSR, LOW);
-        play((char *) "123");
-        led_send(sets.color);
+        switch_change(LOW);
       } else if (data.compareTo("OFF") == 0) {
-        digitalWrite(SSR, HIGH);
-        play((char *) "321");
-        led_send(led_half());
+        switch_change(HIGH);
       }
       break;
     } else if (httpd.argName(i).compareTo("default") == 0) { //恢复出厂设置

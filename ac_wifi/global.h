@@ -19,7 +19,7 @@ int16_t update_timeok = 0; //0-马上wget ，-1 关闭，>0  xx分钟后wget
 uint8_t ota_status = 0; //0:wps, 1:ap
 uint8_t timer3 = 30; //最长30秒等待上线
 uint16_t i_over = 0; //电流过高保护， 倒计时ms
-
+uint32_t switch_change_time = 0;
 bool wifi_connected_is_ok();
 extern bool connected_is_ok;
 extern uint8_t sound_buf[100];
@@ -182,4 +182,19 @@ uint32_t led_half() {
          | (((sets.color & 0xff00) / 4) & 0xff00 )
          | ((sets.color & 0xff) / 4);
 }
+
+void switch_change(bool onff) {
+  switch_change_time = 0;
+  digitalWrite(SSR, onff);
+  if (onff == HIGH) { //关机
+    play((char *) "321");
+    led_send(led_half());
+  } else { //开机
+    play((char *) "123");
+    led_send(sets.color);
+  }
+
+
+}
+
 #endif

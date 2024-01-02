@@ -28,6 +28,15 @@ void sec() {
       }
     }
   }
+  switch_change_time++;
+  if (digitalRead(SSR) == HIGH) { //now off
+    if (sets.switch_off_time > 0 && sets.switch_off_time < switch_change_time)
+      switch_change(LOW);
+  } else { //now on
+    if (sets.switch_on_time > 0 && sets.switch_on_time < switch_change_time)
+      switch_change(HIGH);
+
+  }
 }
 
 #include <Udp.h>

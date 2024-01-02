@@ -15,15 +15,8 @@ void ICACHE_RAM_ATTR key_int() {
       keydown_ms = 0;
       return; //按下超过 10秒， 是进入smartconf状态;
     }
-    if (digitalRead(SSR) == LOW) {
-      digitalWrite(SSR, HIGH);
-      play((char *)"321");
-      led_send(led_half());
-    } else {
-      digitalWrite(SSR, LOW);
-      play((char *)"123");
-      led_send(sets.color);
-    }
+
+    switch_change(!digitalRead(SSR));
     keydown_ms = 0;
   }
 }
