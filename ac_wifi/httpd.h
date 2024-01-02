@@ -536,7 +536,7 @@ void httpsave() {
       }
       data = "";
     } else if (httpd.argName(i).compareTo("switch_on_time") == 0) {
-      if (sets.switch_off_time != httpd.arg(i).toInt()) {
+      if (sets.switch_on_time != httpd.arg(i).toInt()) {
         sets.switch_on_time = httpd.arg(i).toInt();
         save_set(false);
       }
