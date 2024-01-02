@@ -15,6 +15,7 @@ else
 fi
 CRC_MAGIC=$( grep CRC_MAGIC config.h | awk '{printf $3}' )
 cd ..
+rm -f ac_wifi/ac_wifi.bin
 
 if ! [ -x lib/uncrc32 ] ; then
 gcc -o lib/uncrc32 lib/uncrc32.c
@@ -28,6 +29,7 @@ echo $ver
 
 arduino=/opt/arduino-1.8.19
 astyle  --options=$arduino/lib/formatter.conf ac_wifi/*.h ac_wifi/*.ino ac_wifi/*.c
+rm -f ac_wifi/*.orig
 
 arduinoset=$home/.arduino15
 mkdir -p /tmp/${me}_build /tmp/${me}_cache
@@ -35,7 +37,15 @@ rm -f /tmp/${me}_build/ac_wifi.ino.bin
 
 #传递宏定义 GIT_COMMIT_ID 到源码中，源码git版本
 CXXFLAGS="-DGIT_COMMIT_ID=\"$git_id\" -DGIT_VER=\"$ver\" "
-fqbn="esp8266:esp8266:espduino:ResetMethod=v1,UploadTool=esptool,xtal=160,vt=flash,exception=disabled,stacksmash=disabled,ssl=all,mmu=4816,non32xfer=fast,eesz=4M2M,ip=lm2f,dbg=Disabled,lvl=None____,wipe=none,baud=460800 " 
+
+if [ "a$debug" == "a" ] ; then
+debug=",dbg=Disabled,lvl=None____"
+#debug=",dbg=Serial,lvl=WIFI"
+#debug=",dbg=Serial,lvl=SSLTLS_MEMHTTP_CLIENTHTTP_SERVERCOREWIFIHTTP_UPDATEUPDATEROTAOOMMDNSHWDT"
+fi
+
+fqbn="esp8266:esp8266:generic:xtal=160,vt=flash,exception=disabled,stacksmash=disabled,ssl=all,mmu=4816,non32xfer=fast,CrystalFreq=26,FlashFreq=80,FlashMode=qio,eesz=4M2M,led=2,sdk=nonosdk305,ip=hb2f$debug,wipe=none,baud=921600"
+
 $arduino/arduino-builder \
 -dump-prefs \
 -logger=machine \
@@ -87,7 +97,7 @@ if [ -e /tmp/${me}_build/ac_wifi.ino.bin ] ; then
   #把bin文件的crc32值修改为0
   lib/uncrc32 ac_wifi/ac_wifi.bin $CRC_MAGIC
   if [ "a$1" != "a"  ] ;then
-    $arduino/hardware/esp8266com/esp8266/tools/espota.py -p 8266 -i $1 -f lib/test.bin
+    $arduino/hardware/esp8266com/esp8266/tools/espota.py -p 8266 -i $1 -f ac_wifi/ac_wifi.bin
   fi
 fi
 echo $ver
