@@ -572,7 +572,7 @@ void httpsave() {
       }
     } else if (httpd.argName(i).compareTo("vol") == 0) {
       sets.vol = httpd.arg(i).toInt();
-      if (sets.vol <0) sets.vol = 0;
+      if (sets.vol < 0) sets.vol = 0;
       if (sets.vol > 128) sets.vol = 128;
       analogWrite(5, sets.vol);
       save_set(false);

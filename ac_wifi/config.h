@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define VER "2.0"
+#define VER "2.1"
 #define CRC_MAGIC 1
 String hostname = "AC_";
 
