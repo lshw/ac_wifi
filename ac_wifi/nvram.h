@@ -27,7 +27,7 @@ struct {
 } __attribute__ ((packed)) nvram;
 uint32_t nvram_save = 0;
 struct { //不会经常变化的设置， 需要保存到文件系统 sets.dat
-  uint8_t reserved0;
+  uint8_t on_off;
   uint8_t i_max;
   uint16_t serial;
   uint32_t color;
@@ -150,9 +150,9 @@ void load_set() {
           break;
         }
       }
-      sets.reserved0 = 0;
       sets.color = 0x0f00L; //绿色
       sets.vol = 5;
+      sets.on_off = HIGH; //默认关闭
       sets.switch_on_time = 0;
       sets.switch_off_time = 0;
     }

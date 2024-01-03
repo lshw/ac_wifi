@@ -22,7 +22,7 @@ void ICACHE_RAM_ATTR key_int() {
 }
 void gpio_setup() {
   pinMode(SSR, OUTPUT);
-  digitalWrite(SSR, LOW);
+  digitalWrite(SSR, sets.on_off);
   pinMode(KEYWORD, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(KEYWORD), key_int, CHANGE);
 }

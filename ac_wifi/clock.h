@@ -26,6 +26,10 @@ void sec() {
         time_update |= DAY_UP;
         mktime(&now); //修正日期
       }
+      if (sets.on_off != digitalRead(SSR)) { //每小时检查一次switch状态， 并保存
+        sets.on_off = digitalRead(SSR);
+        save_set(false);
+      }
     }
   }
   switch_change_time++;
@@ -83,6 +87,7 @@ bool ntp_get(const __FlashStringHelper * ServerName) {
     ret + FIX_2036;
   time_t t = ret; //必须放一行这个， 否则不正常， 估计是gcc过度优化造成的
   gmtime_r(&t, &now);
+  Serial.println(now.tm_hour);
   return true;
 }
 

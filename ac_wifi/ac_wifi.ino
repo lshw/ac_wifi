@@ -34,9 +34,9 @@ void setup()
 {
   ESP.wdtEnable(50000);
   Serial.begin(4800, SERIAL_8E1); //hlw8032需要这个速度
+  load_set(); //从files载入数据
   gpio_setup();
   load_nvram(); //从esp8266的nvram载入数据
-  load_set(); //从files载入数据
   memset(&now, 0, sizeof(now));
   _myTicker.attach_ms(20, run_20ms);
 
