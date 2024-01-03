@@ -436,10 +436,11 @@ void sound_play() {
       body = httpd.arg(i);
       play((char *)body.c_str());
     } else if (httpd.argName(i).compareTo("vol") == 0) {
-      vol = httpd.arg(i).toInt();
-      if (vol > 1023) vol = 0;
-      if (vol > 512) vol = 1024 - 512;
-      analogWrite(5, vol);
+      sets.vol = httpd.arg(i).toInt();
+      if (sets.vol > 1023) sets.vol = 0;
+      if (sets.vol > 512) sets.vol = 1024 - 512;
+      analogWrite(5, sets.vol);
+      save_set(false);
     }
   }
   httpd_send_200("");
@@ -546,12 +547,11 @@ void httpsave() {
         save_set(false);
       }
     } else if (httpd.argName(i).compareTo("vol") == 0) {
-      vol = httpd.arg(i).toInt();
-      if (vol > 1023) vol = 0;
-      if (vol > 512) vol = 1024 - 512;
-      sets.vol = vol;
-      save_nvram();
-      analogWrite(5, vol);
+      sets.vol = httpd.arg(i).toInt();
+      if (sets.vol > 1023) sets.vol = 0;
+      if (sets.vol > 512) sets.vol = 1024 - 512;
+      analogWrite(5, sets.vol);
+      save_set(false);
     } else if (httpd.argName(i).compareTo("switch") == 0) {
       data = httpd.arg(i);
       data.trim();
