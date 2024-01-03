@@ -98,8 +98,7 @@ void loop()
       play((char *) "3");
       httpd_up = true;
       httpd_listen();
-      if (!ntp_get("ntp.anheng.com.cn"))
-        ntp_get("2.debian.pool.ntp.org");
+      loop_clock(true);
     }
     httpd_loop();
     ArduinoOTA.handle();
@@ -211,7 +210,7 @@ void hour() {
     fp.close();
     SPIFFS.end();
   }
-  loop_clock();
+  loop_clock(false);
 }
 void day() {
   kwh_days[kwh_days_p].kwh = get_kwh() - nvram.kwh_day0;

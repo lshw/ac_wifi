@@ -44,9 +44,13 @@ WiFiUDP ntpUDP;
 #define FIX_1900 2208988800UL
 #define FIX_2036 2085978495UL //从2036-02-07 进入下一圈
 #define NTP_PACKET_SIZE 48
-bool ntp_get(const char * ServerName) {
+bool ntp_get(const __FlashStringHelper * ServerName) {
   uint32_t ret;
   byte  buff[NTP_PACKET_SIZE];
+  strncpy((char *)buff, NTP_PACKET_SIZE, ServerName);
+  Serial.println((char *) buff);
+  ntpUDP.begin(123);
+  ntpUDP.beginPacket(buff, 123); //NTP requests are to port 123
   memset(buff, 0, sizeof(buff));
   buff[0] = 0b11100011;   // LI, Version, Mode
   buff[1] = 0;     // Stratum, or type of clock
@@ -57,8 +61,6 @@ bool ntp_get(const char * ServerName) {
   buff[13]  = 'N';
   buff[14]  = 'I';
   buff[15]  = 'R';
-  ntpUDP.begin(123);
-  ntpUDP.beginPacket(ServerName, 123); //NTP requests are to port 123
   ntpUDP.write(buff, NTP_PACKET_SIZE);
   ntpUDP.endPacket();
 
@@ -85,18 +87,17 @@ bool ntp_get(const char * ServerName) {
 }
 
 uint8_t ntp_last = 0;
-uint32_t ntp_last_ms = 0;
-void loop_clock() {
-  if ((millis() % 60) != 0) return; //随机进行授时
-  if (ntp_last != now.tm_mday) {
-    if (wifi_connected) {
-      if (ntp_last_ms + 60000 < millis() && ntp_last_ms  == 0) {
-        ntp_last_ms = millis();
-        if (!ntp_get("ntp.anheng.com.cn"))
-          ntp_get("1.debian.pool.ntp.org");
-        ntp_last = now.tm_mday;
-      }
-    }
+void loop_clock(bool always) {
+  if (!always) {
+    if ((millis() % 60) != 0) return; //随机进行授时
+    if (ntp_last == now.tm_mday) return; //每天搞一次
+  }
+  if (wifi_connected_is_ok()) {
+    if (!ntp_get(F("cn.ntp.org.cn"))
+        && !ntp_get(F("ntp.ntsc.ac.cn"))
+        && !ntp_get(F("3.openwrt.pool.ntp.org")))
+      ntp_get(F("ntp.anheng.com.cn"));
+    ntp_last = now.tm_mday;
   }
 }
 #endif //__CLOCK_H__

@@ -193,8 +193,18 @@ void switch_change(bool onff) {
     play((char *) "123");
     led_send(sets.color);
   }
-
-
+}
+inline char  *strncpy(char *dest, uint16_t size, const __FlashStringHelper *ifsh) {
+  uint16_t i = 0;
+  char bc;
+  PGM_P p = reinterpret_cast<PGM_P>(ifsh);
+  while (bc = pgm_read_byte(p + i)) {
+    if (i >= size) break;
+    dest[i] = bc;
+    i++ ;
+    dest[i] = 0;
+  }
+  return dest;
 }
 
 #endif
