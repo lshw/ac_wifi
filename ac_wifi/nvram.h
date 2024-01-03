@@ -6,7 +6,7 @@
 
 extern float datahour[24];
 String ac_name;
-
+double get_kwh();
 #define SET_CHARGE 0b1
 #include "calibration.h"
 void update_kwh_count(); //更新kwh的脉冲数，
@@ -96,12 +96,15 @@ void load_nvram() {
       }
     }
     SPIFFS.end();
-    save_nvram();
   } else {
     Serial.print(F("\r\nwifi channel="));
     Serial.println(nvram.ch);
     WRITE_PERI_REG(0x600011f4, 1 << 16 | nvram.ch);
   }
+
+  nvram.kwh_hour0 = get_kwh();
+  nvram.kwh_day0 = nvram.kwh_hour0;
+  save_nvram();
 }
 
 void save_set(bool _default) {
