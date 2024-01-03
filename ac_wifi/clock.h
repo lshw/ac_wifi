@@ -86,6 +86,7 @@ bool ntp_get(const __FlashStringHelper * ServerName) {
   else
     ret + FIX_2036;
   time_t t = ret; //必须放一行这个， 否则不正常， 估计是gcc过度优化造成的
+  t += 3600 * sets.tz;
   gmtime_r(&t, &now);
   Serial.println(now.tm_hour);
   return true;

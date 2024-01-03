@@ -62,7 +62,9 @@ void handleRoot() {
   else body += F("<button onclick=gotoif('/save.php?switch=off','输出关闭?');>开启</button>");
   body += String(switch_change_time)
           + F("秒, 开机时长:<mark onclick=modi('/save.php?switch_on_time=','修改开机秒数,0为保持','") + String(sets.switch_on_time) + F("')>") + switch_mode(sets.switch_on_time) + F("</mark>&nbsp;&nbsp;"
-              "关机时长:<mark onclick=modi('/save.php?switch_off_time=','修改关机秒数,0为保持','") + String(sets.switch_off_time) + F("')>") + switch_mode(sets.switch_off_time) + F("</mark>&nbsp;&nbsp;音量(0-512):<mark onclick=modi('/save.php?vol=','修改音量0-512','") + String(sets.vol) + F("');>") + String(sets.vol) + F("</mark><br>"
+              "关机时长:<mark onclick=modi('/save.php?switch_off_time=','修改关机秒数,0为保持','") + String(sets.switch_off_time) + F("')>") + switch_mode(sets.switch_off_time) + F("</mark>&nbsp;&nbsp;"
+              "时区:<mark onclick=modi('/save.php?tz=','修改时区(-12,+12):','") + String(sets.tz,2) + F("')>") + switch_mode(sets.tz,2) + F("</mark>&nbsp;&nbsp;"
+              "音量(0-512):<mark onclick=modi('/save.php?vol=','修改音量0-512','") + String(sets.vol) + F("');>") + String(sets.vol) + F("</mark><br>"
                   "电压:") + String(voltage) + F("V, 电流:") + String(current) + F("A, 功率:") + String(power) + F("W, 功率因数:") + String(power_ys * 100.0) + F("%, 累积电量:")
           + String(get_kwh(), 8) + F("KWh"
                                      ",测试次数:") + String(ac_ok_count)

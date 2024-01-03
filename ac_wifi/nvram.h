@@ -37,6 +37,7 @@ struct { //不会经常变化的设置， 需要保存到文件系统 sets.dat
   uint32_t switch_off_time; //ms
   uint16_t released1;
   uint16_t vol;  //音量
+  float tz; //时区
   uint32_t crc32;
 } __attribute__ ((packed)) sets; //字节紧凑格式， 不做字对齐
 
@@ -152,6 +153,7 @@ void load_set() {
       }
       sets.color = 0x0f00L; //绿色
       sets.vol = 5;
+      sets.tz = 8.0;
       sets.on_off = HIGH; //默认关闭
       sets.switch_on_time = 0;
       sets.switch_off_time = 0;
