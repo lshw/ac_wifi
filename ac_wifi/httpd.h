@@ -65,7 +65,7 @@ void handleRoot() {
               "关机时长:<mark onclick=modi('/save.php?switch_off_time=','修改关机秒数,0为保持','") + String(sets.switch_off_time) + F("')>") + switch_mode(sets.switch_off_time) + F("</mark>&nbsp;&nbsp;"
                   "授时服务器<mark onclick=modi('/save.php?ntp=','修改授时服务器,也可以不设置,保持为空.','") + String((char *) sets.ntp) + F("')>:") + String((char *)sets.ntp) + F(" </mark>&nbsp;&nbsp;"
                       "时区:<mark onclick=modi('/save.php?tz=','修改时区(-12,+12):','") + String(sets.tz, 2) + F("')>") + String(sets.tz, 2) + F("</mark>&nbsp;&nbsp;"
-                          "音量(0-512):<mark onclick=modi('/save.php?vol=','修改音量0-512','") + String(sets.vol) + F("');>") + String(sets.vol) + F("</mark><br>"
+                          "音量(0-128):<mark onclick=modi('/save.php?vol=','修改音量0-128','") + String(sets.vol) + F("');>") + String(sets.vol) + F("</mark><br>"
                               "电压:") + String(voltage) + F("V, 电流:") + String(current) + F("A, 功率:") + String(power) + F("W, 功率因数:") + String(power_ys * 100.0) + F("%, 累积电量:")
           + String(get_kwh(), 8) + F("KWh"
                                      ",测试次数:") + String(ac_ok_count)
@@ -440,8 +440,8 @@ void sound_play() {
       play((char *)body.c_str());
     } else if (httpd.argName(i).compareTo("vol") == 0) {
       sets.vol = httpd.arg(i).toInt();
-      if (sets.vol > 1023) sets.vol = 0;
-      if (sets.vol > 512) sets.vol = 1024 - 512;
+      if (sets.vol < 0) sets.vol = 0;
+      if (sets.vol > 128) sets.vol = 128;
       analogWrite(5, sets.vol);
       save_set(false);
     }
@@ -572,8 +572,8 @@ void httpsave() {
       }
     } else if (httpd.argName(i).compareTo("vol") == 0) {
       sets.vol = httpd.arg(i).toInt();
-      if (sets.vol > 1023) sets.vol = 0;
-      if (sets.vol > 512) sets.vol = 1024 - 512;
+      if (sets.vol <0) sets.vol = 0;
+      if (sets.vol > 128) sets.vol = 128;
       analogWrite(5, sets.vol);
       save_set(false);
     } else if (httpd.argName(i).compareTo("switch") == 0) {
