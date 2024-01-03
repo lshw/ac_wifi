@@ -152,6 +152,9 @@ void load_set() {
       }
       sets.reserved0 = 0;
       sets.color = 0x0f00L; //绿色
+      sets.vol = 5;
+      sets.switch_on_time = 0;
+      sets.switch_off_time = 0;
     }
     save_set(false);
   }
