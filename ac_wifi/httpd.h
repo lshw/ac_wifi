@@ -63,9 +63,10 @@ void handleRoot() {
   body += String(switch_change_time)
           + F("秒, 开机时长:<mark onclick=modi('/save.php?switch_on_time=','修改开机秒数,0为保持','") + String(sets.switch_on_time) + F("')>") + switch_mode(sets.switch_on_time) + F("</mark>&nbsp;&nbsp;"
               "关机时长:<mark onclick=modi('/save.php?switch_off_time=','修改关机秒数,0为保持','") + String(sets.switch_off_time) + F("')>") + switch_mode(sets.switch_off_time) + F("</mark>&nbsp;&nbsp;"
-              "时区:<mark onclick=modi('/save.php?tz=','修改时区(-12,+12):','") + String(sets.tz,2) + F("')>") + switch_mode(sets.tz,2) + F("</mark>&nbsp;&nbsp;"
-              "音量(0-512):<mark onclick=modi('/save.php?vol=','修改音量0-512','") + String(sets.vol) + F("');>") + String(sets.vol) + F("</mark><br>"
-                  "电压:") + String(voltage) + F("V, 电流:") + String(current) + F("A, 功率:") + String(power) + F("W, 功率因数:") + String(power_ys * 100.0) + F("%, 累积电量:")
+                  "授时服务器<mark onclick=modi('/save.php?ntp=','修改授时服务器,也可以不设置,保持为空.','") + String((char *) sets.ntp) + F("')>:") + String((char *)sets.ntp) + F(" </mark>&nbsp;&nbsp;"
+                      "时区:<mark onclick=modi('/save.php?tz=','修改时区(-12,+12):','") + String(sets.tz, 2) + F("')>") + String(sets.tz, 2) + F("</mark>&nbsp;&nbsp;"
+                          "音量(0-512):<mark onclick=modi('/save.php?vol=','修改音量0-512','") + String(sets.vol) + F("');>") + String(sets.vol) + F("</mark><br>"
+                              "电压:") + String(voltage) + F("V, 电流:") + String(current) + F("A, 功率:") + String(power) + F("W, 功率因数:") + String(power_ys * 100.0) + F("%, 累积电量:")
           + String(get_kwh(), 8) + F("KWh"
                                      ",测试次数:") + String(ac_ok_count)
           + F(",uptime:") + String(millis() / 1000) + F("秒"
@@ -516,6 +517,27 @@ void httpsave() {
         set_modi |= SET_CHARGE;
       }
       break;
+    } else if (httpd.argName(i).compareTo("tz") == 0) {
+      float tz = httpd.arg(i).toFloat();
+      uint16_t tz0 = tz * 4;
+      tz = tz0 * 4;
+      if (tz > 12.0) tz = 12.0;
+      else if (tz < -12.0) tz = -12.0;
+      if (tz != sets.tz) {
+        sets.tz = tz;
+        save_set(false);
+        save_set(true);
+      }
+    } else if (httpd.argName(i).compareTo("ntp") == 0) {
+      data = httpd.arg(i);
+      data.trim();
+      if (String((char *)sets.ntp) != data.substring(0, sizeof(sets.ntp) - 1)) {
+        memset((char *) sets.ntp, 0, sizeof(sets.ntp));
+        strncpy((char *) sets.ntp, data.c_str(), sizeof(sets.ntp) - 1);
+        save_set(false);
+        save_set(true);
+      }
+
     } else if (httpd.argName(i).compareTo("url") == 0) {
       data = httpd.arg(i);
       data.trim();

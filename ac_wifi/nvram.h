@@ -38,6 +38,7 @@ struct { //不会经常变化的设置， 需要保存到文件系统 sets.dat
   uint16_t released1;
   uint16_t vol;  //音量
   float tz; //时区
+  char  ntp[20]; //时区
   uint32_t crc32;
 } __attribute__ ((packed)) sets; //字节紧凑格式， 不做字对齐
 
