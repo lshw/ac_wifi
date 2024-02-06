@@ -195,7 +195,7 @@ void minute() {
       || (last_save + 120000 < millis())
       || last_save > millis())
     save_nvram_file();
-  Serial.println(asctime(&now));
+  Serial.println(isotime(now));
   Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
 }
 extern float datahour[24];//96字节  每一小时的耗电量

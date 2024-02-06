@@ -41,21 +41,12 @@ void handleRoot() {
   String wifi_stat, wifi_scan;
   String ssid;
   char ch[8];
-  char time_str[sizeof("2022-05-26 02:33:18")];
   snprintf(ch, sizeof(ch), "%06X", led);
-  snprintf(time_str, sizeof(time_str), "%04d-%02d-%02d %02d:%02d:%02d",
-           now.tm_year + 1900,
-           now.tm_mon + 1,
-           now.tm_mday,
-           now.tm_hour,
-           now.tm_min,
-           now.tm_sec
-          );
   //body.reserve(8192 + 2048);
   body = F("name:<mark onclick=modi('/save.php?ac_name=','修改标识?','") + ac_name + F("')>") + ac_name + F("</mark> &nbsp;"
          "SN:<mark>") + hostname + "</mark> &nbsp;"
          "版本:<mark>" VER "</mark> &nbsp;" +
-         String(time_str) +
+         String(isotime(now)) +
          "<br>" + String(ac_raw()) +
          "<br>开关状态:";
   if (digitalRead(SSR) == HIGH)  body += "<button onclick=gotoif('/save.php?switch=on','输出开启?');>关闭</button>";
@@ -373,13 +364,6 @@ void http_add_ssid() {
   body = "";
   yield();
 }
-String time_ymd(time_t t) {
-  struct tm tm0;
-  char ymd[sizeof("2024-01-02") + 1];
-  gmtime_r(&t, &tm0);
-  snprintf_P(ymd, sizeof(ymd), PSTR("%04d-%02d-%02d"), tm0.tm_year + 1900, tm0.tm_mon + 1, tm0.tm_mday);
-  return String(ymd);
-}
 void api() {
   String body;
   if (httpd.argName(0).compareTo("type") == 0) {
@@ -424,7 +408,7 @@ void api() {
                + F(",\"I\":") + String(current)
                + F(",\"W\":") + String(power)
                + F(",\"PF\":") + String(power_ys)
-               + F(",\"TIME\":\"") + String(asctime(&now))
+               + F(",\"TIME\":\"") + isotime(now)
                + F("\",\"SWITCH\":") + String(!digitalRead(SSR))
                + F(",\"SWITCH_CHANGE_TIME\":") + String(switch_change_time)
                + "}");

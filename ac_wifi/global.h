@@ -206,5 +206,37 @@ inline char  *strncpy(char *dest, uint16_t size, const __FlashStringHelper *ifsh
   }
   return dest;
 }
+String time_ymd(struct tm tm0) {
+  String ret;
+  ret = String(tm0.tm_year + 1900);
+  ret += "-";
+  if (tm0.tm_mon + 1 < 10) ret += '0';
+  ret += String(tm0.tm_mon + 1);
+  ret += "-";
+  if (tm0.tm_mday < 10) ret += '0';
+  ret += String(tm0.tm_mday);
+  return ret;
+}
+String time_ymd(time_t t) {
+  String ret;
+  struct tm tm0;
+  gmtime_r(&t, &tm0);
+  return time_ymd(tm0);
+}
+
+String isotime(struct tm tm0) {
+  String ret;
+  ret = time_ymd(tm0);
+  ret += " ";
+  if (tm0.tm_hour < 10) ret += '0';
+  ret += String(tm0.tm_hour);
+  ret += ":";
+  if (tm0.tm_min < 10) ret += '0';
+  ret += String(tm0.tm_min);
+  ret += ":";
+  if (tm0.tm_sec < 10) ret += '0';
+  ret += String(tm0.tm_sec);
+  return ret;
+}
 
 #endif
