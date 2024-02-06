@@ -424,7 +424,8 @@ void api() {
                + F(",\"I\":") + String(current)
                + F(",\"W\":") + String(power)
                + F(",\"PF\":") + String(power_ys)
-               + F(",\"SWITCH\":") + String(digitalRead(SSR))
+               + F(",\"TIME\":\"") + String(asctime(&now))
+               + F("\",\"SWITCH\":") + String(!digitalRead(SSR))
                + F(",\"SWITCH_CHANGE_TIME\":") + String(switch_change_time)
                + "}");
   }
