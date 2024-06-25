@@ -1,7 +1,6 @@
 #ifndef __AP_WEB_H__
 #define __AP_WEB_H__
 #include <ESP8266WebServer.h>
-#include <ArduinoOTA.h>
 #include "wifi_client.h"
 #include "global.h"
 extern String hostname;
