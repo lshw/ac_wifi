@@ -26,11 +26,12 @@ void sec() {
         time_update |= DAY_UP;
         mktime(&now); //修正日期
       }
-      if (sets.on_off != digitalRead(SSR)) { //每小时检查一次switch状态， 并保存
-        sets.on_off = digitalRead(SSR);
-        save_set(false);
-      }
     }
+  }
+  if (switch_change_time > 60 && switch_change_time < 65  && sets.on_off != digitalRead(SSR)) { //switch状态改变1分钟后， 保存
+    sets.on_off = digitalRead(SSR);
+    save_set(false);
+    play((char *)"c");
   }
   switch_change_time++;
   if (digitalRead(SSR) == HIGH) { //now off
