@@ -89,6 +89,7 @@ void handleRoot() {
         }
         wifi_scan += F("<br>");
       }
+      WiFi.scanDelete();
     }
   }
   if (wifi_scan == "") {
@@ -456,7 +457,7 @@ void httpsave() {
         fp = SPIFFS.open("/ssid.txt", "r");
         Serial.print(F("保存wifi设置到文件/ssid.txt "));
         Serial.print(fp.size());
-        Serial.println("字节");
+        Serial.println(F("字节"));
         fp.close();
       } else if (data.length() < 2)
         SPIFFS.remove("/ssid.txt");
