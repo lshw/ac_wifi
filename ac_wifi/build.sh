@@ -1,21 +1,20 @@
 #!/bin/bash
-cd `dirname $0`
-
-me=`whoami`
-if [ "$me" == "root" ] ; then
-  home=/home/liushiwei
-else
-  home=~
+which arduino-cli
+if [ $? != 0 ] ; then
+ echo 没有找到 arduino-cli
+ echo 请到https://github.com/arduino/arduino-cli/releases 下载， 并放到 /usr/local/bin目录下
+ exit
 fi
+project=$( basename $( dirname $( realpath $0 )))
+echo $project
 
-if [ -x $home/sketchbook/libraries ] ; then
- sketchbook=$home/sketchbook
-else
- sketchbook=$home/Arduino
-fi
+cd $( dirname $0 )
+
+
+
 CRC_MAGIC=$( grep CRC_MAGIC config.h | awk '{printf $3}' )
 cd ..
-rm -f ac_wifi/ac_wifi.bin
+rm -f $project/${project}.bin
 
 if ! [ -x lib/uncrc32 ] ; then
 gcc -o lib/uncrc32 lib/uncrc32.c
@@ -27,77 +26,49 @@ git_id=${a:0:7}
 ver=$date-${a:0:7}
 echo $ver
 
-arduino=/opt/arduino-1.8.19
-astyle  --options=$arduino/lib/formatter.conf ac_wifi/*.h ac_wifi/*.ino ac_wifi/*.c
-rm -f ac_wifi/*.orig
+me=$( whoami )
+build=/tmp/${me}_${project}_build
+cache=/tmp/${me}_${project}_cache
+mkdir -p $build $cache
+rm -f $build/${project}.ino.bin
 
-arduinoset=$home/.arduino15
-mkdir -p /tmp/${me}_build /tmp/${me}_cache
-rm -f /tmp/${me}_build/ac_wifi.ino.bin
 
+#fqbn="esp32:esp32:esp32c3:UploadSpeed=921600,CDCOnBoot=cdc,CPUFreq=80,FlashFreq=80,FlashMode=qio,FlashSize=4M,PartitionScheme=default,DebugLevel=none,EraseFlash=none,JTAGAdapter=default,ZigbeeMode=default"
+fqbn="esp8266:esp8266:espduino:ResetMethod=v1,UploadTool=esptool,xtal=160,vt=flash,exception=disabled,stacksmash=disabled,ssl=all,mmu=4816,non32xfer=fast,eesz=4M2M,ip=lm2f,dbg=Disabled,lvl=None____,wipe=none,baud=460800 " 
 #传递宏定义 GIT_COMMIT_ID 到源码中，源码git版本
 CXXFLAGS="-DGIT_COMMIT_ID=\"$git_id\" -DGIT_VER=\"$ver\" "
 
-if [ "a$debug" == "a" ] ; then
-debug=",dbg=Disabled,lvl=None____"
-#debug=",dbg=Serial,lvl=WIFI"
-#debug=",dbg=Serial,lvl=SSLTLS_MEMHTTP_CLIENTHTTP_SERVERCOREWIFIHTTP_UPDATEUPDATEROTAOOMMDNSHWDT"
-fi
+#esp8266用 extra_flags esp32c3 用defines
+arduino-cli compile \
+--fqbn $fqbn \
+--verbose \
+--build-property build.extra_flags="$CXXFLAGS" \
+--build-path $build \
+--build-cache-path $cache \
+$project 2>&1 |tee /tmp/${me}_info.log 
+if [ -e $build/${project}.ino.bin ] ; then
+#esp8266
+  tail -n 100 /tmp/${me}_info.log |sed -n "s/^. Instruction RAM (IRAM_ATTR, ICACHE_RAM_ATTR), used \([0-9]*\) .* (\([0-9]*\)%).*$/RAM:使用\1字节(\2%)/p"
+  tail -n 100 /tmp/${me}_info.log |sed -n "s/^. Code in flash (default, ICACHE_FLASH_ATTR), used \([0-9]*\) .* (\(39\)%)$/ROM:使用\1字节(\1%)/p"
+#esp32-c3
+  tail -n 100 /tmp/${me}_info.log |sed -n "s/^Global variables use \([0-9]*\) bytes (\([0-9]*\)%) of dynamic memory, leaving \([0-9]*\) bytes for local variables. .*$/RAM:使用\1字节(\2%),全局变量:\2字节/p"
+  tail -n 100 /tmp/${me}_info.log |sed -n "s/^Sketch uses \([0-9]*\) bytes (\([0-9]*\)%) of program storage space. Maximum is.*$/ROM:使用\1字节(\2%)/p"
 
-fqbn="esp8266:esp8266:generic:xtal=160,vt=flash,exception=disabled,stacksmash=disabled,ssl=all,mmu=4816,non32xfer=fast,CrystalFreq=26,FlashFreq=80,FlashMode=qio,eesz=4M2M,led=2,sdk=nonosdk305,ip=hb2f$debug,wipe=none,baud=921600"
-
-$arduino/arduino-builder \
--dump-prefs \
--logger=machine \
--hardware $arduino/hardware \
--hardware $arduinoset/packages \
--tools $arduino/tools-builder \
--tools $arduino/hardware/tools/avr \
--tools $arduinoset/packages \
--built-in-libraries $arduino/libraries \
--libraries lib/libraries \
--fqbn=$fqbn \
--ide-version=10813 \
--build-path /tmp/${me}_build \
--build-cache /tmp/${me}_cache \
--warnings=none \
--prefs build.extra_flags="$CXXFLAGS" \
--build-cache /tmp/${me}_cache \
--prefs=build.warn_data_percentage=75 \
--verbose \
-./ac_wifi/ac_wifi.ino
-if [ $? != 0 ] ; then
-  exit
-fi
-$arduino/arduino-builder \
--compile \
--logger=machine \
--hardware $arduino/hardware \
--hardware $arduinoset/packages \
--tools $arduino/tools-builder \
--tools $arduino/hardware/tools/avr \
--tools $arduinoset/packages \
--built-in-libraries $arduino/libraries \
--libraries lib/libraries \
--fqbn=$fqbn \
--ide-version=10813 \
--build-path /tmp/${me}_build \
--warnings=none \
--prefs build.extra_flags="$CXXFLAGS" \
--build-cache /tmp/${me}_cache \
--prefs=build.warn_data_percentage=75 \
--verbose \
-./ac_wifi/ac_wifi.ino |tee /tmp/${me}_info.log
-
-if [ -e /tmp/${me}_build/ac_wifi.ino.bin ] ; then
-  grep "Global vari" /tmp/${me}_info.log |sed -n "s/^.* \[\([0-9]*\) \([0-9]*\) \([0-9]*\) \([0-9]*\)\].*$/RAM:使用\1字节(\3%),剩余\4字节/p"
-  grep "Sketch uses" /tmp/${me}_info.log |sed -n "s/^.* \[\([0-9]*\) \([0-9]*\) \([0-9]*\)\].*$/ROM:使用\1字节(\3%)/p"
-
-  cp -a /tmp/${me}_build/ac_wifi.ino.bin ac_wifi/ac_wifi.bin
-  #把bin文件的crc32值修改为0
-  lib/uncrc32 ac_wifi/ac_wifi.bin $CRC_MAGIC
-  if [ "a$1" != "a"  ] ;then
-    $arduino/hardware/esp8266com/esp8266/tools/espota.py -p 8266 -i $1 -f ac_wifi/ac_wifi.bin
+  cp -a $build/${project}.ino.bin ${project}/${project}.bin
+  if [ -x $build/${project}.ino.boorloader.bin ] ; then
+    cp -a $build/${project}.ino.bootloader.bin \
+    $build/${project}.partitions.bin $project
   fi
+  #把bin文件的crc32值修改为0
+  lib/uncrc32 ${project}/${project}.bin $CRC_MAGIC
 fi
 echo $ver
+exit
+
+esp8266
+. Instruction RAM (IRAM_ATTR, ICACHE_RAM_ATTR), used 45811 / 65536 bytes (69%)
+. Code in flash (default, ICACHE_FLASH_ATTR), used 410180 / 1048576 bytes (39%)
+esp32-c3
+Sketch uses 1198874 bytes (91%) of program storage space. Maximum is 1310720 bytes.
+Global variables use 39844 bytes (12%) of dynamic memory, leaving 287836 bytes for local variables. Maximum is 327680 bytes.
+
