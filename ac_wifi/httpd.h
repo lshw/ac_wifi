@@ -119,7 +119,11 @@ void handleRoot() {
                         "<div style='width: 700px; height: 400px; background-color: #00a0a0; background-size: 100% 100%' id='kwh_day'></div>"
                         "<hr>"
                         "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
-                        "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/"  GIT_COMMIT_ID  " target=_blank>https://github.com/lshw/ac_wifi/tree/"  GIT_COMMIT_ID  "</a>  Ver:"  GIT_VER  "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark></td></tr></table>"
+                        "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/"  GIT_COMMIT_ID  " target=_blank>https://github.com/lshw/ac_wifi/tree/"  GIT_COMMIT_ID  "</a>  Ver:"  GIT_VER  "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark>"
+#ifdef BUILD_SET
+"<br>编译参数FQBN:" BUILD_SET
+#endif
+"</td></tr></table>"
                         "<script>\
 var obj = {\
 id:'power_sec',\

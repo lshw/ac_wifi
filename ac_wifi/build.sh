@@ -37,15 +37,16 @@ rm -f $build/${project}.ino.bin
 
 
 #fqbn="esp32:esp32:esp32c3:UploadSpeed=921600,CDCOnBoot=cdc,CPUFreq=80,FlashFreq=80,FlashMode=qio,FlashSize=4M,PartitionScheme=default,DebugLevel=none,EraseFlash=none,JTAGAdapter=default,ZigbeeMode=default"
-fqbn="esp8266:esp8266:espduino:ResetMethod=v1,UploadTool=esptool,xtal=160,vt=flash,exception=disabled,stacksmash=disabled,ssl=all,mmu=4816,non32xfer=fast,eesz=4M2M,ip=lm2f,dbg=Disabled,lvl=None____,wipe=none,baud=460800 " 
+fqbn="esp8266:esp8266:espduino:ResetMethod=v1,UploadTool=esptool,xtal=160,vt=flash,exception=disabled,stacksmash=disabled,ssl=all,mmu=4816,non32xfer=fast,eesz=4M2M,ip=lm2f,dbg=Disabled,lvl=None____,wipe=none,baud=460800"
 #传递宏定义 GIT_COMMIT_ID 到源码中，源码git版本
-CXXFLAGS="-DGIT_COMMIT_ID=\"$git_id\" -DGIT_VER=\"$ver\" "
+CXXFLAGS=" -DGIT_COMMIT_ID=\"$git_id\" -DGIT_VER=\"$ver\" -DBUILD_SET=\"$fqbn\" "
 
 #esp8266用 extra_flags esp32c3 用defines
 $arduino_cli compile \
 --fqbn $fqbn \
 --verbose \
---build-property build.extra_flags="$CXXFLAGS" \
+--build-property compiler.c.extra_flags="$CXXFLAGS" \
+--build-property compiler.cpp.extra_flags="$CXXFLAGS" \
 --build-path $build \
 --build-cache-path $cache \
 $project 2>&1 |tee /tmp/${me}_info.log 
