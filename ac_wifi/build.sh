@@ -1,9 +1,11 @@
 #!/bin/bash
-which arduino-cli
+arduino_cli=$( which arduino-cli )
 if [ $? != 0 ] ; then
+arduino_cli=$( find /opt/arduino-ide_* -name "arduino-cli" |sort |tail -n 1 )
+if ! [ -x $arduino_cli ] ; then
  echo 没有找到 arduino-cli
- echo 请到https://github.com/arduino/arduino-cli/releases 下载， 并放到 /usr/local/bin目录下
- exit
+exit
+fi
 fi
 project=$( basename $( dirname $( realpath $0 )))
 echo $project
@@ -19,9 +21,10 @@ rm -f $project/${project}.bin
 if ! [ -x lib/uncrc32 ] ; then
 gcc -o lib/uncrc32 lib/uncrc32.c
 fi
-branch=`git branch |grep "^\*" |awk '{print $2}'`
-a=`git rev-parse --short HEAD`
-date=`git log --date=short -1 |grep ^Date: |awk '{print $2}' |tr -d '-'`
+
+branch=$( git branch |grep "^\*" |awk '{print $2}' )
+a=$( git log --date=short -1 $project |grep ^commit |awk '{print $2}' )
+date=$( git log --date=short -1 $project |grep ^Date: |awk '{print $2}' |tr -d '-' )
 git_id=${a:0:7}
 ver=$date-${a:0:7}
 echo $ver
@@ -39,7 +42,7 @@ fqbn="esp8266:esp8266:espduino:ResetMethod=v1,UploadTool=esptool,xtal=160,vt=fla
 CXXFLAGS="-DGIT_COMMIT_ID=\"$git_id\" -DGIT_VER=\"$ver\" "
 
 #esp8266用 extra_flags esp32c3 用defines
-arduino-cli compile \
+$arduino_cli compile \
 --fqbn $fqbn \
 --verbose \
 --build-property build.extra_flags="$CXXFLAGS" \
