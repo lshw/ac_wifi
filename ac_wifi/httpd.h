@@ -39,7 +39,7 @@ String switch_mode(uint16_t t) {
 void handleRoot() {
   String wifi_stat, wifi_scan;
   String ssid;
-  char ch[8];
+  char ch[12];
   snprintf(ch, sizeof(ch), "%06X", led);
   //body.reserve(8192 + 2048);
   body = F("name:<mark onclick=modi('/save.php?ac_name=','修改标识?','") + ac_name + F("')>") + ac_name + F("</mark> &nbsp;"
@@ -97,7 +97,7 @@ void handleRoot() {
   }
   body += wifi_scan + F("<ht>");
   yield();
-
+  snprintf(ch, sizeof(ch), "%4d-%2d-%2d", __YEAR__, __MONTH__, __DAY__);
   body += F("<form action=/save.php method=post>"
             "输入ssid:passwd(可以多行多个)"
             "<input type=submit value=save><br>"
@@ -119,7 +119,7 @@ void handleRoot() {
                         "<div style='width: 700px; height: 400px; background-color: #00a0a0; background-size: 100% 100%' id='kwh_day'></div>"
                         "<hr>"
                         "<form method='POST' action='/update.php' enctype='multipart/form-data'>上传更新固件firmware:<input type='file' name='update'><input type='submit' value='Update'></form>"
-                        "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/"  GIT_COMMIT_ID  " target=_blank>https://github.com/lshw/ac_wifi/tree/"  GIT_COMMIT_ID  "</a>  Ver:"  GIT_VER  "<td><td align=right width=50%>程序编译时间: <mark>" __DATE__ " " __TIME__ "</mark>"
+                        "<hr><table width=100%><tr><td align=left width=50%>程序源码:<a href=https://github.com/lshw/ac_wifi/tree/"  GIT_COMMIT_ID  " target=_blank>https://github.com/lshw/ac_wifi/tree/"  GIT_COMMIT_ID  "</a>  Ver:"  GIT_VER  "<td><td align=right width=50%>程序编译时间: <mark>") + String(ch) + F(" " __TIME__ "</mark>"
 #ifdef BUILD_SET
 "<br>编译参数FQBN:" BUILD_SET
 #endif
