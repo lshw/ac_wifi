@@ -4,7 +4,7 @@
 #define VER "2.1"
 #define CRC_MAGIC 1
 String hostname = "AC_";
-
+#define NETLOG //打开netlog
 #define DEFAULT_URL0 "http://ac_wifi.cfido.com:808/ac_wifi.php"
 #define DEFAULT_URL1 "http://ac_wifi.wf163.com:808/ac_wifi.php"
 

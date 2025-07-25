@@ -23,7 +23,7 @@ double get_kwh() { //获取当前数据
 
 void update_pf() { //更新kwh累计， 清理脉冲计数
   if (pf < 0) return; //hlm8032未开始工作
-  if (nvram.ac_pf0 == pf) return;
+  if (nvram.ac_pf0 == pf) return; //未变化
   if (nvram.ac_pf0 < pf) {
     nvram.ac_pf += (pf - nvram.ac_pf0);
   }
@@ -81,18 +81,23 @@ void ac_20ms() { //每20ms执行一次
   if (ac_buf[23] != 0) {
     return;
   }
-  ac_ok = true;
+  ac_ok = true; 
   ac_ok_count++;
 }
 uint32_t p_cs0 = 0;
 void ac_decode() { //hlm8032数据解码
   uint32_t d32;
+  uint32_t pf0;
   float f1;
   uint8_t i = 0;
   uint8_t state, dataUpdata;
   if (!ac_ok) return;
   ac_ok = false;
-  pf = (uint32_t) ((ac_buf[20] & 0x80) << 9 | ( ac_buf[21] << 8) | ac_buf[22]);
+  pf0 = (uint32_t) ((ac_buf[20] & 0x80) << 9 | ( ac_buf[21] << 8) | ac_buf[22]);
+  if(pf0 < pf) {
+   if(netlog.connected()) netlog.printf("pf0<pf, %d < %d\r\n", pf0, pf);
+  }
+  pf = pf0;
   state = ac_buf[0];
   dataUpdata = ac_buf[20];
   if ((state & 0xf5) == 0xf4) current = 0.0;

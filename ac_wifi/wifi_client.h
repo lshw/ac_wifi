@@ -105,6 +105,9 @@ bool wifi_connected_is_ok() {
     wifi_station_get_ap_info(config);
     config[ap_id].bssid_set = 1; //同名ap，mac地址不同
     wifi_station_set_config(&config[ap_id]); //保存成功的ssid,用于下次通讯
+#ifdef NETLOG
+    netlog_setup();
+#endif
 
     return true;
   }

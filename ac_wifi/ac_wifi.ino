@@ -4,12 +4,12 @@ extern "C" {
 }
 #include "config.h"
 #include "global.h"
+#include "netlog.h"
 #include "hlw8032.h"
 #include "gpio.h"
 #include "clock.h"
 #include "wifi_client.h"
 #include "httpd.h"
-#include "log.h"
 uint32_t dida0 = 0;
 uint8_t count_100ms = 0;
 void run_20ms() {
@@ -152,6 +152,9 @@ void loop()
     Serial.println(F("smart_config 结束"));
     smart_status = 0;
   }
+#ifdef NETLOG
+  netlog_loop();
+#endif
 }
 
 void load_kwh_days() {
