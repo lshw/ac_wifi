@@ -64,7 +64,8 @@ void update_kwh_count() { //根据需要修改并保存校准数据
 bool power_down = false;
 bool ac_ok = false;
 uint32_t ac_ok_count = 0;
-void ac_20ms() {
+void ac_20ms() { //每20ms执行一次
+  ac_ok = false; //先设置数据无效
   if (Serial.available() < 24) return;
   if (Serial.available()  > 24) {
     while (Serial.available() > 24) {
@@ -178,4 +179,3 @@ char * ac_raw() {
   return ac_str;
 }
 #endif //__HLW8032_H__
-

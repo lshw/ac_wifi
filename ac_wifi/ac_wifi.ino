@@ -9,6 +9,7 @@ extern "C" {
 #include "clock.h"
 #include "wifi_client.h"
 #include "httpd.h"
+#include "log.h"
 uint32_t dida0 = 0;
 uint8_t count_100ms = 0;
 void run_20ms() {
