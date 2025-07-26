@@ -95,7 +95,7 @@ void loop()
 {
   if (wifi_connected_is_ok()) {
     if (!httpd_up) {
-      play((char *) "3");
+      play((char *) "23");
       httpd_up = true;
       httpd_listen();
       loop_clock(true);
@@ -105,8 +105,13 @@ void loop()
       last_wget = millis() + 1000 * 3600 * 4; //4小时上传一次服务器
       wget();
     }
+    yield();
+    if(WiFi.status() != WL_CONNECTED) {
+      connected_is_ok = false;
+      play((char *) "32");
+      WiFi.reconnect();
+    }
   }
-  yield();
   system_soft_wdt_feed ();
   if (set_modi && (set_modi & SET_CHARGE)) {
     save_set(false); // 保存 /sets.txt
