@@ -62,7 +62,12 @@ void setup()
 #ifdef GIT_VER
   Serial.println(F("Git Ver=" GIT_VER));
 #endif
-  hostname += String(sets.serial) + "_" + String(ESP.getChipId(), HEX);
+  String hostname0 = String(ESP.getChipId(), HEX);
+// 补零到8位
+while (hostname0.length() < 6) {
+  hostname0 = "0" + hostname0;
+}
+  hostname += String(sets.serial) + "-" + hostname0;
   hostname.toUpperCase();
   if (ac_name == "")
     ac_name = hostname;

@@ -14,5 +14,5 @@ if [ -e /dev/ttyUSB0 ] ; then
 else
  port=/dev/ttyS0
 fi
-../esptool.py --chip esp8266 --port $port --after soft_reset --baud 460800 write_flash 0 ac_wifi.bin
-./run.sh
+python3 ../esptool.py --chip esp8266 --port $port --after soft_reset --baud 460800 write_flash 0 ac_wifi.bin
+#./run.sh
