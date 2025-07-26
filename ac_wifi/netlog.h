@@ -4,6 +4,8 @@
 #include <ESP8266WebServer.h>
 WiFiServer tcpServer(23);
 WiFiClient netlog;
+#define LOG(format, ...) \
+	if(netlog.connected()) netlog.printf(PSTR(format), ##__VA_ARGS__)
 
 void netlog_setup() {
   tcpServer.begin();
@@ -13,17 +15,12 @@ void netlog_setup() {
 void netlog_loop() {
   if (tcpServer.hasClient()) {
     if(netlog.connected()) {
-      netlog.println("new client come in, then you will be offline.");
+      LOG("\r\nnew client come in, then you will be offline.\r\n");
       netlog.stop();
    }
    netlog = tcpServer.available();
-   netlog.println("welcome in.");
+   LOG("\r\nwelcome in.\r\n");
   }
-}
-
-void loga(String msg) {
-  if (netlog.availableForWrite())
-    netlog.println(msg);
 }
 
 #endif //__NETLOG_H__

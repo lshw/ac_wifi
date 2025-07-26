@@ -18,12 +18,17 @@ double get_kwh() { //获取当前数据
   kwh = nvram.kwh;
   if (nvram.ac_kwh_count > 0 && nvram.ac_pf > 0)
     kwh += (double)nvram.ac_pf / nvram.ac_kwh_count;
+    LOG("get_kwh() nvram.kwh=%s"
+	",nvram.ac_kwh_count=%d"
+	",nvram.ac_pf=%d\r\n"
+        ,String(nvram.kwh, 8).c_str(), nvram.ac_kwh_count, nvram.ac_pf);
   return kwh;
 }
 
 void update_pf() { //更新kwh累计， 清理脉冲计数
   if (pf < 0) return; //hlm8032未开始工作
   if (nvram.ac_pf0 == pf) return; //未变化
+  LOG("update_pf()i nvram.ac_pf=%d,nvram.ac_pf0=%d,nvram.ac_kwh_count=%d,pf=%d\r\n", nvram.ac_pf, nvram.ac_pf0, nvram.ac_kwh_count,pf);
   if (nvram.ac_pf0 < pf) {
     nvram.ac_pf += (pf - nvram.ac_pf0);
   }
@@ -33,6 +38,7 @@ void update_pf() { //更新kwh累计， 清理脉冲计数
     nvram.ac_pf -= nvram.ac_kwh_count;
   }
   save_nvram();
+  LOG("update_pf()o nvram.ac_pf=%d,nvram.ac_pf0=%d,nvram.ac_kwh_count=%d,pf=%d\r\n", nvram.ac_pf, nvram.ac_pf0, nvram.ac_kwh_count,pf);
 }
 
 void update_kwh_count() { //根据需要修改并保存校准数据
@@ -95,7 +101,7 @@ void ac_decode() { //hlm8032数据解码
   ac_ok = false;
   pf0 = (uint32_t) ((ac_buf[20] & 0x80) << 9 | ( ac_buf[21] << 8) | ac_buf[22]);
   if(pf0 < pf) {
-   if(netlog.connected()) netlog.printf("pf0<pf, %d < %d\r\n", pf0, pf);
+   LOG("error:pf0<pf, %d < %d\r\n", pf0, pf);
   }
   pf = pf0;
   state = ac_buf[0];
