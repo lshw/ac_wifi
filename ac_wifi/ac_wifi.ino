@@ -98,6 +98,11 @@ uint32_t last_wget = 0;
 uint8_t smart_status = 0; //=0 smart未运行， =1 正在进行 尚未松开按键, =2 正在进行，已经松开按键, =3退出中， 检查松开就变成0
 void loop()
 {
+  if (set0.relink) {
+    set0.relink = false;
+    wifi_setup();
+    connected_is_ok = false;
+  }
   if (wifi_connected_is_ok()) {
     if (!httpd_up) {
       play((char *) "23");
@@ -112,9 +117,7 @@ void loop()
     }
     yield();
     if(WiFi.status() != WL_CONNECTED) {
-      connected_is_ok = false;
-      play((char *) "32");
-      WiFi.reconnect();
+      set0.relink = true;
     }
   }
   system_soft_wdt_feed ();
