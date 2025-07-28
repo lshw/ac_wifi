@@ -130,6 +130,11 @@ uint16_t http_get(uint8_t no) {
   else
     url0 += '?';
   url0 += "ver=" VER "&sn=" + hostname
+          + "&kwh=" + String(get_kwh())
+          + "&v=" + String(sets.vol)
+          + "&w=" + String(power)
+          + "&i=" + String(current)
+          + "&pf=" + String(power_ys * 100.0)
           + "&ssid=" + String(WiFi.SSID())
           + "&bssid=" + WiFi.BSSIDstr()
           + "&GIT=" GIT_VER
