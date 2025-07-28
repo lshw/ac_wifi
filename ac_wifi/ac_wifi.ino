@@ -162,7 +162,7 @@ void loop() {
     Serial.println(F("smart_config 结束"));
     smart_status = 0;
     wifi_off();
-    wifi_setup();
+    set0.relink = true;
   }
 #ifdef NETLOG
   netlog_loop();
@@ -258,7 +258,7 @@ void smart_config() {
       Serial.println(F("key down exit"));
       WiFi.stopSmartConfig();
       wifi_off();
-      wifi_setup();
+      set0.relink = true;
       return;
     }
     if (smart_status == 1 && digitalRead(KEYWORD) == HIGH)
@@ -270,7 +270,7 @@ void smart_config() {
       Serial.println(F("OK"));
       WiFi.stopSmartConfig();
       wifi_off();
-      wifi_setup();
+      set0.relink = true;
       return;
     }
     if (i % 5 == 0)
