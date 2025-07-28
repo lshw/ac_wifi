@@ -448,7 +448,7 @@ void httpsave() {
   SPIFFS.begin();
   for (uint8_t i = 0; i < httpd.args(); i++) {
     if (httpd.argName(i).compareTo("reboot") == 0) {
-      reboot_now = true;
+      set0.reboot_now = true;
       data = "重启";
     }
     if (httpd.argName(i).compareTo("data") == 0) {

@@ -138,12 +138,12 @@ void loop()
     yield();
   }
   system_soft_wdt_feed ();
-  if (reboot_now) {
+  if (set0.reboot_now) {
     Serial.println(F("reboot..."));
     Serial.flush();
     nvram_save = millis();
     save_nvram_file();
-    reboot_now = false;
+    set0.reboot_now = false;
     ESP.restart();
   }
   if (kwh_days_p == -1 && now.tm_year > 121) {

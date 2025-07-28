@@ -23,7 +23,10 @@ bool wifi_connected_is_ok();
 extern bool connected_is_ok;
 extern uint8_t sound_buf[100];
 uint16_t http_get(uint8_t);
-bool reboot_now = false;
+struct set0 {
+uint8_t relink : 1;
+uint8_t reboot_now : 1;
+} set0;
 uint16_t wget() {
   uint16_t httpCode = http_get( nvram.nvram7 & NVRAM7_URL); //先试试上次成功的url
   if (httpCode < 200  || httpCode >= 400) {

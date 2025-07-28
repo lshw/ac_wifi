@@ -40,7 +40,6 @@ void sec() {
   } else { //now on
     if (sets.switch_on_time > 0 && sets.switch_on_time < switch_change_time)
       switch_change(HIGH);
-
   }
 }
 
