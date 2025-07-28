@@ -91,7 +91,6 @@ void setup() {
   Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
 }
 
-bool httpd_up = false;
 uint32_t last_wget = 0;
 uint8_t smart_status = 0;  //=0 smart未运行， =1 正在进行 尚未松开按键, =2 正在进行，已经松开按键, =3退出中， 检查松开就变成0
 void loop() {
@@ -101,9 +100,9 @@ void loop() {
     set0.connected_is_ok = false;
   }
   if (wifi_connected_is_ok()) {
-    if (!httpd_up) {
+    if (!set0.httpd_up) {
       play((char *)"23");
-      httpd_up = true;
+      set0.httpd_up = true;
       httpd_listen();
       loop_clock(true);
     }

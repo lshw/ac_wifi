@@ -32,24 +32,23 @@ void play(char *qz) {
   strncpy((char *)sound_buf, qz, sizeof(sound_buf));
   sound_buf[sizeof(sound_buf) - 1] = 0;
 }
-bool pwm_on = false;
 void sound_20ms() {
   if (sound_delay < millis() + 40) {
     analogWrite(5, 0);
-    pwm_on = false;
+    set0.pwm_on = false;
   }
   if (sound_delay > millis()) return;
   if (sound_buf[0] != 0) {
-    if (!pwm_on) {
+    if (!set0.pwm_on) {
       analogWrite(5, sets.vol);
-      pwm_on = true;
+      set0.pwm_on = true;
     }
     sound(sound_buf[0], 500);
     Serial.printf(PSTR("sound(%c)\r\n"), sound_buf[0]);
     strncpy((char *)sound_buf, (char *)&sound_buf[1], sizeof(sound_buf) - 1);
-  } else if (pwm_on) {
+  } else if (set0.pwm_on) {
     analogWrite(5, 0);
-    pwm_on = false;
+    set0.pwm_on = false;
   }
 }
 

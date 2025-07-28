@@ -3,7 +3,6 @@
 uint8_t ac_buf[30];
 char ac_str[120];
 int32_t pf = -1;
-bool ac_init = false;
 float current = 0.0, voltage = 0.0, power = 0.0, power_ys = 0.0;  //上次测量
 uint32_t v_cs = 0, i_cs = 0, p_cs = 0;
 float i_max = 0.0;
@@ -67,10 +66,9 @@ void update_kwh_count() {  //根据需要修改并保存校准数据
   }
 }
 
-bool ac_ok = false;
 uint32_t ac_ok_count = 0;
 void ac_20ms() {  //每20ms执行一次
-  ac_ok = false;  //先设置数据无效
+  set0.ac_ok = false;  //先设置数据无效
   if (Serial.available() < 24) return;
   if (Serial.available() > 24) {
     while (Serial.available() > 24) {
@@ -86,7 +84,7 @@ void ac_20ms() {  //每20ms执行一次
   if (ac_buf[23] != 0) {
     return;
   }
-  ac_ok = true;
+  set0.ac_ok = true;
   ac_ok_count++;
 }
 uint32_t p_cs0 = 0;
@@ -96,8 +94,8 @@ void ac_decode() {  //hlm8032数据解码
   float f1;
   uint8_t i = 0;
   uint8_t state, dataUpdata;
-  if (!ac_ok) return;
-  ac_ok = false;
+  if (!set0.ac_ok) return;
+  set0.ac_ok = false;
   pf0 = (uint32_t)((ac_buf[20] & 0x80) << 9 | (ac_buf[21] << 8) | ac_buf[22]);
   if (pf0 < pf) {
     LOG("error:pf0<pf, %d < %d\r\n", pf0, pf);
@@ -144,9 +142,9 @@ void ac_decode() {  //hlm8032数据解码
       if (f1 <= 1.0) power_ys = f1;
     } else power_ys = 0;
   }
-  if (ac_init == false && p_cs > 0) {
+  if (set0.ac_init == false && p_cs > 0) {
     update_kwh_count();
-    ac_init = true;
+    set0.ac_init = true;
   }
   update_pf();
   if (set0.power_down == false) {
@@ -159,6 +157,7 @@ void ac_decode() {  //hlm8032数据解码
     }
   } else if (voltage > 80) {
     set0.power_down = false;
+    set0.ac_init = false;
     set0.relink = true;
     nvram_save = millis() + 60000;
   }

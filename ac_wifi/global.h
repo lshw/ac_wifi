@@ -26,6 +26,10 @@ struct set0 {
   uint8_t reboot_now : 1;
   uint8_t connected_is_ok : 1;
   uint8_t power_down : 1;
+  uint8_t ac_init : 1;
+  uint8_t ac_ok : 1;
+  uint8_t httpd_up : 1;
+  uint8_t pwm_on : 1;
 } set0;
 uint16_t wget() {
   uint16_t httpCode = http_get(nvram.nvram7 & NVRAM7_URL);  //先试试上次成功的url
