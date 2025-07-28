@@ -101,7 +101,7 @@ void loop()
   if (set0.relink) {
     set0.relink = false;
     wifi_setup();
-    connected_is_ok = false;
+    set0.connected_is_ok = false;
   }
   if (wifi_connected_is_ok()) {
     if (!httpd_up) {

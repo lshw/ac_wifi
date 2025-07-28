@@ -13,19 +13,18 @@
 #include "CRC32.h"
 CRC32 crc;
 Ticker _myTicker;
-extern bool wifi_connected;
 extern float i_max;
 int16_t update_timeok = 0; //0-马上wget ，-1 关闭，>0  xx分钟后wget
 uint8_t timer3 = 30; //最长30秒等待上线
 uint16_t i_over = 0; //电流过高保护， 倒计时ms
 uint32_t switch_change_time = 0;
 bool wifi_connected_is_ok();
-extern bool connected_is_ok;
 extern uint8_t sound_buf[100];
 uint16_t http_get(uint8_t);
 struct set0 {
 uint8_t relink : 1;
 uint8_t reboot_now : 1;
+uint8_t connected_is_ok : 1;
 } set0;
 uint16_t wget() {
   uint16_t httpCode = http_get( nvram.nvram7 & NVRAM7_URL); //先试试上次成功的url

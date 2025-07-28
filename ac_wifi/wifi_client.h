@@ -5,7 +5,6 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266httpUpdate.h>
-bool wifi_connected = false;
 bool http_update();
 ESP8266WiFiMulti WiFiMulti;
 WiFiClient client;
@@ -87,13 +86,12 @@ void wifi_setup() {
   WiFiMulti.run(5000);
   wifi_connected_is_ok();
 }
-bool connected_is_ok = false;
 bool wifi_connected_is_ok() {
-  if (connected_is_ok)
-    return connected_is_ok;
+  if (set0.connected_is_ok)
+    return set0.connected_is_ok;
   if (wifi_station_get_connect_status() == STATION_GOT_IP) {
     Serial.println("ip:" + WiFi.localIP().toString());
-    connected_is_ok = true;
+    set0.connected_is_ok = true;
     //  ht16c21_cmd(0x88, 0); //停止闪烁
     if (nvram.ch != wifi_get_channel() ) {
       nvram.ch =  wifi_get_channel();

@@ -66,7 +66,7 @@ void handleRoot() {
                       "电压校准参数:") + String(sets.ac_v_calibration, 6)
           + F(",电流校准参数:") + String(sets.ac_i_calibration, 6)
           + F("<hr>");
-  if (connected_is_ok) {
+  if (set0.connected_is_ok) {
     body += F("wifi已连接 ssid:<mark>") + String(WiFi.SSID()) + F("</mark> &nbsp;"
             "ap:<mark>") + WiFi.BSSIDstr() + F("</mark> &nbsp;"
                 "信号:<mark>") + String(WiFi.RSSI()) + F("</mark>dbm &nbsp;"
