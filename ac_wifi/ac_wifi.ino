@@ -10,6 +10,7 @@ extern "C" {
 #include "clock.h"
 #include "wifi_client.h"
 #include "httpd.h"
+#include "pwm_speeker.h"
 uint32_t dida0 = 0;
 uint8_t count_100ms = 0;
 void run_20ms() {
@@ -160,6 +161,8 @@ void loop() {
   if (smart_status == 3 && digitalRead(KEYWORD)) {  //等待松开按键就结束过程
     Serial.println(F("smart_config 结束"));
     smart_status = 0;
+    wifi_off();
+    wifi_setup();
   }
 #ifdef NETLOG
   netlog_loop();
@@ -254,6 +257,8 @@ void smart_config() {
     if (smart_status == 2 && digitalRead(KEYWORD) == LOW) {  //松开按键后，又按下按键
       Serial.println(F("key down exit"));
       WiFi.stopSmartConfig();
+      wifi_off();
+      wifi_setup();
       return;
     }
     if (smart_status == 1 && digitalRead(KEYWORD) == HIGH)
@@ -264,6 +269,8 @@ void smart_config() {
       WiFi.setAutoConnect(true);
       Serial.println(F("OK"));
       WiFi.stopSmartConfig();
+      wifi_off();
+      wifi_setup();
       return;
     }
     if (i % 5 == 0)

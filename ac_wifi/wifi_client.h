@@ -20,6 +20,11 @@ void hexprint(uint8_t dat) {
   Serial.print(dat, HEX);
 }
 
+void wifi_off() {
+  WiFi.disconnect(true);  // 断开并关闭WiFi硬件
+  WiFi.mode(WIFI_OFF);
+  set0.connected_is_ok = false;
+}
 void wifi_setup() {
   File fp;
   uint32_t i;
@@ -28,6 +33,7 @@ void wifi_setup() {
   uint8_t count = 0;
   boolean is_ssid = true;
   WiFi.mode(WIFI_STA);
+  set0.connected_is_ok = false;
   WiFi.hostname(hostname);
   wifi_set_sleep_type(LIGHT_SLEEP_T);
   WiFi.setAutoConnect(true);    //自动链接上次

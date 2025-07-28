@@ -8,7 +8,6 @@
 #include <WiFiUdp.h>
 
 #include "ws2813.h"
-#include "pwm_speeker.h"
 #include "datalog.h"
 #include "CRC32.h"
 CRC32 crc;
@@ -21,6 +20,8 @@ uint32_t switch_change_time = 0;
 bool wifi_connected_is_ok();
 extern uint8_t sound_buf[100];
 uint16_t http_get(uint8_t);
+void play(char *qz);
+void wifi_off();
 struct set0 {
   uint8_t relink : 1;
   uint8_t reboot_now : 1;

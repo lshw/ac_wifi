@@ -150,10 +150,9 @@ void ac_decode() {  //hlm8032数据解码
   if (set0.power_down == false) {
     if (voltage < 40) {
       set0.power_down = true;
-      WiFi.disconnect(true);  // 断开并关闭WiFi硬件
-      WiFi.mode(WIFI_OFF);
       save_nvram();
       nvram_save = millis() + 80;  //80ms后保存 nvram 到文件
+      wifi_off();
     }
   } else if (voltage > 80) {
     set0.power_down = false;
