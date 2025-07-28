@@ -11,7 +11,7 @@ WiFiClient client;
 HTTPClient http;
 String ssid, passwd;
 uint8_t hex2ch(char dat) {
-  dat |= 0x20; //41->61 A->a
+  dat |= 0x20;  //41->61 A->a
   if (dat >= 'a') return dat - 'a' + 10;
   return dat - '0';
 }
@@ -30,8 +30,8 @@ void wifi_setup() {
   WiFi.mode(WIFI_STA);
   WiFi.hostname(hostname);
   wifi_set_sleep_type(LIGHT_SLEEP_T);
-  WiFi.setAutoConnect(true); //自动链接上次
-  WiFi.setAutoReconnect(true);//断线自动重连
+  WiFi.setAutoConnect(true);    //自动链接上次
+  WiFi.setAutoReconnect(true);  //断线自动重连
   if (SPIFFS.begin()) {
     if (!SPIFFS.exists("/ssid.txt")) {
       fp = SPIFFS.open("/ssid.txt", "w");
@@ -52,8 +52,10 @@ void wifi_setup() {
           case 0xd:
           case 0xa:
             if (ssid != "") {
-              Serial.print(F("Ssid:")); Serial.println(ssid);
-              Serial.print(F("Passwd:")); Serial.println(passwd);
+              Serial.print(F("Ssid:"));
+              Serial.println(ssid);
+              Serial.print(F("Passwd:"));
+              Serial.println(passwd);
               WiFiMulti.addAP(ssid.c_str(), passwd.c_str());
             }
             is_ssid = true;
@@ -72,9 +74,11 @@ void wifi_setup() {
         }
       }
       if (ssid != "" && passwd != "") {
-        if (count < 5) count ++;
-        Serial.print(F("Ssid:")); Serial.println(ssid);
-        Serial.print(F("Passwd:")); Serial.println(passwd);
+        if (count < 5) count++;
+        Serial.print(F("Ssid:"));
+        Serial.println(ssid);
+        Serial.print(F("Passwd:"));
+        Serial.println(passwd);
         WiFiMulti.addAP(ssid.c_str(), passwd.c_str());
       }
     }
@@ -93,16 +97,16 @@ bool wifi_connected_is_ok() {
     Serial.println("ip:" + WiFi.localIP().toString());
     set0.connected_is_ok = true;
     //  ht16c21_cmd(0x88, 0); //停止闪烁
-    if (nvram.ch != wifi_get_channel() ) {
-      nvram.ch =  wifi_get_channel();
+    if (nvram.ch != wifi_get_channel()) {
+      nvram.ch = wifi_get_channel();
       save_nvram();
     }
 
     uint8_t ap_id = wifi_station_get_current_ap_id();
     struct station_config config[5];
     wifi_station_get_ap_info(config);
-    config[ap_id].bssid_set = 1; //同名ap，mac地址不同
-    wifi_station_set_config(&config[ap_id]); //保存成功的ssid,用于下次通讯
+    config[ap_id].bssid_set = 1;              //同名ap，mac地址不同
+    wifi_station_set_config(&config[ap_id]);  //保存成功的ssid,用于下次通讯
 #ifdef NETLOG
     netlog_setup();
 #endif
@@ -119,14 +123,14 @@ uint16_t http_get(uint8_t no) {
     url0 += '&';
   else
     url0 += '?';
-  url0 += "ver="  VER  "&sn=" + hostname
+  url0 += "ver=" VER "&sn=" + hostname
           + "&ssid=" + String(WiFi.SSID())
           + "&bssid=" + WiFi.BSSIDstr()
           + "&GIT=" GIT_VER
           + "&rssi=" + String(WiFi.RSSI())
           + "&ms=" + String(millis());
-  Serial.println( url0); //串口输出
-  http.begin(client, url0 ); //HTTP提交
+  Serial.println(url0);      //串口输出
+  http.begin(client, url0);  //HTTP提交
   http.setTimeout(4000);
   int httpCode;
   for (uint8_t i = 0; i < 3; i++) {
@@ -168,13 +172,12 @@ void update_progress(int cur, int total) {
   Serial.printf(PSTR("HTTP update process at %d of %d bytes...\r\n"), cur, total);
 }
 
-bool http_update()
-{
-  String update_url = "http://ac_wifi.anheng.com.cn/firmware.php?type=AC_WIFI&SN=" + hostname + "&GIT=" GIT_VER "&ver=" VER; //可以在header里下发x-MD5作为校验
+bool http_update() {
+  String update_url = "http://ac_wifi.anheng.com.cn/firmware.php?type=AC_WIFI&SN=" + hostname + "&GIT=" GIT_VER "&ver=" VER;  //可以在header里下发x-MD5作为校验
   Serial.print(F("下载firmware from "));
   Serial.println(update_url);
   ESPhttpUpdate.onProgress(update_progress);
-  t_httpUpdate_return  ret = ESPhttpUpdate.update(client, update_url);
+  t_httpUpdate_return ret = ESPhttpUpdate.update(client, update_url);
   update_url = "";
 
   switch (ret) {

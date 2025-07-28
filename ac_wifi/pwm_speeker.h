@@ -2,9 +2,9 @@
 #define __PWM_SPEEKET_H__
 
 void set_hz(uint8_t range) {
-  uint16_t snd_high[7] = {1047, 1175, 1319, 1397, 1568, 1760, 1976};
-  uint16_t snd[7] = {532, 587, 659, 698, 784, 880, 988};
-  uint16_t snd_low[7] = {262, 294, 330, 349, 392, 440, 494};
+  uint16_t snd_high[7] = { 1047, 1175, 1319, 1397, 1568, 1760, 1976 };
+  uint16_t snd[7] = { 532, 587, 659, 698, 784, 880, 988 };
+  uint16_t snd_low[7] = { 262, 294, 330, 349, 392, 440, 494 };
   switch (range) {
     case 1 ... 9:
       analogWriteFreq(snd[range - 1]);
@@ -28,7 +28,7 @@ void sound(uint8_t range, uint16_t len) {
 }
 
 uint8_t sound_buf[100];
-void play(char * qz) {
+void play(char *qz) {
   strncpy((char *)sound_buf, qz, sizeof(sound_buf));
   sound_buf[sizeof(sound_buf) - 1] = 0;
 }
