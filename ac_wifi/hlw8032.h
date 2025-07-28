@@ -67,7 +67,7 @@ void update_kwh_count() {  //根据需要修改并保存校准数据
 }
 
 uint32_t ac_ok_count = 0;
-void ac_20ms() {  //每20ms执行一次
+void ac_20ms() {       //每20ms执行一次
   set0.ac_ok = false;  //先设置数据无效
   if (Serial.available() < 24) return;
   if (Serial.available() > 24) {
