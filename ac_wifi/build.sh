@@ -48,7 +48,6 @@ $arduino_cli compile \
 --build-property compiler.c.extra_flags="$CXXFLAGS" \
 --build-property compiler.cpp.extra_flags="$CXXFLAGS" \
 --build-path $build \
---build-cache-path $cache \
 $project 2>&1 |tee /tmp/${me}_info.log 
 if [ -e $build/${project}.ino.bin ] ; then
 #esp8266
