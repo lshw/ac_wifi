@@ -31,13 +31,16 @@ echo $ver
 
 me=$( whoami )
 build=/tmp/${me}_${project}_build
-cache=/tmp/${me}_${project}_cache
-mkdir -p $build $cache
+mkdir -p $build
 rm -f $build/${project}.ino.bin
 
+#debug输出设置
+debug=",dbg=Disabled,lvl=None____"
+#debug=",dbg=Serial,lvl=WIFI"
+#debug=",dbg=Serial,lvl=SSLTLS_MEMHTTP_CLIENTHTTP_SERVERCOREWIFIHTTP_UPDATEUPDATEROTAOOMMDNSHWDT"
 
 #fqbn="esp32:esp32:esp32c3:UploadSpeed=921600,CDCOnBoot=cdc,CPUFreq=80,FlashFreq=80,FlashMode=qio,FlashSize=4M,PartitionScheme=default,DebugLevel=none,EraseFlash=none,JTAGAdapter=default,ZigbeeMode=default"
-fqbn="esp8266:esp8266:espduino:ResetMethod=v1,UploadTool=esptool,xtal=160,vt=flash,exception=disabled,stacksmash=disabled,ssl=all,mmu=4816,non32xfer=fast,eesz=4M2M,ip=lm2f,dbg=Disabled,lvl=None____,wipe=none,baud=460800"
+fqbn="esp8266:esp8266:espduino:ResetMethod=v1,UploadTool=esptool,xtal=160,vt=flash,exception=disabled,stacksmash=disabled,ssl=all,mmu=4816,non32xfer=fast,eesz=4M2M,ip=lm2f$debug,wipe=none,baud=460800"
 #传递宏定义 GIT_COMMIT_ID 到源码中，源码git版本
 CXXFLAGS=" -DGIT_COMMIT_ID=\"$git_id\" -DGIT_VER=\"$ver\" -DBUILD_SET=\"$fqbn\" "
 
