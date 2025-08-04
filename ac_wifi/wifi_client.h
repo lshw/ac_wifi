@@ -129,7 +129,10 @@ bool wifi_connected_is_ok() {
       nvram.ch = wifi_get_channel();
       save_nvram();
     }
-
+    if (strlen(sets.ntp) < 4) {
+        configTime(sets.tz * 60, 0, "ntp.tuna.tsinghua.edu.cn", "ntp.tencent.com", "ntp.aliyun.com");
+    }else
+        configTime(sets.tz * 60, 0, sets.ntp,"ntp.tuna.tsinghua.edu.cn", "ntp.aliyun.com");
     uint8_t ap_id = wifi_station_get_current_ap_id();
     struct station_config config[5];
     wifi_station_get_ap_info(config);

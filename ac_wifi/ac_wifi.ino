@@ -107,7 +107,10 @@ void loop() {
       play((char *)"23");
       set0.httpd_up = true;
       httpd_listen();
-      loop_clock(true);
+    }
+    if(now.tm_year < __YEAR__ - 1900 && set0.connected_is_ok) {
+      Serial.println("getLocalTime()");
+      Serial.println(getLocalTime(&now, 1000));
     }
     httpd_loop();
     if (millis() > last_wget) {
@@ -231,7 +234,6 @@ void hour() {
     fp.close();
     SPIFFS.end();
   }
-  loop_clock(false);
 }
 void day() {
   kwh_days[kwh_days_p].kwh = get_kwh() - nvram.kwh_day0;
