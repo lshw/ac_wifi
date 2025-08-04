@@ -238,4 +238,18 @@ String isotime(struct tm tm0) {
          + ":" + int2str(tm0.tm_sec);
 }
 
+String ls() {
+  String result;
+  result.reserve(1024); // 预留1KB空间（根据预期内容大小调整）
+  Dir dir = SPIFFS.openDir("/");
+  while (dir.next()) {
+    result += dir.fileName();
+    result += "\t";
+    File f = dir.openFile("r");
+    result += String(f.size());
+    result += " bytes\n";
+    f.close();
+  }
+  return result;
+}
 #endif

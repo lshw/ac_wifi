@@ -35,7 +35,7 @@ void wifi_setup() {
   WiFi.mode(WIFI_STA);
   set0.connected_is_ok = false;
   WiFi.hostname(hostname);
-  wifi_set_sleep_type(LIGHT_SLEEP_T);
+  //wifi_set_sleep_type(LIGHT_SLEEP_T);
   WiFi.setAutoConnect(true);    //自动链接上次
   WiFi.setAutoReconnect(true);  //断线自动重连
   if (SPIFFS.begin()) {
@@ -138,7 +138,6 @@ bool wifi_connected_is_ok() {
 #ifdef NETLOG
     netlog_setup();
 #endif
-
     return true;
   }
   return false;

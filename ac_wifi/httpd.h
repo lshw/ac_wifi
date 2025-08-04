@@ -29,18 +29,22 @@ void httpd_send_200(String javascript) {
 void http204() {
   httpd.send(204, "", "");
   httpd.client().stop();
+  body = "";
 }
 String switch_mode(uint16_t t) {
   if (t == 0)
     return String(F("保持"));
   return String(t) + F(" 秒");
 }
+void http_ls() {
+body = "<pre>" + ls() + "</pre>";
+  httpd_send_200("");
+}
 void handleRoot() {
   String wifi_stat, wifi_scan;
   String ssid;
   char ch[12];
   snprintf(ch, sizeof(ch), "%06X", led);
-  //body.reserve(8192 + 2048);
   body = F("name:<mark onclick=modi('/save.php?ac_name=','修改标识?','") + ac_name + F("')>") + ac_name + F("</mark> &nbsp;"
                                                                                                             "SN:<mark>")
          + hostname + "</mark> &nbsp;"
@@ -385,7 +389,6 @@ void http_add_ssid() {
   yield();
 }
 void api() {
-  String body;
   if (httpd.argName(0).compareTo("type") == 0) {
     if (httpd.arg(0) == "days") {
       File fp;
@@ -637,6 +640,7 @@ void httpd_listen() {
 
   httpd.on("/", handleRoot);
   httpd.on("/save.php", httpsave);           //保存设置
+  httpd.on("/ls.php", http_ls);           //保存设置
   httpd.on("/api.php", api);                 //api服务
   httpd.on("/sound.php", sound_play);        //播放音乐  http://xxxx/sound.php?play=123
   httpd.on("/add_ssid.php", http_add_ssid);  //保存设置
