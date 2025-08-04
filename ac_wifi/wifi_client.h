@@ -96,6 +96,28 @@ void wifi_setup() {
   WiFiMulti.run(5000);
   wifi_connected_is_ok();
 }
+void wifi_status() {
+    wl_status_t status = WiFi.status();
+    switch(status) {
+      case WL_CONNECTED:
+        Serial.println("WiFi 已连接");
+        break;
+      case WL_NO_SSID_AVAIL:
+        Serial.println("找不到指定WiFi");
+        break;
+      case WL_CONNECT_FAILED:
+        Serial.println("WiFi连接失败");
+        break;
+      case WL_IDLE_STATUS:
+        Serial.println("WiFi空闲");
+        break;
+      case WL_DISCONNECTED:
+        Serial.println("WiFi断开");
+        break;
+      default:
+        Serial.println("未知状态");
+    }
+}
 bool wifi_connected_is_ok() {
   if (set0.connected_is_ok)
     return set0.connected_is_ok;

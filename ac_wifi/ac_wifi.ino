@@ -89,10 +89,12 @@ void setup() {
   Serial.flush();
   wifi_setup();
   ESP.wdtEnable(5000);
+  body.reserve(8192 + 2048);
   Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
 }
 
 uint32_t last_wget = 0;
+uint32_t last_10sec = 0;
 uint8_t smart_status = 0;  //=0 smart未运行， =1 正在进行 尚未松开按键, =2 正在进行，已经松开按键, =3退出中， 检查松开就变成0
 void loop() {
   if (set0.relink) {
@@ -135,6 +137,11 @@ void loop() {
   if (time_update & MIN_UP) {
     minute();
     time_update &= ~MIN_UP;
+    yield();
+  }
+  if (time_update & SEC10_UP) {
+    sec10();
+    time_update &= ~SEC10_UP;
     yield();
   }
   system_soft_wdt_feed();
