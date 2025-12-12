@@ -6,7 +6,7 @@ WiFiServer tcpServer(23);
 WiFiClient netlog;
 #define LOG(format, ...) \
   if (netlog.connected()) netlog.printf(PSTR(format), ##__VA_ARGS__); \
-  if (Serial) Serial.printf(PSTR(format),  ##__VA_ARGS__);
+  if (Serial) Serial.printf(PSTR(format), ##__VA_ARGS__);
 
 void netlog_setup() {
   tcpServer.begin();

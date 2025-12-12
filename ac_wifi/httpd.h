@@ -37,7 +37,7 @@ String switch_mode(uint16_t t) {
   return String(t) + F(" 秒");
 }
 void http_ls() {
-body = "<pre>" + ls() + "</pre>";
+  body = "<pre>" + ls() + "</pre>";
   httpd_send_200("");
 }
 void handleRoot() {
@@ -485,6 +485,7 @@ void httpsave() {
       data = httpd.arg(i);
       nvram.kwh = data.toFloat();
       nvram.ac_pf = 0;
+      nvram.ac_pf0 = 0;
       play((char *)data.c_str());
       save_nvram();
       nvram_save = millis();
@@ -517,8 +518,8 @@ void httpsave() {
       break;
     } else if (httpd.argName(i).compareTo("tz") == 0) {
       float tz = httpd.arg(i).toFloat();
-      uint16_t tz0 = tz * 4;
-      tz = tz0 * 4;
+      int16_t tz0 = tz * 4;
+      tz = tz0 / 4;
       if (tz > 12.0) tz = 12.0;
       else if (tz < -12.0) tz = -12.0;
       if (tz != sets.tz) {
@@ -640,7 +641,7 @@ void httpd_listen() {
 
   httpd.on("/", handleRoot);
   httpd.on("/save.php", httpsave);           //保存设置
-  httpd.on("/ls.php", http_ls);           //保存设置
+  httpd.on("/ls.php", http_ls);              //保存设置
   httpd.on("/api.php", api);                 //api服务
   httpd.on("/sound.php", sound_play);        //播放音乐  http://xxxx/sound.php?play=123
   httpd.on("/add_ssid.php", http_add_ssid);  //保存设置

@@ -97,26 +97,26 @@ void wifi_setup() {
   wifi_connected_is_ok();
 }
 void wifi_status() {
-    wl_status_t status = WiFi.status();
-    switch(status) {
-      case WL_CONNECTED:
-        Serial.println("WiFi 已连接");
-        break;
-      case WL_NO_SSID_AVAIL:
-        Serial.println("找不到指定WiFi");
-        break;
-      case WL_CONNECT_FAILED:
-        Serial.println("WiFi连接失败");
-        break;
-      case WL_IDLE_STATUS:
-        Serial.println("WiFi空闲");
-        break;
-      case WL_DISCONNECTED:
-        Serial.println("WiFi断开");
-        break;
-      default:
-        Serial.println("未知状态");
-    }
+  wl_status_t status = WiFi.status();
+  switch (status) {
+    case WL_CONNECTED:
+      Serial.println("WiFi 已连接");
+      break;
+    case WL_NO_SSID_AVAIL:
+      Serial.println("找不到指定WiFi");
+      break;
+    case WL_CONNECT_FAILED:
+      Serial.println("WiFi连接失败");
+      break;
+    case WL_IDLE_STATUS:
+      Serial.println("WiFi空闲");
+      break;
+    case WL_DISCONNECTED:
+      Serial.println("WiFi断开");
+      break;
+    default:
+      Serial.println("未知状态");
+  }
 }
 bool wifi_connected_is_ok() {
   if (set0.connected_is_ok)
@@ -130,9 +130,9 @@ bool wifi_connected_is_ok() {
       save_nvram();
     }
     if (strlen(sets.ntp) < 4) {
-        configTime(sets.tz * 60, 0, "ntp.tuna.tsinghua.edu.cn", "ntp.tencent.com", "ntp.aliyun.com");
-    }else
-        configTime(sets.tz * 60, 0, sets.ntp,"ntp.tuna.tsinghua.edu.cn", "ntp.aliyun.com");
+      configTime(sets.tz * 60, 0, "ntp.tuna.tsinghua.edu.cn", "ntp.tencent.com", "ntp.aliyun.com");
+    } else
+      configTime(sets.tz * 60, 0, sets.ntp, "ntp.tuna.tsinghua.edu.cn", "ntp.aliyun.com");
     uint8_t ap_id = wifi_station_get_current_ap_id();
     struct station_config config[5];
     wifi_station_get_ap_info(config);

@@ -10,13 +10,13 @@ uint8_t time_update = 0;
 #define DAY_UP 4
 #define SEC10_UP 8
 void wifi_status();
-void sec10() { //由loop调用
-wifi_status();
+void sec10() {  //由loop调用
+  wifi_status();
 }
 void sec() {
   now.tm_sec++;
-  if(now.tm_sec & 10 == 1)
-   time_update |= SEC10_UP; //10秒标志， 让loop去调用sec10();
+  if (now.tm_sec & 10 == 1)
+    time_update |= SEC10_UP;  //10秒标志， 让loop去调用sec10();
   if (datamins[now.tm_min] < power)
     datamins[now.tm_min] = power;
   if (now.tm_sec >= 60) {

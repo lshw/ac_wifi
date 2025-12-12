@@ -240,7 +240,7 @@ String isotime(struct tm tm0) {
 
 String ls() {
   String result;
-  result.reserve(1024); // 预留1KB空间（根据预期内容大小调整）
+  result.reserve(1024);  // 预留1KB空间（根据预期内容大小调整）
   Dir dir = SPIFFS.openDir("/");
   while (dir.next()) {
     result += dir.fileName();

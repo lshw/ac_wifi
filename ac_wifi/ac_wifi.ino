@@ -108,7 +108,7 @@ void loop() {
       set0.httpd_up = true;
       httpd_listen();
     }
-    if(now.tm_year < __YEAR__ - 1900 && set0.connected_is_ok) {
+    if (now.tm_year < __YEAR__ - 1900 && set0.connected_is_ok) {
       Serial.println("getLocalTime()");
       Serial.println(getLocalTime(&now, 1000));
     }

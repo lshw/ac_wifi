@@ -1,8 +1,5 @@
 #ifndef __WS2813_H__
 #define __WS2813_H__
-#include "ets_sys.h"
-#include "osapi.h"
-#include "eagle_soc.h"
 #define LEDP 13                                        /* 接ws2813的 gpio */
 #define _300ns ((uint32_t)F_CPU / (1000000000L / 300)) /*300n需要的时钟周期数 */
 #define _780ns ((uint32_t)F_CPU / (1000000000L / 780))
