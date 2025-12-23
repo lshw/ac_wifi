@@ -67,17 +67,32 @@ void update_kwh_count() {  //根据需要修改并保存校准数据
 }
 
 uint32_t ac_ok_count = 0;
-void ac_20ms() {       //每20ms执行一次
-  set0.ac_ok = false;  //先设置数据无效
-  if (Serial.available() < 24) return;
-  if (Serial.available() > 24) {
-    while (Serial.available() > 24) {
-      Serial.read();
-    }
+uint16_t com_len = 0;
+void ac_20ms() {                        //每20ms执行一次
+  if (com_len != Serial.available()) {  //串口接受中， 就再等待20ms
+    com_len = Serial.available();
     return;
   }
-  memset(ac_buf, 0, sizeof(ac_buf));
+  if (com_len < 24) {  //数据不完整， 清理掉
+    while (Serial.available()) {
+      Serial.read();
+    }
+    com_len = 0;
+    return;
+  }
+  com_len = 0;
+  set0.ac_ok = false;  //先设置数据无效
+  if (Serial.available() > 24) {
+    while (Serial.available() > 24) {  //对齐
+      Serial.read();
+    }
+  }
+  memset(ac_buf, 1, sizeof(ac_buf));
   Serial.read(ac_buf, 24);
+  if (ac_buf[1] != 0x5a) {
+    ac_buf[23] = 1;
+    return;
+  }
   for (uint8_t i = 2; i < 23; i++) {
     ac_buf[23] -= ac_buf[i];
   }
