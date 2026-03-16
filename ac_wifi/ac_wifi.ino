@@ -202,8 +202,8 @@ void load_kwh_days() {
     if (SPIFFS.exists(fn)) {
       fp = SPIFFS.open(fn, "r");
       if (fp) {
-        while (fp.available()) {
-          fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday));
+        while (fp.available() >= (int)sizeof(dataday)) {
+          if (fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) != sizeof(dataday)) break;  // codex修改: 只接受完整记录
           kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
         }
         fp.close();
@@ -213,8 +213,8 @@ void load_kwh_days() {
     if (SPIFFS.exists(fn)) {
       fp = SPIFFS.open(fn, "r");
       if (fp) {
-        while (fp.available()) {
-          fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday));
+        while (fp.available() >= (int)sizeof(dataday)) {
+          if (fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) != sizeof(dataday)) break;  // codex修改: 只接受完整记录
           kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
         }
         fp.close();

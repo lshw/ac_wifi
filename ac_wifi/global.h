@@ -239,6 +239,34 @@ String isotime(struct tm tm0) {
          + ":" + int2str(tm0.tm_sec);
 }
 
+String html_escape(const String &src) {
+  String ret;
+  ret.reserve(src.length() + 8);
+  for (uint16_t i = 0; i < src.length(); i++) {
+    char ch = src[i];
+    if (ch == '&') ret += F("&amp;");
+    else if (ch == '<') ret += F("&lt;");
+    else if (ch == '>') ret += F("&gt;");
+    else if (ch == '"') ret += F("&quot;");
+    else if (ch == '\'') ret += F("&#39;");
+    else ret += ch;
+  }
+  return ret;
+}
+
+String js_quote_escape(const String &src) {
+  String ret;
+  ret.reserve(src.length() + 8);
+  for (uint16_t i = 0; i < src.length(); i++) {
+    char ch = src[i];
+    if (ch == '\\' || ch == '\'' || ch == '"') ret += '\\';
+    if (ch == '\r') ret += F("\\r");
+    else if (ch == '\n') ret += F("\\n");
+    else ret += ch;
+  }
+  return ret;
+}
+
 String ls() {
   String result;
   result.reserve(1024);  // 预留1KB空间（根据预期内容大小调整）

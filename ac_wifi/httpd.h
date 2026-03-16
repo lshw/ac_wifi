@@ -17,7 +17,7 @@ void httpd_send_200(String javascript) {
                                                "function modi(url,text,Defaulttext) {"
                                                "var data=prompt(text,Defaulttext);"
                                                "if (data==null) {return false;}"
-                                               "location.replace(url+data);"
+                                               "location.replace(url+encodeURIComponent(data));"
                                                "}")
                                  + javascript + F("</script>"
                                                   "</head>"
@@ -43,11 +43,16 @@ void http_ls() {
 void handleRoot() {
   String wifi_stat, wifi_scan;
   String ssid;
+  String ac_name_html = html_escape(ac_name);
+  String ac_name_js = js_quote_escape(ac_name);
+  String ntp_value = String((char *)sets.ntp);
+  String ntp_html = html_escape(ntp_value);
+  String ntp_js = js_quote_escape(ntp_value);
   char ch[12];
   snprintf(ch, sizeof(ch), "%06X", led);
-  body = F("name:<mark onclick=modi('/save.php?ac_name=','修改标识?','") + ac_name + F("')>") + ac_name + F("</mark> &nbsp;"
+  body = F("name:<mark onclick=modi('/save.php?ac_name=','修改标识?','") + ac_name_js + F("')>") + ac_name_html + F("</mark> &nbsp;"
                                                                                                             "SN:<mark>")
-         + hostname + "</mark> &nbsp;"
+         + html_escape(hostname) + "</mark> &nbsp;"
                       "版本:<mark>" VER "</mark> &nbsp;"
          + String(isotime(now)) + "<br>" + String(ac_raw()) + "<br>开关状态:";
   if (digitalRead(SSR) == HIGH) body += "<button onclick=gotoif('/save.php?switch=on','输出开启?');>关闭</button>";
@@ -57,7 +62,7 @@ void handleRoot() {
                                                                                                                                                                                       "关机时长:<mark onclick=modi('/save.php?switch_off_time=','修改关机秒数,0为保持','")
           + String(sets.switch_off_time) + F("')>") + switch_mode(sets.switch_off_time) + F("</mark>&nbsp;&nbsp;"
                                                                                             "授时服务器<mark onclick=modi('/save.php?ntp=','修改授时服务器,也可以不设置,保持为空.','")
-          + String((char *)sets.ntp) + F("')>:") + String((char *)sets.ntp) + F(" </mark>&nbsp;&nbsp;"
+          + ntp_js + F("')>:") + ntp_html + F(" </mark>&nbsp;&nbsp;"
                                                                                 "时区:<mark onclick=modi('/save.php?tz=','修改时区(-12,+12):','")
           + String(sets.tz, 2) + F("')>") + String(sets.tz, 2) + F("</mark>&nbsp;&nbsp;"
                                                                    "音量(0-128):<mark onclick=modi('/save.php?vol=','修改音量0-128','")
@@ -78,9 +83,9 @@ void handleRoot() {
           + F(",电流校准参数:") + String(sets.ac_i_calibration, 6)
           + F("<hr>");
   if (set0.connected_is_ok) {
-    body += F("wifi已连接 ssid:<mark>") + String(WiFi.SSID()) + F("</mark> &nbsp;"
+    body += F("wifi已连接 ssid:<mark>") + html_escape(String(WiFi.SSID())) + F("</mark> &nbsp;"
                                                                   "ap:<mark>")
-            + WiFi.BSSIDstr() + F("</mark> &nbsp;"
+            + html_escape(WiFi.BSSIDstr()) + F("</mark> &nbsp;"
                                   "信号:<mark>")
             + String(WiFi.RSSI()) + F("</mark>dbm &nbsp;"
                                       "ip:<mark>")
@@ -93,11 +98,13 @@ void handleRoot() {
         wifi_scan = F("自动扫描到如下WiFi,点击连接:<br>");
         for (int i = 0; i < n; ++i) {
           ssid = String(WiFi.SSID(i));
+          String ssid_html = html_escape(ssid);
+          String ssid_js = js_quote_escape(ssid);
           if (WiFi.encryptionType(i) != ENC_TYPE_NONE)
-            wifi_scan += F("&nbsp;<button onclick=get_passwd('") + ssid + F("')>*");
+            wifi_scan += F("&nbsp;<button onclick=get_passwd('") + ssid_js + F("')>*");
           else
-            wifi_scan += F("&nbsp;<button onclick=select_ssid('") + ssid + F("')>");
-          wifi_scan += String(WiFi.SSID(i)) + F("(") + String(WiFi.RSSI(i)) + F("dbm)");
+            wifi_scan += F("&nbsp;<button onclick=select_ssid('") + ssid_js + F("')>");
+          wifi_scan += ssid_html + F("(") + String(WiFi.RSSI(i)) + F("dbm)");
           wifi_scan += F("</button>");
           delay(10);
         }
@@ -116,12 +123,12 @@ void handleRoot() {
             "输入ssid:passwd(可以多行多个)"
             "<input type=submit value=save><br>"
             "<textarea  style='width:500px;height:80px;' name=data>")
-          + get_ssid() + F("</textarea><br>"
+          + html_escape(get_ssid()) + F("</textarea><br>"
                            "可以设置自己的服务器地址(清空恢复)<br>"
                            "url0:<input maxlength=100  size=30 type=text value='")
-          + get_url(0) + F("' name=url><br>"
+          + html_escape(get_url(0)) + F("' name=url><br>"
                            "url1:<input maxlength=100  size=30 type=text value='")
-          + get_url(1) + F("' name=url1><br>"
+          + html_escape(get_url(1)) + F("' name=url1><br>"
                            "<input type=submit name=submit value=save>"
                            "&nbsp;<input type=submit name=reboot value='reboot'>"
                            "</form>"
@@ -311,7 +318,7 @@ cvs.fill();\
       "function get_passwd(ssid) {\
 var passwd = prompt('输入 ' + ssid + ' 的密码:'); "
       "if (passwd == null) return false; "
-      "if (passwd) location.replace('add_ssid.php?data=' + ssid + ':' + passwd); "
+      "if (passwd) location.replace('add_ssid.php?data=' + encodeURIComponent(ssid + ':' + passwd)); "
       "else return false; "
       "return true; \
 }"
@@ -329,7 +336,7 @@ var passwd = prompt('输入 ' + ssid + ' 的密码:'); "
       "}"
 
       "function select_ssid(ssid) {\
-if (confirm('连接到[' + ssid + ']?')) location.replace('add_ssid.php?data=' + ssid); \
+if (confirm('连接到[' + ssid + ']?')) location.replace('add_ssid.php?data=' + encodeURIComponent(ssid)); \
 }"));
   body = "";
 }
@@ -401,8 +408,8 @@ void api() {
         if (SPIFFS.exists(fn)) {
           fp = SPIFFS.open(fn, "r");
           if (fp) {
-            while (fp.available()) {
-              fp.read((uint8_t *)&kwh_day, sizeof(kwh_day));
+            while (fp.available() >= (int)sizeof(kwh_day)) {
+              if (fp.read((uint8_t *)&kwh_day, sizeof(kwh_day)) != sizeof(kwh_day)) break;  // codex修改: 过滤不完整日数据记录
               body += time_ymd(kwh_day.time) + "," + String(kwh_day.kwh, 4) + "\r\n";
             }
             fp.close();
@@ -412,8 +419,8 @@ void api() {
         if (SPIFFS.exists(fn)) {
           fp = SPIFFS.open(fn, "r");
           if (fp) {
-            while (fp.available()) {
-              fp.read((uint8_t *)&kwh_day, sizeof(kwh_day));
+            while (fp.available() >= (int)sizeof(kwh_day)) {
+              if (fp.read((uint8_t *)&kwh_day, sizeof(kwh_day)) != sizeof(kwh_day)) break;  // codex修改: 过滤不完整日数据记录
               body += time_ymd(kwh_day.time) + "," + String(kwh_day.kwh, 4) + "\r\n";
             }
             fp.close();
