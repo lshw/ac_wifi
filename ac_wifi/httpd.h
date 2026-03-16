@@ -433,9 +433,12 @@ void api() {
     httpd.send(200, "text/csv", body);
   } else {
     ac_name.trim();
+    String ac_name_json = js_quote_escape(ac_name);
+    String hostname_json = js_quote_escape(hostname);
+    String isotime_json = js_quote_escape(isotime(now));
     httpd.send(200, F("application/json"), F("{"
                                              "\"NAME\":\"")
-                                             + ac_name + F("\",\"SN\":\"") + hostname + F("\",\"VER\":\"") + VER + "-" + GIT_VER + F("\",\"KWH\":") + String(get_kwh(), 8) + F(",\"V\":") + String(voltage) + F(",\"I\":") + String(current) + F(",\"W\":") + String(power) + F(",\"PF\":") + String(power_ys) + F(",\"TIME\":\"") + isotime(now) + F("\",\"SWITCH\":") + String(!digitalRead(SSR)) + F(",\"SWITCH_CHANGE_TIME\":") + String(switch_change_time) + "}");
+                                             + ac_name_json + F("\",\"SN\":\"") + hostname_json + F("\",\"VER\":\"") + VER + "-" + GIT_VER + F("\",\"KWH\":") + String(get_kwh(), 8) + F(",\"V\":") + String(voltage) + F(",\"I\":") + String(current) + F(",\"W\":") + String(power) + F(",\"PF\":") + String(power_ys) + F(",\"TIME\":\"") + isotime_json + F("\",\"SWITCH\":") + String(!digitalRead(SSR)) + F(",\"SWITCH_CHANGE_TIME\":") + String(switch_change_time) + "}");
   }
   httpd.client().stop();
   yield();
@@ -462,7 +465,7 @@ void sound_play() {
 void httpsave() {
   File fp;
   String data;
-  SPIFFS.begin();
+  bool spiffs_ok = SPIFFS.begin();
   for (uint8_t i = 0; i < httpd.args(); i++) {
     if (httpd.argName(i).compareTo("reboot") == 0) {
       set0.reboot_now = true;
@@ -475,23 +478,33 @@ void httpsave() {
       data.replace("\xa3\xba", ":");      //gbk :
       data.replace("\xa1\x47", ":");      //big5 :
       if (data.length() > 8) {
-        fp = SPIFFS.open("/ssid.txt", "w");
-        fp.println(data);
-        fp.close();
-        fp = SPIFFS.open("/ssid.txt", "r");
-        Serial.print(F("保存wifi设置到文件/ssid.txt "));
-        Serial.print(fp.size());
-        Serial.println(F("字节"));
-        fp.close();
+        if (spiffs_ok) {
+          fp = SPIFFS.open("/ssid.txt", "w");
+          if (fp) {
+            fp.println(data);
+            fp.close();
+            fp = SPIFFS.open("/ssid.txt", "r");
+            if (fp) {
+              Serial.print(F("保存wifi设置到文件/ssid.txt "));
+              Serial.print(fp.size());
+              Serial.println(F("字节"));
+              fp.close();
+            }
+          }
+        }
       } else if (data.length() < 2)
-        SPIFFS.remove("/ssid.txt");
+        if (spiffs_ok) SPIFFS.remove("/ssid.txt");
       data = "";
     } else if (httpd.argName(i).compareTo("ac_name") == 0) {
       ac_name = httpd.arg(i);
       ac_name.trim();
-      fp = SPIFFS.open("/ac_name.txt", "w");
-      fp.println(ac_name);
-      fp.close();
+      if (spiffs_ok) {
+        fp = SPIFFS.open("/ac_name.txt", "w");
+        if (fp) {
+          fp.println(ac_name);
+          fp.close();
+        }
+      }
     } else if (httpd.argName(i).compareTo("kwh") == 0) {
       data = httpd.arg(i);
       nvram.kwh = data.toFloat();
@@ -552,22 +565,30 @@ void httpsave() {
       data = httpd.arg(i);
       data.trim();
       if (data.length() == 0) {
-        SPIFFS.remove("/url.txt");
+        if (spiffs_ok) SPIFFS.remove("/url.txt");
       } else {
-        fp = SPIFFS.open("/url.txt", "w");
-        fp.println(data);
-        fp.close();
+        if (spiffs_ok) {
+          fp = SPIFFS.open("/url.txt", "w");
+          if (fp) {
+            fp.println(data);
+            fp.close();
+          }
+        }
       }
       data = "";
     } else if (httpd.argName(i).compareTo("url1") == 0) {
       data = httpd.arg(i);
       data.trim();
       if (data.length() == 0) {
-        SPIFFS.remove("/url1.txt");
+        if (spiffs_ok) SPIFFS.remove("/url1.txt");
       } else {
-        fp = SPIFFS.open("/url1.txt", "w");
-        fp.println(data);
-        fp.close();
+        if (spiffs_ok) {
+          fp = SPIFFS.open("/url1.txt", "w");
+          if (fp) {
+            fp.println(data);
+            fp.close();
+          }
+        }
       }
       data = "";
     } else if (httpd.argName(i).compareTo("switch_on_time") == 0) {
@@ -602,9 +623,11 @@ void httpsave() {
         if (httpd.arg(i) == hostname) {
           kwh = get_kwh();
         }
-        SPIFFS.remove("/nvram.txt");
-        SPIFFS.remove("/sets_default.txt");
-        SPIFFS.remove("/sets.txt");
+        if (spiffs_ok) {
+          SPIFFS.remove("/nvram.txt");
+          SPIFFS.remove("/sets_default.txt");
+          SPIFFS.remove("/sets.txt");
+        }
         nvram.crc32++;
         ESP.rtcUserMemoryWrite(0, (uint32_t *)&nvram, sizeof(nvram));
         nvram.kwh = kwh;
@@ -615,9 +638,9 @@ void httpsave() {
       } else {
         data = F("密码错误!");
       }
-      SPIFFS.end();
+      if (spiffs_ok) SPIFFS.end();
       body = data + F("....");
-      httpd_send_200(F("setTimeout(function(){ alert('") + data + F("'); window.location.href = '/';}, 1000);"));
+      httpd_send_200(F("setTimeout(function(){ alert('") + js_quote_escape(data) + F("'); window.location.href = '/';}, 1000);"));
       yield();
       ESP.restart();
       break;
@@ -638,10 +661,10 @@ void httpsave() {
       break;
     }
   }
-  SPIFFS.end();
+  if (spiffs_ok) SPIFFS.end();
   if (data != "") {
     body = data + F("....");
-    httpd_send_200(F("setTimeout(function(){ alert('") + data + F("'); window.location.href = '/';}, 1000);"));
+    httpd_send_200(F("setTimeout(function(){ alert('") + js_quote_escape(data) + F("'); window.location.href = '/';}, 1000);"));
   } else {
     body = F("返回首页....");
     httpd_send_200(F("window.location.href = '/';"));
