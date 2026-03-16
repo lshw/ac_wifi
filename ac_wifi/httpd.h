@@ -19,11 +19,15 @@ void body_send_chunk() {
 void body_send_if_large(size_t threshold = 2048) {
   if (body.length() >= threshold) body_send_chunk();
 }
-void httpd_stream_begin(const __FlashStringHelper *javascript) {
+void httpd_stream_begin_raw(const char *content_type) {
   httpd.sendHeader("charset", "utf-8");
   httpd.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  httpd.send(200, "text/html", "");
+  httpd.send(200, content_type, "");
   body = "";
+  body.reserve(1024);
+}
+void httpd_stream_begin(const __FlashStringHelper *javascript) {
+  httpd_stream_begin_raw("text/html");
   body.reserve(2048);
   body += F("<html><head><title>");
   body += ac_name;
@@ -456,6 +460,7 @@ void api() {
     if (httpd.arg(0) == "days") {
       File fp;
       struct dataday kwh_day;
+      httpd_stream_begin_raw("text/csv");
       if (SPIFFS.begin()) {
         String fn = "/" + String(now.tm_year + 1900 - 1) + ".dat";
         if (SPIFFS.exists(fn)) {
@@ -464,6 +469,7 @@ void api() {
             while (fp.available() >= (int)sizeof(kwh_day)) {
               if (fp.read((uint8_t *)&kwh_day, sizeof(kwh_day)) != sizeof(kwh_day)) break;  // codex修改: 过滤不完整日数据记录
               body += time_ymd(kwh_day.time) + "," + String(kwh_day.kwh, 4) + "\r\n";
+              body_send_if_large();  // codex修改: 导出日数据时分段发送，避免全年数据一次性堆积
             }
             fp.close();
           }
@@ -475,15 +481,19 @@ void api() {
             while (fp.available() >= (int)sizeof(kwh_day)) {
               if (fp.read((uint8_t *)&kwh_day, sizeof(kwh_day)) != sizeof(kwh_day)) break;  // codex修改: 过滤不完整日数据记录
               body += time_ymd(kwh_day.time) + "," + String(kwh_day.kwh, 4) + "\r\n";
+              body_send_if_large();  // codex修改: 导出日数据时分段发送，避免全年数据一次性堆积
             }
             fp.close();
           }
         }
         SPIFFS.end();  // codex修改: API 读取完成后关闭 SPIFFS，避免请求累积占用
       }
+      body_send_chunk();
+      httpd.sendContent("");
       //    }else if(httpd.arg(0)=="hours") {
+    } else {
+      httpd.send(200, "text/csv", "");
     }
-    httpd.send(200, "text/csv", body);
   } else {
     ac_name.trim();
     String ac_name_json = js_quote_escape(ac_name);
