@@ -43,16 +43,23 @@ void http_ls() {
 void handleRoot() {
   String wifi_stat, wifi_scan;
   String ssid;
+  body = "";
+  body.reserve(16384);  // codex修改: 请求开始前预留接近最终页面大小的空间，减少拼接过程中的反复重分配
+  wifi_scan.reserve(1024);
   String ac_name_html = html_escape(ac_name);
   String ac_name_js = js_quote_escape(ac_name);
   String ntp_value = String((char *)sets.ntp);
   String ntp_html = html_escape(ntp_value);
   String ntp_js = js_quote_escape(ntp_value);
+  String hostname_html = html_escape(hostname);
+  String ssid_text = get_ssid();
+  String url0_text = get_url(0);
+  String url1_text = get_url(1);
   char ch[12];
   snprintf(ch, sizeof(ch), "%06X", led);
-  body = F("name:<mark onclick=modi('/save.php?ac_name=','修改标识?','") + ac_name_js + F("')>") + ac_name_html + F("</mark> &nbsp;"
+  body += F("name:<mark onclick=modi('/save.php?ac_name=','修改标识?','") + ac_name_js + F("')>") + ac_name_html + F("</mark> &nbsp;"
                                                                                                             "SN:<mark>")
-         + html_escape(hostname) + "</mark> &nbsp;"
+         + hostname_html + "</mark> &nbsp;"
                       "版本:<mark>" VER "</mark> &nbsp;"
          + String(isotime(now)) + "<br>" + String(ac_raw()) + "<br>开关状态:";
   if (digitalRead(SSR) == HIGH) body += "<button onclick=gotoif('/save.php?switch=on','输出开启?');>关闭</button>";
@@ -123,12 +130,12 @@ void handleRoot() {
             "输入ssid:passwd(可以多行多个)"
             "<input type=submit value=save><br>"
             "<textarea  style='width:500px;height:80px;' name=data>")
-          + html_escape(get_ssid()) + F("</textarea><br>"
+          + html_escape(ssid_text) + F("</textarea><br>"
                            "可以设置自己的服务器地址(清空恢复)<br>"
                            "url0:<input maxlength=100  size=30 type=text value='")
-          + html_escape(get_url(0)) + F("' name=url><br>"
+          + html_escape(url0_text) + F("' name=url><br>"
                            "url1:<input maxlength=100  size=30 type=text value='")
-          + html_escape(get_url(1)) + F("' name=url1><br>"
+          + html_escape(url1_text) + F("' name=url1><br>"
                            "<input type=submit name=submit value=save>"
                            "&nbsp;<input type=submit name=reboot value='reboot'>"
                            "</form>"

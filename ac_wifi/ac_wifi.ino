@@ -89,7 +89,7 @@ void setup() {
   Serial.flush();
   wifi_setup();
   ESP.wdtEnable(5000);
-  body.reserve(8192 + 2048);
+  body.reserve(16384);  // codex修改: 首页包含多段图表数据，预留更大缓冲区以减少动态扩容和堆碎片
   Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
 }
 
