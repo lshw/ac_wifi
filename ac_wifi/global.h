@@ -205,15 +205,16 @@ void switch_change(bool onff) {
   }
 }
 inline char *strncpy(char *dest, uint16_t size, const __FlashStringHelper *ifsh) {
+  if (size == 0) return dest;
   uint16_t i = 0;
   char bc;
   PGM_P p = reinterpret_cast<PGM_P>(ifsh);
-  while (bc = pgm_read_byte(p + i)) {
-    if (i >= size) break;
+  dest[0] = 0;
+  while ((bc = pgm_read_byte(p + i)) && i + 1 < size) {
     dest[i] = bc;
     i++;
-    dest[i] = 0;
   }
+  dest[i] = 0;  // codex修改: 始终在缓冲区范围内补零，避免 size 边界写越界
   return dest;
 }
 String int2str(uint8_t dat) {

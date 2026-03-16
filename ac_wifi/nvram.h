@@ -62,13 +62,16 @@ void save_nvram_file() {
       return;
   }
   last_save = millis();
-  SPIFFS.begin();
-  fp = SPIFFS.open("/nvram.txt", "w");
-  save_nvram();
-  fp.write((uint8_t *)&nvram, sizeof(nvram));
-  fp.close();
-  SPIFFS.end();
-  nvram_save = 0;
+  if (SPIFFS.begin()) {
+    fp = SPIFFS.open("/nvram.txt", "w");
+    save_nvram();
+    if (fp) {
+      fp.write((uint8_t *)&nvram, sizeof(nvram));
+      fp.close();
+      nvram_save = 0;  // codex修改: 只有文件写成功后才清除待保存标志
+    }
+    SPIFFS.end();
+  }
 }
 void load_nvram() {
   File fp;
@@ -109,15 +112,18 @@ void load_nvram() {
 void save_set(bool _default) {
   File fp;
   sets.crc32 = calculateCRC32((uint8_t *)&sets, sizeof(sets) - sizeof(sets.crc32));
-  SPIFFS.begin();
-  if (_default)
-    fp = SPIFFS.open("/sets_default.txt", "w");
-  else
-    fp = SPIFFS.open("/sets.txt", "w");
-  fp.write((uint8_t *)&sets, sizeof(sets));
-  fp.close();
-  SPIFFS.end();
-  set_modi &= ~SET_CHARGE;
+  if (SPIFFS.begin()) {
+    if (_default)
+      fp = SPIFFS.open("/sets_default.txt", "w");
+    else
+      fp = SPIFFS.open("/sets.txt", "w");
+    if (fp) {
+      fp.write((uint8_t *)&sets, sizeof(sets));
+      fp.close();
+      set_modi &= ~SET_CHARGE;  // codex修改: 写盘成功后再清除脏标记
+    }
+    SPIFFS.end();
+  }
 }
 
 void load_set() {

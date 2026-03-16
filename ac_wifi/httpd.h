@@ -337,22 +337,25 @@ void handleNotFound() {
   File fp;
   int ch;
   body = "";
-  SPIFFS.begin();
-  if (SPIFFS.exists(httpd.uri().c_str())) {
-    fp = SPIFFS.open(httpd.uri().c_str(), "r");
-    if (fp) {
-      while (1) {
-        ch = fp.read();
-        if (ch == -1) break;
-        body += (char)ch;
+  if (SPIFFS.begin()) {
+    if (SPIFFS.exists(httpd.uri().c_str())) {
+      fp = SPIFFS.open(httpd.uri().c_str(), "r");
+      if (fp) {
+        while (1) {
+          ch = fp.read();
+          if (ch == -1) break;
+          body += (char)ch;
+        }
+        fp.close();
+        SPIFFS.end();  // codex修改: 命中文件后也及时释放文件系统句柄
+        httpd.sendHeader("charset", "utf-8");
+        httpd.send(200, "text/plain", body);
+        httpd.client().stop();
+        body = "";
+        return;
       }
-      fp.close();
-      httpd.sendHeader("charset", "utf-8");
-      httpd.send(200, "text/plain", body);
-      httpd.client().stop();
-      body = "";
-      return;
     }
+    SPIFFS.end();
   }
   yield();
   body = F("404 File Not Found\n\nURI: ") + httpd.uri()
@@ -416,6 +419,7 @@ void api() {
             fp.close();
           }
         }
+        SPIFFS.end();  // codex修改: API 读取完成后关闭 SPIFFS，避免请求累积占用
       }
       //    }else if(httpd.arg(0)=="hours") {
     }
