@@ -45,11 +45,11 @@ uint16_t wget() {
 
 String get_url(uint8_t no) {
   File fp;
-  char fn[20];
   String ret;
+  bool spiffs_ok = SPIFFS.begin();
   if (no == 0 || no == '0') ret = String(DEFAULT_URL0);
   else ret = String(DEFAULT_URL1);
-  if (SPIFFS.begin()) {
+  if (spiffs_ok) {
     if (no == 0 || no == '0')
       fp = SPIFFS.open("/url.txt", "r");
     else
@@ -68,8 +68,8 @@ String get_url(uint8_t no) {
         ret.replace("www.wf163.com/", "temp2.wf163.com:808/");
       }
     }
+    SPIFFS.end();
   }
-  SPIFFS.end();
   if (ret == "") {
     if (no == 0 || no == '0')
       ret = DEFAULT_URL0;
@@ -81,7 +81,8 @@ String get_url(uint8_t no) {
 String get_ssid() {
   File fp;
   String ssid;
-  if (SPIFFS.begin()) {
+  bool spiffs_ok = SPIFFS.begin();
+  if (spiffs_ok) {
     fp = SPIFFS.open("/ssid.txt", "r");
     if (fp) {
       ssid = fp.readString();
@@ -95,7 +96,7 @@ String get_ssid() {
   } else
     Serial.print(F("载入ssid设置:"));
   Serial.println(ssid);
-  SPIFFS.end();
+  if (spiffs_ok) SPIFFS.end();
   return ssid;
 }
 

@@ -128,26 +128,33 @@ void save_set(bool _default) {
 
 void load_set() {
   File fp;
-  SPIFFS.begin();
+  bool spiffs_ok = SPIFFS.begin();
+  bool need_save_set = false;
   if (ac_name == "") {
-    if (SPIFFS.exists("/ac_name.txt")) {
+    if (spiffs_ok && SPIFFS.exists("/ac_name.txt")) {
       fp = SPIFFS.open("/ac_name.txt", "r");
-      ac_name = fp.readString();
-      ac_name.trim();
+      if (fp) {
+        ac_name = fp.readString();
+        ac_name.trim();
+        fp.close();
+      }
+    }
+  }
+  if (spiffs_ok && SPIFFS.exists("/sets.txt")) {
+    fp = SPIFFS.open("/sets.txt", "r");
+    if (fp) {
+      fp.read((uint8_t *)&sets, sizeof(sets));
       fp.close();
     }
   }
-  if (SPIFFS.exists("/sets.txt")) {
-    fp = SPIFFS.open("/sets.txt", "r");
-    fp.read((uint8_t *)&sets, sizeof(sets));
-    fp.close();
-  }
   uint32_t chipid = ESP.getChipId();
   if (sets.crc32 != calculateCRC32((uint8_t *)&sets, sizeof(sets) - sizeof(sets.crc32))) {
-    if (SPIFFS.exists("/sets_default.txt")) {
+    if (spiffs_ok && SPIFFS.exists("/sets_default.txt")) {
       fp = SPIFFS.open("/sets_default.txt", "r");
-      fp.read((uint8_t *)&sets, sizeof(sets));
-      fp.close();
+      if (fp) {
+        fp.read((uint8_t *)&sets, sizeof(sets));
+        fp.close();
+      }
     }
     if (sets.crc32 != calculateCRC32((uint8_t *)&sets, sizeof(sets) - sizeof(sets.crc32))) {
       sets.serial = 0;
@@ -167,17 +174,18 @@ void load_set() {
       sets.switch_on_time = 0;
       sets.switch_off_time = 0;
     }
-    save_set(false);
+    need_save_set = true;  // codex修改: 退出当前 SPIFFS 会话后再保存，避免 begin/end 嵌套
   }
   for (uint16_t i = 0; i < sizeof(calibrations) / sizeof(calibration); i++) {
     if (chipid == calibrations[i].serial) {
       if (sets.i_max != calibrations[i].i_max) {
         sets.i_max = calibrations[i].i_max;
-        save_set(false);
+        need_save_set = true;  // codex修改: 合并成一次保存，减少文件系统反复开关
       }
     }
   }
-  SPIFFS.end();
+  if (spiffs_ok) SPIFFS.end();
+  if (need_save_set) save_set(false);
 }
 
 #endif  //__NVRAM__
