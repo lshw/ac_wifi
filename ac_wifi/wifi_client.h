@@ -171,23 +171,42 @@ bool wifi_connected_is_ok() {
 }
 
 uint16_t http_get(uint8_t no) {
-  char key[17];
   String url0 = get_url(no);
+  String wifi_ssid = WiFi.SSID();
+  String wifi_bssid = WiFi.BSSIDstr();
+  char numbuf[32];
+  url0.reserve(url0.length() + 192);  // codex修改: 周期上报路径预留空间，减少多参数拼接时的反复扩容
   if (url0.indexOf('?') > 0)
     url0 += '&';
   else
     url0 += '?';
-  url0 += "ver=" VER "&sn=" + hostname
-          + "&kwh=" + String(get_kwh())
-          + "&v=" + String(sets.vol)
-          + "&w=" + String(power)
-          + "&i=" + String(current)
-          + "&pf=" + String(power_ys * 100.0)
-          + "&ssid=" + String(WiFi.SSID())
-          + "&bssid=" + WiFi.BSSIDstr()
-          + "&GIT=" GIT_VER
-          + "&rssi=" + String(WiFi.RSSI())
-          + "&ms=" + String(millis());
+  url0 += F("ver=" VER "&sn=");
+  url0 += hostname;
+  url0 += F("&kwh=");
+  snprintf(numbuf, sizeof(numbuf), "%.8f", get_kwh());
+  url0 += numbuf;
+  url0 += F("&v=");
+  snprintf(numbuf, sizeof(numbuf), "%d", sets.vol);
+  url0 += numbuf;
+  url0 += F("&w=");
+  snprintf(numbuf, sizeof(numbuf), "%.0f", power);
+  url0 += numbuf;
+  url0 += F("&i=");
+  snprintf(numbuf, sizeof(numbuf), "%.3f", current);
+  url0 += numbuf;
+  url0 += F("&pf=");
+  snprintf(numbuf, sizeof(numbuf), "%.2f", power_ys * 100.0);
+  url0 += numbuf;
+  url0 += F("&ssid=");
+  url0 += wifi_ssid;
+  url0 += F("&bssid=");
+  url0 += wifi_bssid;
+  url0 += F("&GIT=" GIT_VER "&rssi=");
+  snprintf(numbuf, sizeof(numbuf), "%d", WiFi.RSSI());
+  url0 += numbuf;
+  url0 += F("&ms=");
+  snprintf(numbuf, sizeof(numbuf), "%lu", millis());
+  url0 += numbuf;
   Serial.println(url0);      //串口输出
   http.begin(client, url0);  //HTTP提交
   http.setTimeout(4000);
