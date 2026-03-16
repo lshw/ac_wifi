@@ -35,6 +35,7 @@ void wifi_setup() {
   WiFi.mode(WIFI_STA);
   set0.connected_is_ok = false;
   WiFi.hostname(hostname);
+  WiFiMulti.cleanAPlist();  // codex修改: 重连前先清空旧列表，避免重复 addAP 导致内存持续增长
   //wifi_set_sleep_type(LIGHT_SLEEP_T);
   WiFi.setAutoConnect(true);    //自动链接上次
   WiFi.setAutoReconnect(true);  //断线自动重连
@@ -80,7 +81,7 @@ void wifi_setup() {
               passwd += ch;
         }
       }
-      if (ssid != "" && passwd != "") {
+      if (ssid != "") {
         if (count < 5) count++;
         Serial.print(F("Ssid:"));
         Serial.println(ssid);
@@ -91,7 +92,7 @@ void wifi_setup() {
     }
     if (count == 0)
       WiFiMulti.addAP("test", "cfido.com");
-    fp.close();
+    if (fp) fp.close();
     SPIFFS.end();
   }
   WiFiMulti.run(5000);

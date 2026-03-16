@@ -168,8 +168,13 @@ void loop() {
   if (kwh_days_p == -1 && now.tm_year > 121) {
     load_kwh_days();
   }
-  if (smart_status == 0 && keydown_ms > 0 && millis() - keydown_ms > 5000 && digitalRead(KEYWORD) == LOW) {
-    keydown_ms = 0;
+  noInterrupts();
+  uint32_t keydown_ms0 = keydown_ms;
+  interrupts();
+  if (smart_status == 0 && keydown_ms0 > 0 && millis() - keydown_ms0 > 5000 && digitalRead(KEYWORD) == LOW) {
+    noInterrupts();
+    keydown_ms = 0;  // codex修改: 先复制再判断，避免和按键中断并发读写
+    interrupts();
     Serial.println(F("smart_config() begin"));
     smart_status = 1;
     smart_config();

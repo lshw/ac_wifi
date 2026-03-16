@@ -3,7 +3,7 @@
 #include <time.h>
 #include "global.h"
 struct tm now;
-uint8_t time_update = 0;
+volatile uint8_t time_update = 0;
 
 #define MIN_UP 1
 #define HOUR_UP 2
