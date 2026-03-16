@@ -77,27 +77,33 @@ void load_nvram() {
   File fp;
   ESP.rtcUserMemoryRead(0, (uint32_t *)&nvram, sizeof(nvram));
   if (nvram.crc32 != calculateCRC32((uint8_t *)&nvram, sizeof(nvram) - sizeof(nvram.crc32))) {
-    SPIFFS.begin();
-    if (SPIFFS.exists("/nvram.txt")) {
+    bool spiffs_ok = SPIFFS.begin();
+    if (spiffs_ok && SPIFFS.exists("/nvram.txt")) {
       fp = SPIFFS.open("/nvram.txt", "r");
       if (fp) {
-        fp.read((uint8_t *)&nvram, sizeof(nvram));
+        if (fp.read((uint8_t *)&nvram, sizeof(nvram)) != sizeof(nvram)) {
+          memset(&nvram, 0, sizeof(nvram));  // codex修改: 文件长度不足时视为损坏，避免半截结构体参与 CRC
+        }
         fp.close();
       }
     }
     if (nvram.crc32 != calculateCRC32((uint8_t *)&nvram, sizeof(nvram) - sizeof(nvram.crc32))) {
       memset(&nvram, 0, sizeof(nvram));
       update_kwh_count();  //校准数据初始化
-      SPIFFS.remove("/hours.dat");
+      if (spiffs_ok) SPIFFS.remove("/hours.dat");
       memset(datahour, 0, sizeof(datahour));
     } else {
-      fp = SPIFFS.open("/hours.dat", "r");
+      fp = spiffs_ok ? SPIFFS.open("/hours.dat", "r") : File();
       if (fp) {
-        fp.read((uint8_t *)&datahour, sizeof(datahour));
+        if (fp.read((uint8_t *)&datahour, sizeof(datahour)) != sizeof(datahour)) {
+          memset(datahour, 0, sizeof(datahour));  // codex修改: 小时统计不完整时直接丢弃，避免旧数据残留
+        }
         fp.close();
+      } else {
+        memset(datahour, 0, sizeof(datahour));
       }
     }
-    SPIFFS.end();
+    if (spiffs_ok) SPIFFS.end();
   } else {
     Serial.print(F("\r\nwifi channel="));
     Serial.println(nvram.ch);
@@ -143,7 +149,9 @@ void load_set() {
   if (spiffs_ok && SPIFFS.exists("/sets.txt")) {
     fp = SPIFFS.open("/sets.txt", "r");
     if (fp) {
-      fp.read((uint8_t *)&sets, sizeof(sets));
+      if (fp.read((uint8_t *)&sets, sizeof(sets)) != sizeof(sets)) {
+        memset(&sets, 0, sizeof(sets));  // codex修改: 配置文件长度异常时按损坏处理
+      }
       fp.close();
     }
   }
@@ -152,7 +160,9 @@ void load_set() {
     if (spiffs_ok && SPIFFS.exists("/sets_default.txt")) {
       fp = SPIFFS.open("/sets_default.txt", "r");
       if (fp) {
-        fp.read((uint8_t *)&sets, sizeof(sets));
+        if (fp.read((uint8_t *)&sets, sizeof(sets)) != sizeof(sets)) {
+          memset(&sets, 0, sizeof(sets));  // codex修改: 默认配置文件长度异常时按损坏处理
+        }
         fp.close();
       }
     }
