@@ -6,6 +6,11 @@
 extern String hostname;
 String body;
 ESP8266WebServer httpd(80);
+void body_append_number(double value, uint8_t decimals = 0) {
+  char numbuf[24];
+  snprintf(numbuf, sizeof(numbuf), "%.*f", decimals, value);
+  body += numbuf;
+}
 void httpd_send_200(String javascript) {
   httpd.sendHeader("charset", "utf-8");
   httpd.send(200, "text/html", F("<html>"
@@ -170,7 +175,7 @@ name:'功率(W)',\
 color:'red',\
 data:[");
   for (uint16_t i = 0; i < 600; i++) {
-    body += String(data100ms[(i + data100ms_p) % 600], 1);
+    body_append_number(data100ms[(i + data100ms_p) % 600], 1);  // codex修改: 避免循环内构造大量临时 String
     body += ",";
   }
   body += F("]\
@@ -192,7 +197,7 @@ name:'功率(W)',\
 color:'red',\
 data:[");
   for (uint16_t i = 0; i < 60; i++) {
-    body += String(datamins[(now.tm_min + i + 1) % 60]);
+    body_append_number(datamins[(now.tm_min + i + 1) % 60], 2);  // codex修改: 改用固定缓冲区输出数值
     body += ",";
   }
   body += F("]}];\
@@ -205,7 +210,7 @@ name:'耗电量(Wh)',\
 color:'red',\
 data:[");
   for (uint16_t i = 0; i < 24; i++) {
-    body += String(datahour[(now.tm_hour + i + 1) % 24] * 1000.0);
+    body_append_number(datahour[(now.tm_hour + i + 1) % 24] * 1000.0, 2);  // codex修改: 改用固定缓冲区输出数值
     body += ",";
   }
   body += F("]}];\
@@ -221,7 +226,7 @@ data:[");
   for (uint16_t i = 0; i < KWH_DAYS; i++) {
     kwh0 = kwh_days[(kwh_days_p + i) % KWH_DAYS].kwh;
     if (kwh0 > 3.0 * 24) continue;
-    body += String(kwh0, 4);
+    body_append_number(kwh0, 4);  // codex修改: 改用固定缓冲区输出数值
     body += ",";
   }
   body += F("]}];\
