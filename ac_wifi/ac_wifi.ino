@@ -97,6 +97,15 @@ uint32_t last_wget = 0;
 uint32_t last_10sec = 0;
 uint8_t smart_status = 0;  //=0 smart未运行， =1 正在进行 尚未松开按键, =2 正在进行，已经松开按键, =3退出中， 检查松开就变成0
 void loop() {
+  if (key_toggle_pending) {
+    noInterrupts();
+    bool do_toggle = key_toggle_pending;
+    key_toggle_pending = false;
+    interrupts();
+    if (do_toggle) {
+      switch_change(!digitalRead(SSR));  // codex修改: 把重操作移到主循环执行
+    }
+  }
   if (set0.relink) {
     set0.relink = false;
     wifi_setup();

@@ -199,7 +199,7 @@ char* ac_raw() {
       ac_str[i] = ' ';
       i++;
     }
-    snprintf(&ac_str[i], sizeof(ac_str), "%02x", ac_buf[i0]);
+    snprintf(&ac_str[i], sizeof(ac_str) - i, "%02x", ac_buf[i0]);  // codex修改: 传入剩余缓冲区长度
     i = i + 2;
   }
   return ac_str;

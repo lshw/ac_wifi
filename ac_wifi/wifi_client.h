@@ -58,6 +58,7 @@ void wifi_setup() {
           case 0xd:
           case 0xa:
             if (ssid != "") {
+              if (count < 255) count++;  // codex修改: 正常换行结尾的配置也要计数，避免误加默认 AP
               Serial.print(F("Ssid:"));
               Serial.println(ssid);
               Serial.print(F("Passwd:"));
@@ -196,7 +197,7 @@ uint16_t http_get(uint8_t no) {
       break;
     }
   }
-  //  http.end();
+  http.end();  // codex修改: 释放 HTTP 连接，避免长时间运行后堆碎片和句柄泄漏
   url0 = "";
   return httpCode;
 }

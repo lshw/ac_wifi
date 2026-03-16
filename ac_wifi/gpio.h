@@ -1,7 +1,8 @@
 #ifndef __GPIO_H__
 #define __GPIO_H__
 extern uint8_t smart_status;
-uint32_t keydown_ms = 0;
+volatile uint32_t keydown_ms = 0;
+volatile bool key_toggle_pending = false;
 void ICACHE_RAM_ATTR key_int() {
   if (smart_status > 0)  //正在配网的话，关闭按键，
     return;
@@ -15,8 +16,7 @@ void ICACHE_RAM_ATTR key_int() {
       keydown_ms = 0;
       return;  //按下超过 10秒， 是进入smartconf状态;
     }
-
-    switch_change(!digitalRead(SSR));
+    key_toggle_pending = true;  // codex修改: 中断里只置位，避免在 ISR 中执行蜂鸣器和 LED 逻辑
     keydown_ms = 0;
   }
 }

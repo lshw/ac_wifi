@@ -15,7 +15,7 @@ void sec10() {  //由loop调用
 }
 void sec() {
   now.tm_sec++;
-  if (now.tm_sec & 10 == 1)
+  if ((now.tm_sec % 10) == 0)  // codex修改: 修正运算符优先级，按 10 秒周期触发
     time_update |= SEC10_UP;  //10秒标志， 让loop去调用sec10();
   if (datamins[now.tm_min] < power)
     datamins[now.tm_min] = power;
