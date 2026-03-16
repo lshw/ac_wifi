@@ -10,6 +10,28 @@ ESP8266WiFiMulti WiFiMulti;
 WiFiClient client;
 HTTPClient http;
 String ssid, passwd;
+bool http_response_is_update(HTTPClient &http) {
+  WiFiClient *stream = http.getStreamPtr();
+  char payload[16];
+  size_t len = 0;
+  unsigned long deadline = millis() + 1000;
+  while (stream && stream->connected() && millis() < deadline && len < sizeof(payload) - 1) {
+    while (stream->available() && len < sizeof(payload) - 1) {
+      char ch = stream->read();
+      if (ch == '\r' || ch == '\n' || ch == ' ' || ch == '\t') continue;
+      payload[len++] = ch;
+      if (len >= 6) break;  // codex修改: 只保留 UPDATE 指令所需的最小响应，避免把整页响应读入 String
+    }
+    if (len >= 6) break;
+    delay(1);
+    yield();
+  }
+  payload[len] = 0;
+  for (size_t i = 0; i < len; i++) {
+    if (payload[i] >= 'a' && payload[i] <= 'z') payload[i] -= 32;
+  }
+  return strcmp(payload, "UPDATE") == 0;
+}
 uint8_t hex2ch(char dat) {
   dat |= 0x20;  //41->61 A->a
   if (dat >= 'a') return dat - 'a' + 10;
@@ -184,9 +206,7 @@ uint16_t http_get(uint8_t no) {
       Serial.println(httpCode);
       // file found at server
       if (httpCode == HTTP_CODE_OK) {
-        String payload = http.getString();
-        payload.toUpperCase();
-        if (payload.compareTo("UPDATE") == 0) {
+        if (http_response_is_update(http)) {
           if (http_update() == false)
             http_update();
         }
