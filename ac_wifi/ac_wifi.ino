@@ -142,6 +142,7 @@ void loop() {
         noInterrupts();
         now = now_sync;
         interrupts();  // codex修改: 先授时到局部变量，再一次性替换共享时间结构体，避免和秒节拍并发写出半更新状态
+        time_update_take();  // codex修改: 授时成功后清掉无效时间阶段遗留的分钟/小时/天事件，避免刚校时就误触发一次结算
         Serial.println(1);
       } else {
         Serial.println(0);
