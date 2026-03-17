@@ -88,7 +88,10 @@ void ac_20ms() {                        //每20ms执行一次
     }
   }
   memset(ac_buf, 1, sizeof(ac_buf));
-  Serial.read(ac_buf, 24);
+  if (Serial.read((char *)ac_buf, 24) != 24) {  // codex修改: 串口短读时直接丢弃本帧，避免半帧数据继续参与校验和解码
+    ac_buf[23] = 1;
+    return;
+  }
   if (ac_buf[1] != 0x5a) {
     ac_buf[23] = 1;
     return;
