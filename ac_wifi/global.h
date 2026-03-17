@@ -15,8 +15,8 @@ Ticker _myTicker;
 extern float i_max;
 int16_t update_timeok = 0;  //0-马上wget ，-1 关闭，>0  xx分钟后wget
 uint8_t timer3 = 30;        //最长30秒等待上线
-uint16_t i_over = 0;        //电流过高保护， 倒计时ms
-uint32_t switch_change_time = 0;
+volatile uint16_t i_over = 0;        // codex修改: 由 20ms 回调和计量解码共享的过流倒计时需声明为 volatile
+volatile uint32_t switch_change_time = 0;  // codex修改: 由秒级时钟更新、主循环和 HTTP 读取的共享计时值需声明为 volatile
 bool wifi_connected_is_ok();
 extern uint8_t sound_buf[100];
 uint16_t http_get(uint8_t);
