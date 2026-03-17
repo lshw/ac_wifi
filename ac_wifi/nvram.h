@@ -66,11 +66,18 @@ void save_nvram_file() {
     fp = SPIFFS.open("/nvram.txt", "w");
     save_nvram();
     if (fp) {
-      fp.write((uint8_t *)&nvram, sizeof(nvram));
+      if (fp.write((uint8_t *)&nvram, sizeof(nvram)) == sizeof(nvram)) {
+        nvram_save = 0;  // codex修改: 只有文件写成功后才清除待保存标志
+      } else {
+        Serial.println(F("nvram.txt写入不完整"));  // codex修改: RTC 数据落盘失败时输出日志，避免静默丢失持久化状态
+      }
       fp.close();
-      nvram_save = 0;  // codex修改: 只有文件写成功后才清除待保存标志
+    } else {
+      Serial.println(F("打开nvram.txt失败"));  // codex修改: 补齐 NVRAM 文件句柄检查，避免空句柄写入
     }
     SPIFFS.end();
+  } else {
+    Serial.println(F("SPIFFS打开失败, 无法保存nvram"));  // codex修改: 文件系统不可用时明确提示持久化未执行
   }
 }
 void load_nvram() {
@@ -90,7 +97,9 @@ void load_nvram() {
     if (nvram.crc32 != calculateCRC32((uint8_t *)&nvram, sizeof(nvram) - sizeof(nvram.crc32))) {
       memset(&nvram, 0, sizeof(nvram));
       update_kwh_count();  //校准数据初始化
-      if (spiffs_ok) SPIFFS.remove("/hours.dat");
+      if (spiffs_ok && !SPIFFS.remove("/hours.dat")) {
+        Serial.println(F("删除hours.dat失败"));  // codex修改: 小时统计损坏后清理失败时输出日志，避免旧文件残留无提示
+      }
       memset(datahour, 0, sizeof(datahour));
     } else {
       fp = spiffs_ok ? SPIFFS.open("/hours.dat", "r") : File();
@@ -124,11 +133,24 @@ void save_set(bool _default) {
     else
       fp = SPIFFS.open("/sets.txt", "w");
     if (fp) {
-      fp.write((uint8_t *)&sets, sizeof(sets));
+      if (fp.write((uint8_t *)&sets, sizeof(sets)) == sizeof(sets)) {
+        set_modi &= ~SET_CHARGE;  // codex修改: 写盘成功后再清除脏标记
+      } else if (_default) {
+        Serial.println(F("sets_default.txt写入不完整"));  // codex修改: 默认配置写盘失败时输出日志，避免静默丢失恢复基线
+      } else {
+        Serial.println(F("sets.txt写入不完整"));  // codex修改: 当前配置写盘失败时输出日志，避免静默丢配置
+      }
       fp.close();
-      set_modi &= ~SET_CHARGE;  // codex修改: 写盘成功后再清除脏标记
+    } else if (_default) {
+      Serial.println(F("打开sets_default.txt失败"));  // codex修改: 默认配置文件句柄检查
+    } else {
+      Serial.println(F("打开sets.txt失败"));  // codex修改: 当前配置文件句柄检查
     }
     SPIFFS.end();
+  } else if (_default) {
+    Serial.println(F("SPIFFS打开失败, 无法保存默认配置"));  // codex修改: 文件系统不可用时明确提示默认配置未落盘
+  } else {
+    Serial.println(F("SPIFFS打开失败, 无法保存配置"));  // codex修改: 文件系统不可用时明确提示当前配置未落盘
   }
 }
 
