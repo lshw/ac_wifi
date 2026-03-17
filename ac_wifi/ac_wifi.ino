@@ -274,14 +274,14 @@ void hour() {
   save_nvram();
   if (SPIFFS.begin()) {
     File fp;
-    fp = SPIFFS.open("/hours.dat", "a");
+    fp = SPIFFS.open("/hours.dat", "w");
     if (fp) {
       if (fp.write((uint8_t *)&datahour, sizeof(datahour)) != sizeof(datahour)) {
-        Serial.println(F("hours.dat写入不完整"));  // codex修改: 统计文件写失败时输出明确日志，避免静默损坏
+        Serial.println(F("hours.dat写入不完整"));  // codex修改: 小时统计文件改为整块覆盖写，保证重启后读取到最新 24 小时快照而不是历史首块
       }
       fp.close();
     } else {
-      Serial.println(F("hours.dat打开失败"));  // codex修改: 补齐小时统计文件句柄检查，避免空句柄写入
+      Serial.println(F("hours.dat打开失败"));  // codex修改: 覆盖保存小时统计失败时输出明确日志，避免重启后继续读到陈旧快照
     }
     SPIFFS.end();
   }
