@@ -1,6 +1,6 @@
 #ifndef __GPIO_H__
 #define __GPIO_H__
-extern uint8_t smart_status;
+extern volatile uint8_t smart_status;
 volatile uint32_t keydown_ms = 0;
 volatile bool key_toggle_pending = false;
 void ICACHE_RAM_ATTR key_int() {
