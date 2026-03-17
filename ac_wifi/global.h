@@ -24,6 +24,8 @@ void play(char *qz);
 void wifi_off();
 extern struct tm now;
 extern float current, voltage, power, power_ys;
+extern float i_max;
+extern uint32_t ac_ok_count;
 extern uint16_t data100ms_p;
 struct set0 {
   uint8_t relink : 1;
@@ -41,6 +43,8 @@ struct runtime_snapshot_t {
   float voltage;
   float power;
   float power_ys;
+  float i_max;
+  uint32_t ac_ok_count;
   uint32_t switch_change_time;
   uint16_t data100ms_p;
 };
@@ -51,6 +55,8 @@ inline void runtime_snapshot(runtime_snapshot_t *snap) {
   snap->voltage = voltage;
   snap->power = power;
   snap->power_ys = power_ys;
+  snap->i_max = i_max;
+  snap->ac_ok_count = ac_ok_count;
   snap->switch_change_time = switch_change_time;
   snap->data100ms_p = data100ms_p;
   interrupts();  // codex修改: 先复制跨 Ticker/主循环共享的时间和计量值，再在前台使用，避免读到半更新状态

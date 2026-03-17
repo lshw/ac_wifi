@@ -239,10 +239,10 @@ if (confirm('连接到[' + ssid + ']?')) location.replace('add_ssid.php?data=' +
           + String(snap.voltage) + F("V, 电流:") + String(snap.current) + F("A, 功率:") + String(snap.power) + F("W, 功率因数:") + String(snap.power_ys * 100.0) + F("%, 累积电量:")
           + String(get_kwh(), 8) + F("KWh"
                                      ",测试次数:")
-          + String(ac_ok_count)
+          + String(snap.ac_ok_count)
           + F(",uptime:") + String(millis() / 1000) + F("秒"
                                                         ",最大电流:")
-          + String(i_max) + F("A"
+          + String(snap.i_max) + F("A"
                               ",LED:<button onclick=modi('/save.php?led=','输入新的html色值编号:','")
           + String(ch) + F("')>#") + String(ch) + F("</button>"
                                                     "<hr>"
