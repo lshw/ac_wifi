@@ -279,6 +279,7 @@ void hour() {
   runtime_snapshot_t snap;
   double kwh_hour0;
   runtime_snapshot(&snap);
+  if (snap.now.tm_year <= 2021 - 1900) return;  // codex修改: 时间尚未有效时不能提前推进小时基线，否则授时成功后当前小时累计会被直接吃掉
   kwh_hour0 = kwh_hour0_swap(snap.kwh);
   datahour[snap.now.tm_hour] = snap.kwh - kwh_hour0;  // codex修改: 小时统计改成单次累计电量快照结算，避免前后两次 get_kwh() 跨采样周期导致丢量或重复
   save_nvram();
