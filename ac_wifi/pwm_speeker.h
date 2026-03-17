@@ -45,7 +45,8 @@ void sound_20ms() {
     }
     sound(sound_buf[0], 500);
     Serial.printf(PSTR("sound(%c)\r\n"), sound_buf[0]);
-    strncpy((char *)sound_buf, (char *)&sound_buf[1], sizeof(sound_buf) - 1);
+    memmove((char *)sound_buf, (char *)&sound_buf[1], sizeof(sound_buf) - 1);  // codex修改: 左移播放队列时直接移动字节，避免 strncpy 在尾字节留下旧数据
+    sound_buf[sizeof(sound_buf) - 1] = 0;                                       // codex修改: 始终显式补零，确保播放缓冲区尾部干净
   } else if (set0.pwm_on) {
     analogWrite(5, 0);
     set0.pwm_on = false;
