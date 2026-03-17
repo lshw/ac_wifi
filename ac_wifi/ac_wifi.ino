@@ -198,7 +198,7 @@ void load_kwh_days() {
   kwh_days_p = 0;
   memset(kwh_days, 0, sizeof(kwh_days));
   if (SPIFFS.begin()) {
-    String fn = "/" + String(now.tm_year + 1900 - 1) + ".dat";
+    String fn = year_dat_path(now.tm_year + 1900 - 1);
     if (SPIFFS.exists(fn)) {
       fp = SPIFFS.open(fn, "r");
       if (fp) {
@@ -209,7 +209,7 @@ void load_kwh_days() {
         fp.close();
       }
     }
-    fn = "/" + String(now.tm_year + 1900) + ".dat";
+    fn = year_dat_path(now.tm_year + 1900);
     if (SPIFFS.exists(fn)) {
       fp = SPIFFS.open(fn, "r");
       if (fp) {
@@ -223,6 +223,11 @@ void load_kwh_days() {
     fn = "";
     SPIFFS.end();
   }
+}
+String year_dat_path(int year) {
+  char path[16];
+  snprintf(path, sizeof(path), "/%d.dat", year);
+  return String(path);
 }
 extern float datamins[60];  //240 byte 每分钟最大功率
 void minute() {
@@ -244,8 +249,14 @@ void hour() {
   if (SPIFFS.begin()) {
     File fp;
     fp = SPIFFS.open("/hours.dat", "a");
-    fp.write((char *)&datahour, sizeof(datahour));
-    fp.close();
+    if (fp) {
+      if (fp.write((uint8_t *)&datahour, sizeof(datahour)) != sizeof(datahour)) {
+        Serial.println(F("hours.dat写入不完整"));  // codex修改: 统计文件写失败时输出明确日志，避免静默损坏
+      }
+      fp.close();
+    } else {
+      Serial.println(F("hours.dat打开失败"));  // codex修改: 补齐小时统计文件句柄检查，避免空句柄写入
+    }
     SPIFFS.end();
   }
 }
@@ -256,9 +267,15 @@ void day() {
   if (now.tm_year > 2021 - 1900) {
     if (SPIFFS.begin()) {
       File fp;
-      fp = SPIFFS.open("/" + String(now.tm_year + 1900) + ".dat", "a");
-      fp.write((char *)&kwh_days[kwh_days_p], sizeof(dataday));
-      fp.close();
+      fp = SPIFFS.open(year_dat_path(now.tm_year + 1900), "a");
+      if (fp) {
+        if (fp.write((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) != sizeof(dataday)) {
+          Serial.println(F("日统计写入不完整"));  // codex修改: 年统计写失败时保留日志，避免文件损坏被静默吞掉
+        }
+        fp.close();
+      } else {
+        Serial.println(F("日统计文件打开失败"));  // codex修改: 补齐年统计文件句柄检查，避免空句柄写入
+      }
       SPIFFS.end();
     }
     kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
