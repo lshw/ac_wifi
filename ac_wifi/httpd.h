@@ -84,8 +84,10 @@ void http_ls() {
   httpd_send_200("");
 }
 void handleRoot() {
+  runtime_snapshot_t snap;
   String wifi_stat, wifi_scan;
   String ssid;
+  runtime_snapshot(&snap);
   body = "";
   body.reserve(16384);  // codex修改: 请求开始前预留接近最终页面大小的空间，减少拼接过程中的反复重分配
   wifi_scan.reserve(1024);
@@ -220,10 +222,10 @@ if (confirm('连接到[' + ssid + ']?')) location.replace('add_ssid.php?data=' +
                                                                                                             "SN:<mark>")
          + hostname_html + "</mark> &nbsp;"
                       "版本:<mark>" VER "</mark> &nbsp;"
-         + String(isotime(now)) + "<br>" + String(ac_raw()) + "<br>开关状态:";
+         + String(isotime(snap.now)) + "<br>" + String(ac_raw()) + "<br>开关状态:";
   if (digitalRead(SSR) == HIGH) body += "<button onclick=gotoif('/save.php?switch=on','输出开启?');>关闭</button>";
   else body += F("<button onclick=gotoif('/save.php?switch=off','输出关闭?');>开启</button>");
-  body += String(switch_change_time)
+  body += String(snap.switch_change_time)
           + F("秒, 开机时长:<mark onclick=modi('/save.php?switch_on_time=','修改开机秒数,0为保持','") + String(sets.switch_on_time) + F("')>") + switch_mode(sets.switch_on_time) + F("</mark>&nbsp;&nbsp;"
                                                                                                                                                                                       "关机时长:<mark onclick=modi('/save.php?switch_off_time=','修改关机秒数,0为保持','")
           + String(sets.switch_off_time) + F("')>") + switch_mode(sets.switch_off_time) + F("</mark>&nbsp;&nbsp;"
@@ -234,7 +236,7 @@ if (confirm('连接到[' + ssid + ']?')) location.replace('add_ssid.php?data=' +
                                                                    "音量(0-128):<mark onclick=modi('/save.php?vol=','修改音量0-128','")
           + String(sets.vol) + F("');>") + String(sets.vol) + F("</mark><br>"
                                                                 "电压:")
-          + String(voltage) + F("V, 电流:") + String(current) + F("A, 功率:") + String(power) + F("W, 功率因数:") + String(power_ys * 100.0) + F("%, 累积电量:")
+          + String(snap.voltage) + F("V, 电流:") + String(snap.current) + F("A, 功率:") + String(snap.power) + F("W, 功率因数:") + String(snap.power_ys * 100.0) + F("%, 累积电量:")
           + String(get_kwh(), 8) + F("KWh"
                                      ",测试次数:")
           + String(ac_ok_count)
@@ -331,7 +333,7 @@ color:'red',\
 data:[");
   body_send_if_large();
   for (uint16_t i = 0; i < 600; i++) {
-    body_append_number(data100ms[(i + data100ms_p) % 600], 1);  // codex修改: 避免循环内构造大量临时 String
+    body_append_number(data100ms[(i + snap.data100ms_p) % 600], 1);  // codex修改: 用同一时刻的环形缓冲区索引快照，避免图表读到撕裂顺序
     body += ",";
     body_send_if_large();
   }
@@ -355,7 +357,7 @@ color:'red',\
 data:[");
   body_send_if_large();
   for (uint16_t i = 0; i < 60; i++) {
-    body_append_number(datamins[(now.tm_min + i + 1) % 60], 2);  // codex修改: 改用固定缓冲区输出数值
+    body_append_number(datamins[(snap.now.tm_min + i + 1) % 60], 2);  // codex修改: 用时间快照生成图表索引，避免跨分钟时读到混合区间
     body += ",";
     body_send_if_large();
   }
@@ -370,7 +372,7 @@ color:'red',\
 data:[");
   body_send_if_large();
   for (uint16_t i = 0; i < 24; i++) {
-    body_append_number(datahour[(now.tm_hour + i + 1) % 24] * 1000.0, 2);  // codex修改: 改用固定缓冲区输出数值
+    body_append_number(datahour[(snap.now.tm_hour + i + 1) % 24] * 1000.0, 2);  // codex修改: 用时间快照生成图表索引，避免跨小时时读到混合区间
     body += ",";
     body_send_if_large();
   }
@@ -458,13 +460,15 @@ void http_add_ssid() {
   yield();
 }
 void api() {
+  runtime_snapshot_t snap;
+  runtime_snapshot(&snap);
   if (httpd.argName(0).compareTo("type") == 0) {
     if (httpd.arg(0) == "days") {
       File fp;
       struct dataday kwh_day;
       httpd_stream_begin_raw("text/csv");
       if (SPIFFS.begin()) {
-        String fn = "/" + String(now.tm_year + 1900 - 1) + ".dat";
+        String fn = "/" + String(snap.now.tm_year + 1900 - 1) + ".dat";
         if (SPIFFS.exists(fn)) {
           fp = SPIFFS.open(fn, "r");
           if (fp) {
@@ -476,7 +480,7 @@ void api() {
             fp.close();
           }
         }
-        fn = "/" + String(now.tm_year + 1900) + ".dat";
+        fn = "/" + String(snap.now.tm_year + 1900) + ".dat";
         if (SPIFFS.exists(fn)) {
           fp = SPIFFS.open(fn, "r");
           if (fp) {
@@ -500,10 +504,10 @@ void api() {
     ac_name.trim();
     String ac_name_json = js_quote_escape(ac_name);
     String hostname_json = js_quote_escape(hostname);
-    String isotime_json = js_quote_escape(isotime(now));
+    String isotime_json = js_quote_escape(isotime(snap.now));
     httpd.send(200, F("application/json"), F("{"
                                              "\"NAME\":\"")
-                                             + ac_name_json + F("\",\"SN\":\"") + hostname_json + F("\",\"VER\":\"") + VER + "-" + GIT_VER + F("\",\"KWH\":") + String(get_kwh(), 8) + F(",\"V\":") + String(voltage) + F(",\"I\":") + String(current) + F(",\"W\":") + String(power) + F(",\"PF\":") + String(power_ys) + F(",\"TIME\":\"") + isotime_json + F("\",\"SWITCH\":") + String(!digitalRead(SSR)) + F(",\"SWITCH_CHANGE_TIME\":") + String(switch_change_time) + "}");
+                                             + ac_name_json + F("\",\"SN\":\"") + hostname_json + F("\",\"VER\":\"") + VER + "-" + GIT_VER + F("\",\"KWH\":") + String(get_kwh(), 8) + F(",\"V\":") + String(snap.voltage) + F(",\"I\":") + String(snap.current) + F(",\"W\":") + String(snap.power) + F(",\"PF\":") + String(snap.power_ys) + F(",\"TIME\":\"") + isotime_json + F("\",\"SWITCH\":") + String(!digitalRead(SSR)) + F(",\"SWITCH_CHANGE_TIME\":") + String(snap.switch_change_time) + "}");
   }
   httpd.client().stop();
   yield();

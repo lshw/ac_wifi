@@ -176,10 +176,12 @@ bool wifi_connected_is_ok() {
 }
 
 uint16_t http_get(uint8_t no) {
+  runtime_snapshot_t snap;
   String url0 = get_url(no);
   String wifi_ssid = WiFi.SSID();
   String wifi_bssid = WiFi.BSSIDstr();
   char numbuf[32];
+  runtime_snapshot(&snap);
   url0.reserve(url0.length() + 192);  // codex修改: 周期上报路径预留空间，减少多参数拼接时的反复扩容
   if (url0.indexOf('?') > 0)
     url0 += '&';
@@ -194,13 +196,13 @@ uint16_t http_get(uint8_t no) {
   snprintf(numbuf, sizeof(numbuf), "%d", sets.vol);
   url0 += numbuf;
   url0 += F("&w=");
-  snprintf(numbuf, sizeof(numbuf), "%.0f", power);
+  snprintf(numbuf, sizeof(numbuf), "%.0f", snap.power);
   url0 += numbuf;
   url0 += F("&i=");
-  snprintf(numbuf, sizeof(numbuf), "%.3f", current);
+  snprintf(numbuf, sizeof(numbuf), "%.3f", snap.current);
   url0 += numbuf;
   url0 += F("&pf=");
-  snprintf(numbuf, sizeof(numbuf), "%.2f", power_ys * 100.0);
+  snprintf(numbuf, sizeof(numbuf), "%.2f", snap.power_ys * 100.0);
   url0 += numbuf;
   url0 += F("&ssid=");
   url0 += wifi_ssid;

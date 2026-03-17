@@ -97,6 +97,8 @@ uint32_t last_wget = 0;
 uint32_t last_10sec = 0;
 volatile uint8_t smart_status = 0;  // codex修改: 被 GPIO 中断读取、被主循环修改的共享状态需声明为 volatile
 void loop() {
+  struct tm now0;
+  now_snapshot(&now0);
   if (key_toggle_pending) {
     noInterrupts();
     bool do_toggle = key_toggle_pending;
@@ -117,7 +119,7 @@ void loop() {
       set0.httpd_up = true;
       httpd_listen();
     }
-    if (now.tm_year < __YEAR__ - 1900 && set0.connected_is_ok) {
+    if (now0.tm_year < __YEAR__ - 1900 && set0.connected_is_ok) {
       Serial.println("getLocalTime()");
       Serial.println(getLocalTime(&now, 1000));
     }
@@ -165,7 +167,8 @@ void loop() {
     set0.reboot_now = false;
     ESP.restart();
   }
-  if (kwh_days_p == -1 && now.tm_year > 121) {
+  now_snapshot(&now0);
+  if (kwh_days_p == -1 && now0.tm_year > 121) {
     load_kwh_days();
   }
   noInterrupts();
@@ -195,10 +198,12 @@ void loop() {
 
 void load_kwh_days() {
   File fp;
+  struct tm now0;
+  now_snapshot(&now0);
   kwh_days_p = 0;
   memset(kwh_days, 0, sizeof(kwh_days));
   if (SPIFFS.begin()) {
-    String fn = year_dat_path(now.tm_year + 1900 - 1);
+    String fn = year_dat_path(now0.tm_year + 1900 - 1);
     if (SPIFFS.exists(fn)) {
       fp = SPIFFS.open(fn, "r");
       if (fp) {
@@ -209,7 +214,7 @@ void load_kwh_days() {
         fp.close();
       }
     }
-    fn = year_dat_path(now.tm_year + 1900);
+    fn = year_dat_path(now0.tm_year + 1900);
     if (SPIFFS.exists(fn)) {
       fp = SPIFFS.open(fn, "r");
       if (fp) {
@@ -231,19 +236,23 @@ String year_dat_path(int year) {
 }
 extern float datamins[60];  //240 byte 每分钟最大功率
 void minute() {
-  datamins[now.tm_min] = 0.0;
-  if ((now.tm_min % 10) == 0)
+  struct tm now0;
+  now_snapshot(&now0);
+  datamins[now0.tm_min] = 0.0;
+  if ((now0.tm_min % 10) == 0)
     save_nvram();
   if ((nvram_save > 0 && nvram_save <= millis())
       || (last_save + 120000 < millis())
       || last_save > millis())
     save_nvram_file();
-  Serial.println(isotime(now));
+  Serial.println(isotime(now0));
   Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
 }
 extern float datahour[24];  //96字节  每一小时的耗电量
 void hour() {
-  datahour[now.tm_hour] = get_kwh() - nvram.kwh_hour0;
+  struct tm now0;
+  now_snapshot(&now0);
+  datahour[now0.tm_hour] = get_kwh() - nvram.kwh_hour0;
   nvram.kwh_hour0 = get_kwh();
   save_nvram();
   if (SPIFFS.begin()) {
@@ -261,13 +270,15 @@ void hour() {
   }
 }
 void day() {
+  struct tm now0;
+  now_snapshot(&now0);
   kwh_days[kwh_days_p].kwh = get_kwh() - nvram.kwh_day0;
-  kwh_days[kwh_days_p].time = mktime(&now);
+  kwh_days[kwh_days_p].time = mktime(&now0);
   nvram.kwh_day0 = get_kwh();
-  if (now.tm_year > 2021 - 1900) {
+  if (now0.tm_year > 2021 - 1900) {
     if (SPIFFS.begin()) {
       File fp;
-      fp = SPIFFS.open(year_dat_path(now.tm_year + 1900), "a");
+      fp = SPIFFS.open(year_dat_path(now0.tm_year + 1900), "a");
       if (fp) {
         if (fp.write((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) != sizeof(dataday)) {
           Serial.println(F("日统计写入不完整"));  // codex修改: 年统计写失败时保留日志，避免文件损坏被静默吞掉

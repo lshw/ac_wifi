@@ -22,6 +22,9 @@ extern uint8_t sound_buf[100];
 uint16_t http_get(uint8_t);
 void play(char *qz);
 void wifi_off();
+extern struct tm now;
+extern float current, voltage, power, power_ys;
+extern uint16_t data100ms_p;
 struct set0 {
   uint8_t relink : 1;
   uint8_t reboot_now : 1;
@@ -32,6 +35,31 @@ struct set0 {
   uint8_t httpd_up : 1;
   uint8_t pwm_on : 1;
 } volatile set0;  // codex修改: 20ms Ticker 回调、主循环和 HTTP 路径共享的状态位需声明为 volatile
+struct runtime_snapshot_t {
+  struct tm now;
+  float current;
+  float voltage;
+  float power;
+  float power_ys;
+  uint32_t switch_change_time;
+  uint16_t data100ms_p;
+};
+inline void runtime_snapshot(runtime_snapshot_t *snap) {
+  noInterrupts();
+  snap->now = now;
+  snap->current = current;
+  snap->voltage = voltage;
+  snap->power = power;
+  snap->power_ys = power_ys;
+  snap->switch_change_time = switch_change_time;
+  snap->data100ms_p = data100ms_p;
+  interrupts();  // codex修改: 先复制跨 Ticker/主循环共享的时间和计量值，再在前台使用，避免读到半更新状态
+}
+inline void now_snapshot(struct tm *tm0) {
+  noInterrupts();
+  *tm0 = now;
+  interrupts();  // codex修改: 时间结构体由节拍路径更新，读取前先复制快照避免字段撕裂
+}
 uint16_t wget() {
   uint16_t httpCode = http_get(nvram.nvram7 & NVRAM7_URL);  //先试试上次成功的url
   if (httpCode < 200 || httpCode >= 400) {
