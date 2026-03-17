@@ -156,6 +156,10 @@ void loop() {
     save_set(false);  // 保存 /sets.txt
   }
   yield();
+  now_snapshot(&now0);
+  if (kwh_days_p == -1 && now0.tm_year > 121) {
+    load_kwh_days();  // codex修改: 先在消费 DAY_UP 事件前初始化日统计环形缓冲区，避免首次有效日期切换时用 -1 索引写入
+  }
   uint8_t time_flags = time_update_take();
   if (time_flags & DAY_UP) {
     day();
@@ -181,10 +185,6 @@ void loop() {
     save_nvram_file();
     set0.reboot_now = false;
     ESP.restart();
-  }
-  now_snapshot(&now0);
-  if (kwh_days_p == -1 && now0.tm_year > 121) {
-    load_kwh_days();
   }
   noInterrupts();
   uint32_t keydown_ms0 = keydown_ms;
@@ -289,6 +289,7 @@ void hour() {
 void day() {
   struct tm now0;
   now_snapshot(&now0);
+  if (kwh_days_p < 0) return;  // codex修改: 再加一道保护，避免异常顺序下日统计索引未初始化时写越界
   kwh_days[kwh_days_p].kwh = get_kwh() - nvram.kwh_day0;
   kwh_days[kwh_days_p].time = mktime(&now0);
   nvram.kwh_day0 = get_kwh();
