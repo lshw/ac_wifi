@@ -5,6 +5,8 @@
 #include "global.h"
 extern String hostname;
 String body;
+bool update_session_ok = false;
+uint32_t update_session_crc = 0;
 ESP8266WebServer httpd(80);
 void body_append_number(double value, uint8_t decimals = 0) {
   char numbuf[24];
@@ -771,7 +773,7 @@ void httpd_listen() {
         httpd_send_200("");
       } else {
         led_send(0xFF0000L);
-        if (crc.finalize() != CRC_MAGIC) {
+        if (update_session_crc != CRC_MAGIC) {
           body = F("文件校验错误.....");
           httpd_send_200(F("setTimeout(function(){ alert('文件校验错误!'); window.location.href = '/';}, 500);"));
         } else {
@@ -781,7 +783,7 @@ void httpd_listen() {
         Serial.println(body);
         Serial.flush();
         delay(5);
-        if (crc.finalize() == CRC_MAGIC) {
+        if (update_session_ok && update_session_crc == CRC_MAGIC) {
           led_send(0xFF0000L);
           ESP.restart();
         }
@@ -800,8 +802,12 @@ void httpd_listen() {
         WiFiUDP::stopAll();
         Serial.printf(PSTR("Update: %s\r\n"), upload.filename.c_str());
         uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+        update_session_ok = false;
+        update_session_crc = 0;
         if (!Update.begin(maxSketchSpace)) {  //start with max available size
           Update.printError(Serial);
+        } else {
+          update_session_ok = true;  // codex修改: 只有 Update.begin() 成功后才允许后续写入和重启，避免失败会话继续落到成功路径
         }
         crc.reset();
       } else if (upload.status == UPLOAD_FILE_WRITE) {
@@ -809,23 +815,31 @@ void httpd_listen() {
           led_send(0xFF0000L);
         else
           led_send(0);
+        if (!update_session_ok) {
+          yield();
+          return;
+        }
         crc.update((uint8_t *)upload.buf, upload.currentSize);
-        Serial.printf(PSTR("size:%d,crc=%08x\r\n"), upload.totalSize, crc.finalize());
+        update_session_crc = crc.finalize();
+        Serial.printf(PSTR("size:%d,crc=%08x\r\n"), upload.totalSize, update_session_crc);
         if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
           Update.printError(Serial);
+          update_session_ok = false;  // codex修改: 任一写块失败后禁止继续走成功分支和自动重启
         }
       } else if (upload.status == UPLOAD_FILE_END) {
         led_send(0xFF0000L);
-        if (Update.end(true)) {  //true to set the size to the current progress
-          if (crc.finalize() != CRC_MAGIC)
+        if (update_session_ok && Update.end(true)) {  //true to set the size to the current progress
+          update_session_crc = crc.finalize();
+          if (update_session_crc != CRC_MAGIC)
             Serial.printf(PSTR("File Update : %u\r\nCRC32 error ...\r\n"), upload.totalSize);
           else
             Serial.printf(PSTR("Update Success: %u\r\nRebooting...\r\n"), upload.totalSize);
         } else {
           Update.printError(Serial);
+          update_session_ok = false;
         }
         Serial.setDebugOutput(false);
-        Serial.printf(PSTR("crc=%08x\r\n"), crc.finalize());
+        Serial.printf(PSTR("crc=%08x\r\n"), update_session_crc);
       }
       yield();
     });
