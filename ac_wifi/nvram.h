@@ -126,6 +126,7 @@ void save_nvram_file() {
 }
 void load_nvram() {
   File fp;
+  bool reset_kwh_baseline = false;
   ESP.rtcUserMemoryRead(0, (uint32_t *)&nvram, sizeof(nvram));
   if (nvram.crc32 != calculateCRC32((uint8_t *)&nvram, sizeof(nvram) - sizeof(nvram.crc32))) {
     bool spiffs_ok = SPIFFS.begin();
@@ -140,6 +141,7 @@ void load_nvram() {
     }
     if (nvram.crc32 != calculateCRC32((uint8_t *)&nvram, sizeof(nvram) - sizeof(nvram.crc32))) {
       memset(&nvram, 0, sizeof(nvram));
+      reset_kwh_baseline = true;  // codex修改: 只有 NVRAM 确认损坏并回退为全零时，才重建小时/日耗电基线，避免每次重启都丢失当前周期累计值
       update_kwh_count();  //校准数据初始化
       if (spiffs_ok && !SPIFFS.remove("/hours.dat")) {
         Serial.println(F("删除hours.dat失败"));  // codex修改: 小时统计损坏后清理失败时输出日志，避免旧文件残留无提示
@@ -163,9 +165,11 @@ void load_nvram() {
     WRITE_PERI_REG(0x600011f4, 1 << 16 | nvram.ch);
   }
 
-  nvram.kwh_hour0 = get_kwh();
-  nvram.kwh_day0 = nvram.kwh_hour0;
-  save_nvram();
+  if (reset_kwh_baseline) {
+    nvram.kwh_hour0 = get_kwh();
+    nvram.kwh_day0 = nvram.kwh_hour0;
+    save_nvram();  // codex修改: 仅在首次初始化/损坏恢复时重建基线，正常重启保留小时和日统计的未结算累计
+  }
 }
 
 void save_set(bool _default) {
