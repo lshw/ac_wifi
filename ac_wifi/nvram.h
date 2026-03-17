@@ -43,6 +43,18 @@ struct {
   uint32_t crc32;
 } __attribute__((packed)) nvram;
 uint32_t nvram_save = 0;
+inline void nvram_save_set(uint32_t when_ms) {
+  noInterrupts();
+  nvram_save = when_ms;
+  interrupts();  // codex修改: 保存调度时间会被计量回调、主循环和 HTTP 路径共同改写，更新时需原子化
+}
+inline uint32_t nvram_save_read() {
+  uint32_t when_ms;
+  noInterrupts();
+  when_ms = nvram_save;
+  interrupts();  // codex修改: 主循环判断是否到期前先读取快照，避免读到被异步改写的半旧值
+  return when_ms;
+}
 struct {  //不会经常变化的设置， 需要保存到文件系统 sets.dat
   uint8_t on_off;
   uint8_t i_max;
@@ -64,27 +76,41 @@ uint32_t calculateCRC32(const uint8_t *data, size_t length);
 void save_nvram() {
   nvram.crc32 = calculateCRC32((uint8_t *)&nvram, sizeof(nvram) - sizeof(nvram.crc32));
   ESP.rtcUserMemoryWrite(0, (uint32_t *)&nvram, sizeof(nvram));
-  nvram_save = millis() + 60000;  //60秒后 保存 nvram到 file
+  nvram_save_set(millis() + 60000);  //60秒后 保存 nvram到 file
 }
 
 uint32_t last_save = 0;
+inline void last_save_set(uint32_t when_ms) {
+  noInterrupts();
+  last_save = when_ms;
+  interrupts();  // codex修改: 保存节流时间和立即保存路径共享，更新时需原子化避免覆盖
+}
+inline uint32_t last_save_read() {
+  uint32_t when_ms;
+  noInterrupts();
+  when_ms = last_save;
+  interrupts();  // codex修改: 节流判断基于快照，避免和异步更新交错导致判断失真
+  return when_ms;
+}
 void save_nvram_file() {
   File fp;
-  if (nvram_save == 0) return;
+  uint32_t nvram_save0 = nvram_save_read();
+  uint32_t last_save0 = last_save_read();
+  if (nvram_save0 == 0) return;
 
-  if (last_save < millis()) {  //最多120秒保存一次数据
-    if (nvram_save > millis()
-        && millis() - last_save < 12000
-        && nvram_save - millis() < 600000)  //可能millis() 溢出
+  if (last_save0 < millis()) {  //最多120秒保存一次数据
+    if (nvram_save0 > millis()
+        && millis() - last_save0 < 12000
+        && nvram_save0 - millis() < 600000)  //可能millis() 溢出
       return;
   }
-  last_save = millis();
+  last_save_set(millis());
   if (SPIFFS.begin()) {
     fp = SPIFFS.open("/nvram.txt", "w");
     save_nvram();
     if (fp) {
       if (fp.write((uint8_t *)&nvram, sizeof(nvram)) == sizeof(nvram)) {
-        nvram_save = 0;  // codex修改: 只有文件写成功后才清除待保存标志
+        nvram_save_set(0);  // codex修改: 只有文件写成功后才清除待保存标志
       } else {
         Serial.println(F("nvram.txt写入不完整"));  // codex修改: RTC 数据落盘失败时输出日志，避免静默丢失持久化状态
       }

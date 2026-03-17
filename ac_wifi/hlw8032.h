@@ -169,14 +169,14 @@ void ac_decode() {  //hlm8032数据解码
     if (voltage < 40) {
       set0.power_down = true;
       save_nvram();
-      nvram_save = millis() + 80;  //80ms后保存 nvram 到文件
+      nvram_save_set(millis() + 80);  //80ms后保存 nvram 到文件
       wifi_off();
     }
   } else if (voltage > 80) {
     set0.power_down = false;
     set0.ac_init = false;
     set0.relink = true;
-    nvram_save = millis() + 60000;
+    nvram_save_set(millis() + 60000);
   }
   if (p_cs0 != p_cs) {
     p_cs0 = p_cs;

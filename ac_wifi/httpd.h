@@ -591,7 +591,7 @@ void httpsave() {
       nvram.ac_pf0 = 0;
       play((char *)data.c_str());
       save_nvram();
-      nvram_save = millis();
+      nvram_save_set(millis());
       save_nvram_file();
       data = "";
       break;
@@ -719,7 +719,7 @@ void httpsave() {
         ESP.rtcUserMemoryWrite(0, (uint32_t *)&nvram, sizeof(nvram));
         nvram.kwh = kwh;
         save_nvram();
-        last_save = millis() + 1000;  //马上保存file
+        last_save_set(millis() + 1000);  //马上保存file
         save_nvram_file();
         data = F("恢复出厂设置成功!");
       } else {

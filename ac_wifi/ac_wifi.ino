@@ -160,7 +160,7 @@ void loop() {
   if (set0.reboot_now) {
     Serial.println(F("reboot..."));
     Serial.flush();
-    nvram_save = millis();
+    nvram_save_set(millis());
     save_nvram_file();
     set0.reboot_now = false;
     ESP.restart();
@@ -235,13 +235,15 @@ String year_dat_path(int year) {
 extern float datamins[60];  //240 byte 每分钟最大功率
 void minute() {
   struct tm now0;
+  uint32_t nvram_save0 = nvram_save_read();
+  uint32_t last_save0 = last_save_read();
   now_snapshot(&now0);
   datamins[now0.tm_min] = 0.0;
   if ((now0.tm_min % 10) == 0)
     save_nvram();
-  if ((nvram_save > 0 && nvram_save <= millis())
-      || (last_save + 120000 < millis())
-      || last_save > millis())
+  if ((nvram_save0 > 0 && nvram_save0 <= millis())
+      || (last_save0 + 120000 < millis())
+      || last_save0 > millis())
     save_nvram_file();
   Serial.println(isotime(now0));
   Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
