@@ -28,15 +28,15 @@ extern float i_max;
 extern uint32_t ac_ok_count;
 extern uint16_t data100ms_p;
 struct set0 {
-  uint8_t relink : 1;
-  uint8_t reboot_now : 1;
-  uint8_t connected_is_ok : 1;
-  uint8_t power_down : 1;
-  uint8_t ac_init : 1;
-  uint8_t ac_ok : 1;
-  uint8_t httpd_up : 1;
-  uint8_t pwm_on : 1;
-} volatile set0;  // codex修改: 20ms Ticker 回调、主循环和 HTTP 路径共享的状态位需声明为 volatile
+  volatile uint8_t relink;
+  volatile uint8_t reboot_now;
+  volatile uint8_t connected_is_ok;
+  volatile uint8_t power_down;
+  volatile uint8_t ac_init;
+  volatile uint8_t ac_ok;
+  volatile uint8_t httpd_up;
+  volatile uint8_t pwm_on;
+} set0;  // codex修改: 共享状态不能继续用同一字节 bitfield，异步上下文分别改不同位时会互相覆盖，改成独立字节避免读改写丢标志
 struct runtime_snapshot_t {
   struct tm now;
   float current;
