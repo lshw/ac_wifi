@@ -73,6 +73,24 @@ struct {  //不会经常变化的设置， 需要保存到文件系统 sets.dat
 
 uint32_t calculateCRC32(const uint8_t *data, size_t length);
 
+inline double kwh_hour0_swap(double new_kwh) {
+  double old_kwh;
+  noInterrupts();
+  old_kwh = nvram.kwh_hour0;
+  nvram.kwh_hour0 = new_kwh;
+  interrupts();  // codex修改: 小时结算要在同一临界区内读取旧基线并写入新基线，避免计量路径夹在中间造成小时耗电丢量或重复
+  return old_kwh;
+}
+
+inline double kwh_day0_swap(double new_kwh) {
+  double old_kwh;
+  noInterrupts();
+  old_kwh = nvram.kwh_day0;
+  nvram.kwh_day0 = new_kwh;
+  interrupts();  // codex修改: 日结算同样使用原子交换，保证本日增量和新日基线来自同一次累计电量快照
+  return old_kwh;
+}
+
 void save_nvram() {
   nvram.crc32 = calculateCRC32((uint8_t *)&nvram, sizeof(nvram) - sizeof(nvram.crc32));
   ESP.rtcUserMemoryWrite(0, (uint32_t *)&nvram, sizeof(nvram));

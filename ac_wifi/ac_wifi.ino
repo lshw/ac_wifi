@@ -275,10 +275,11 @@ void minute() {
 }
 extern float datahour[24];  //96字节  每一小时的耗电量
 void hour() {
-  struct tm now0;
-  now_snapshot(&now0);
-  datahour[now0.tm_hour] = get_kwh() - nvram.kwh_hour0;
-  nvram.kwh_hour0 = get_kwh();
+  runtime_snapshot_t snap;
+  double kwh_hour0;
+  runtime_snapshot(&snap);
+  kwh_hour0 = kwh_hour0_swap(snap.kwh);
+  datahour[snap.now.tm_hour] = snap.kwh - kwh_hour0;  // codex修改: 小时统计改成单次累计电量快照结算，避免前后两次 get_kwh() 跨采样周期导致丢量或重复
   save_nvram();
   if (SPIFFS.begin()) {
     File fp;
@@ -295,16 +296,17 @@ void hour() {
   }
 }
 void day() {
-  struct tm now0;
-  now_snapshot(&now0);
+  runtime_snapshot_t snap;
+  double kwh_day0;
+  runtime_snapshot(&snap);
   if (kwh_days_p < 0) return;  // codex修改: 再加一道保护，避免异常顺序下日统计索引未初始化时写越界
-  kwh_days[kwh_days_p].kwh = get_kwh() - nvram.kwh_day0;
-  kwh_days[kwh_days_p].time = mktime(&now0);
-  nvram.kwh_day0 = get_kwh();
-  if (now0.tm_year > 2021 - 1900) {
+  kwh_day0 = kwh_day0_swap(snap.kwh);
+  kwh_days[kwh_days_p].kwh = snap.kwh - kwh_day0;  // codex修改: 日统计也基于同一份累计电量快照结算，避免新日基线和旧日增量错位
+  kwh_days[kwh_days_p].time = mktime(&snap.now);
+  if (snap.now.tm_year > 2021 - 1900) {
     if (SPIFFS.begin()) {
       File fp;
-      fp = SPIFFS.open(year_dat_path(now0.tm_year + 1900), "a");
+      fp = SPIFFS.open(year_dat_path(snap.now.tm_year + 1900), "a");
       if (fp) {
         if (fp.write((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) != sizeof(dataday)) {
           Serial.println(F("日统计写入不完整"));  // codex修改: 年统计写失败时保留日志，避免文件损坏被静默吞掉
