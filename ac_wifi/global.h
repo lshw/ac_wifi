@@ -42,6 +42,10 @@ uint16_t wget() {
   }
   return httpCode;
 }
+const char *url_file_path(uint8_t no) {
+  if (no == 0 || no == '0') return "/url.txt";
+  return "/url1.txt";
+}
 
 String get_url(uint8_t no) {
   File fp;
@@ -50,25 +54,26 @@ String get_url(uint8_t no) {
   if (no == 0 || no == '0') ret = String(DEFAULT_URL0);
   else ret = String(DEFAULT_URL1);
   if (spiffs_ok) {
-    if (no == 0 || no == '0')
-      fp = SPIFFS.open("/url.txt", "r");
-    else
-      fp = SPIFFS.open("/url1.txt", "r");
+    fp = SPIFFS.open(url_file_path(no), "r");
     if (fp) {
       ret = fp.readStringUntil('\n');
       ret.trim();
       fp.close();
       if (ret.startsWith("http://www.cfido.com/")) {
-        SPIFFS.remove("/url.txt");
-        SPIFFS.remove("/url1.txt");
+        if (!SPIFFS.remove("/url.txt")) Serial.println(F("清理旧url.txt失败"));    // codex修改: 老域名迁移失败时输出日志，避免配置长期停留在旧文件
+        if (!SPIFFS.remove("/url1.txt")) Serial.println(F("清理旧url1.txt失败"));  // codex修改: 老域名迁移失败时输出日志，避免静默保留旧配置
         ret.replace("www.cfido.com/", "temp.cfido.com:808/");
       } else if (ret.startsWith("http://www.wf163.com/")) {
-        SPIFFS.remove("/url.txt");
-        SPIFFS.remove("/url1.txt");
+        if (!SPIFFS.remove("/url.txt")) Serial.println(F("清理旧url.txt失败"));    // codex修改: 老域名迁移失败时输出日志，避免配置长期停留在旧文件
+        if (!SPIFFS.remove("/url1.txt")) Serial.println(F("清理旧url1.txt失败"));  // codex修改: 老域名迁移失败时输出日志，避免静默保留旧配置
         ret.replace("www.wf163.com/", "temp2.wf163.com:808/");
       }
+    } else {
+      Serial.println(F("URL配置文件打开失败, 使用默认地址"));  // codex修改: URL 文件不可读时明确回退默认地址，避免静默沿用空值
     }
     SPIFFS.end();
+  } else {
+    Serial.println(F("SPIFFS打开失败, 使用默认URL"));  // codex修改: 文件系统不可用时保留可诊断日志
   }
   if (ret == "") {
     if (no == 0 || no == '0')
