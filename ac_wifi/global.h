@@ -96,7 +96,9 @@ String get_ssid() {
       fp = SPIFFS.open("/ssid.txt", "w");
       ssid = "test:cfido.com";
       if (fp) {
-        fp.println(ssid);
+        if (fp.println(ssid) == 0) {
+          Serial.println(F("写入默认ssid失败"));  // codex修改: 默认 WiFi 配置落盘失败时输出日志，避免静默只留内存值
+        }
         fp.close();
       } else {
         Serial.println(F("创建ssid.txt失败"));  // codex修改: 默认 WiFi 配置写入失败时给出明确日志
@@ -148,8 +150,12 @@ String fp_gets(File fp) {
 
 void wifi_set_clean() {
   if (SPIFFS.begin()) {
-    SPIFFS.remove("/ssid.txt");
+    if (!SPIFFS.remove("/ssid.txt")) {
+      Serial.println(F("删除ssid.txt失败"));  // codex修改: 清空 WiFi 配置失败时输出日志，避免误以为已恢复为空配置
+    }
     SPIFFS.end();
+  } else {
+    Serial.println(F("SPIFFS打开失败, 无法清空WiFi配置"));  // codex修改: 文件系统不可用时明确提示清空操作未执行
   }
 }
 void wifi_set_add(const char *wps_ssid, const char *wps_password) {
