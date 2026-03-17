@@ -90,11 +90,17 @@ String get_ssid() {
     } else {
       fp = SPIFFS.open("/ssid.txt", "w");
       ssid = "test:cfido.com";
-      fp.println(ssid);
-      fp.close();
+      if (fp) {
+        fp.println(ssid);
+        fp.close();
+      } else {
+        Serial.println(F("创建ssid.txt失败"));  // codex修改: 默认 WiFi 配置写入失败时给出明确日志
+      }
     }
-  } else
-    Serial.print(F("载入ssid设置:"));
+  } else {
+    Serial.println(F("SPIFFS打开失败, 使用默认ssid设置"));  // codex修改: 文件系统不可用时直接回退默认配置，避免返回空字符串
+    ssid = F("test:cfido.com");
+  }
   Serial.println(ssid);
   if (spiffs_ok) SPIFFS.end();
   return ssid;
@@ -168,10 +174,16 @@ void wifi_set_add(const char *wps_ssid, const char *wps_password) {
     }
     fp = SPIFFS.open("/ssid.txt", "w");
     if (fp) {
-      fp.print(wifi_sets);
+      if (fp.print(wifi_sets) != wifi_sets.length()) {
+        Serial.println(F("ssid.txt写入不完整"));  // codex修改: WiFi 配置重写失败时输出日志，避免静默丢配置
+      }
       fp.close();
+    } else {
+      Serial.println(F("ssid.txt打开失败"));  // codex修改: 补齐 WiFi 配置文件句柄检查，避免空句柄写入
     }
     SPIFFS.end();
+  } else {
+    Serial.println(F("SPIFFS打开失败, 无法保存WiFi配置"));  // codex修改: 文件系统不可用时明确提示配置未落盘
   }
 }
 
