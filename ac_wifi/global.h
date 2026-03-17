@@ -31,7 +31,7 @@ struct set0 {
   uint8_t ac_ok : 1;
   uint8_t httpd_up : 1;
   uint8_t pwm_on : 1;
-} set0;
+} volatile set0;  // codex修改: 20ms Ticker 回调、主循环和 HTTP 路径共享的状态位需声明为 volatile
 uint16_t wget() {
   uint16_t httpCode = http_get(nvram.nvram7 & NVRAM7_URL);  //先试试上次成功的url
   if (httpCode < 200 || httpCode >= 400) {
