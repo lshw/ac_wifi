@@ -138,24 +138,21 @@ void loop() {
     save_set(false);  // 保存 /sets.txt
   }
   yield();
-  if (time_update & DAY_UP) {
+  uint8_t time_flags = time_update_take();
+  if (time_flags & DAY_UP) {
     day();
-    time_update &= ~DAY_UP;
     yield();
   }
-  if (time_update & HOUR_UP) {
+  if (time_flags & HOUR_UP) {
     hour();
-    time_update &= ~HOUR_UP;
     yield();
   }
-  if (time_update & MIN_UP) {
+  if (time_flags & MIN_UP) {
     minute();
-    time_update &= ~MIN_UP;
     yield();
   }
-  if (time_update & SEC10_UP) {
+  if (time_flags & SEC10_UP) {
     sec10();
-    time_update &= ~SEC10_UP;
     yield();
   }
   system_soft_wdt_feed();
