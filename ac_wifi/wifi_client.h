@@ -146,7 +146,8 @@ bool wifi_connected_is_ok() {
   if (set0.connected_is_ok)
     return set0.connected_is_ok;
   if (wifi_station_get_connect_status() == STATION_GOT_IP) {
-    Serial.println("ip:" + WiFi.localIP().toString());
+    Serial.print(F("ip:"));
+    Serial.println(WiFi.localIP());
     set0.connected_is_ok = true;
     //  ht16c21_cmd(0x88, 0); //停止闪烁
     if (nvram.ch != wifi_get_channel()) {
@@ -160,8 +161,12 @@ bool wifi_connected_is_ok() {
     uint8_t ap_id = wifi_station_get_current_ap_id();
     struct station_config config[5];
     wifi_station_get_ap_info(config);
-    config[ap_id].bssid_set = 1;              //同名ap，mac地址不同
-    wifi_station_set_config(&config[ap_id]);  //保存成功的ssid,用于下次通讯
+    if (ap_id < 5) {
+      config[ap_id].bssid_set = 1;              //同名ap，mac地址不同
+      wifi_station_set_config(&config[ap_id]);  //保存成功的ssid,用于下次通讯
+    } else {
+      Serial.println(F("当前AP索引无效"));  // codex修改: 防止异常 ap_id 直接越界访问 station_config 数组
+    }
 #ifdef NETLOG
     netlog_setup();
 #endif
@@ -247,7 +252,10 @@ void update_progress(int cur, int total) {
 }
 
 bool http_update() {
-  String update_url = "http://ac_wifi.anheng.com.cn/firmware.php?type=AC_WIFI&SN=" + hostname + "&GIT=" GIT_VER "&ver=" VER;  //可以在header里下发x-MD5作为校验
+  String update_url(F("http://ac_wifi.anheng.com.cn/firmware.php?type=AC_WIFI&SN="));
+  update_url.reserve(update_url.length() + hostname.length() + 32);  // codex修改: OTA 地址格式固定，预留空间减少低频更新路径的临时扩容
+  update_url += hostname;
+  update_url += F("&GIT=" GIT_VER "&ver=" VER);  //可以在header里下发x-MD5作为校验
   Serial.print(F("下载firmware from "));
   Serial.println(update_url);
   ESPhttpUpdate.onProgress(update_progress);
