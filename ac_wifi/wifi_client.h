@@ -14,8 +14,9 @@ bool http_response_is_update(HTTPClient &http) {
   WiFiClient *stream = http.getStreamPtr();
   char payload[16];
   size_t len = 0;
-  unsigned long deadline = millis() + 1000;
-  while (stream && stream->connected() && millis() < deadline && len < sizeof(payload) - 1) {
+  uint32_t deadline = millis() + 1000;
+  uint32_t now_ms = millis();
+  while (stream && stream->connected() && millis_before(deadline, now_ms) && len < sizeof(payload) - 1) {
     while (stream->available() && len < sizeof(payload) - 1) {
       char ch = stream->read();
       if (ch == '\r' || ch == '\n' || ch == ' ' || ch == '\t') continue;
@@ -25,6 +26,7 @@ bool http_response_is_update(HTTPClient &http) {
     if (len >= 6) break;
     delay(1);
     yield();
+    now_ms = millis();
   }
   payload[len] = 0;
   for (size_t i = 0; i < len; i++) {

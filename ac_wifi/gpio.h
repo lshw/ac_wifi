@@ -11,7 +11,7 @@ void ICACHE_RAM_ATTR key_int() {
     keydown_ms = millis();                   //开始计时
   } else {                                   //松开按键
     if (keydown_ms == 0) return;             //忽略
-    if (keydown_ms + 20 > millis()) return;  //按下时长短于20ms 算抖动
+    if ((uint32_t)(millis() - keydown_ms) < 20) return;  // codex修改: 用时间差做消抖，避免 millis 溢出后把短按误判成长按
     if (keydown_ms >= 0 && millis() - keydown_ms > 5000) {
       keydown_ms = 0;
       return;  //按下超过 10秒， 是进入smartconf状态;

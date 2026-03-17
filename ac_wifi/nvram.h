@@ -96,15 +96,16 @@ void save_nvram_file() {
   File fp;
   uint32_t nvram_save0 = nvram_save_read();
   uint32_t last_save0 = last_save_read();
+  uint32_t now_ms = millis();
   if (nvram_save0 == 0) return;
 
-  if (last_save0 < millis()) {  //最多120秒保存一次数据
-    if (nvram_save0 > millis()
-        && millis() - last_save0 < 12000
-        && nvram_save0 - millis() < 600000)  //可能millis() 溢出
+  if (millis_reached(last_save0, now_ms)) {  // codex修改: 节流窗口改成溢出安全的到期比较，避免长时间运行后保存判断反转
+    if (millis_before(nvram_save0, now_ms)
+        && (uint32_t)(now_ms - last_save0) < 12000
+        && (uint32_t)(nvram_save0 - now_ms) < 600000)
       return;
   }
-  last_save_set(millis());
+  last_save_set(now_ms);
   if (SPIFFS.begin()) {
     fp = SPIFFS.open("/nvram.txt", "w");
     save_nvram();

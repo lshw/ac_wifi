@@ -126,8 +126,9 @@ void loop() {
       Serial.println(getLocalTime(&now, 1000));
     }
     httpd_loop();
-    if (millis() > last_wget) {
-      last_wget = millis() + 1000 * 3600 * 4;  //4小时上传一次服务器
+    uint32_t now_ms = millis();
+    if (millis_reached(last_wget, now_ms)) {
+      last_wget = now_ms + 1000 * 3600 * 4;  // codex修改: 用溢出安全的到期判断维持 4 小时上报节拍，避免长期运行后停止或提前触发
       wget();
     }
     yield();
@@ -239,13 +240,14 @@ void minute() {
   struct tm now0;
   uint32_t nvram_save0 = nvram_save_read();
   uint32_t last_save0 = last_save_read();
+  uint32_t now_ms = millis();
   now_snapshot(&now0);
   datamins[now0.tm_min] = 0.0;
   if ((now0.tm_min % 10) == 0)
     save_nvram();
-  if ((nvram_save0 > 0 && nvram_save0 <= millis())
-      || (last_save0 + 120000 < millis())
-      || last_save0 > millis())
+  if ((nvram_save0 > 0 && millis_reached(nvram_save0, now_ms))
+      || millis_reached(last_save0 + 120000, now_ms)
+      || millis_before(last_save0, now_ms))
     save_nvram_file();
   Serial.println(isotime(now0));
   Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());

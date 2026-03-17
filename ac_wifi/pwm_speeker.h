@@ -33,11 +33,12 @@ void play(char *qz) {
   sound_buf[sizeof(sound_buf) - 1] = 0;
 }
 void sound_20ms() {
-  if (sound_delay < millis() + 40) {
+  uint32_t now_ms = millis();
+  if ((int32_t)(sound_delay - now_ms) < 40) {
     analogWrite(5, 0);
     set0.pwm_on = false;
   }
-  if (sound_delay > millis()) return;
+  if (millis_before(sound_delay, now_ms)) return;
   if (sound_buf[0] != 0) {
     if (!set0.pwm_on) {
       analogWrite(5, sets.vol);
