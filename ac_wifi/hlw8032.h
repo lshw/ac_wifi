@@ -170,7 +170,7 @@ void ac_decode() {  //hlm8032数据解码
       set0.power_down = true;
       save_nvram();
       nvram_save_set(millis() + 80);  //80ms后保存 nvram 到文件
-      wifi_off();
+      deferred_action_set(DEFER_WIFI_OFF);  // codex修改: 计量回调里只登记断网动作，避免在 20ms 路径直接切换 WiFi 硬件状态
     }
   } else if (voltage > 80) {
     set0.power_down = false;

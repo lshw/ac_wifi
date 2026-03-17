@@ -121,6 +121,9 @@ void loop() {
   } else if (deferred_actions & DEFER_SWITCH_ON) {
     switch_change(HIGH);  // codex修改: 同一轮只执行一个自动切换方向，避免边界条件下连续翻转
   }
+  if (deferred_actions & DEFER_WIFI_OFF) {
+    wifi_off();  // codex修改: 把计量回调里的断网动作移到主循环执行，避免在 20ms 路径直接切换 WiFi 硬件
+  }
   if (set0.relink) {
     set0.relink = false;
     wifi_setup();

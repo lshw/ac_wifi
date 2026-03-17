@@ -31,6 +31,7 @@ volatile uint8_t deferred_action_flags = 0;
 #define DEFER_SAVE_SWITCH 0x01
 #define DEFER_SWITCH_ON 0x02
 #define DEFER_SWITCH_OFF 0x04
+#define DEFER_WIFI_OFF 0x08
 inline void deferred_action_set(uint8_t flags) {
   noInterrupts();
   deferred_action_flags |= flags;
