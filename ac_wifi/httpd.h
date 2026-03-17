@@ -85,9 +85,12 @@ void http_ls() {
 }
 void handleRoot() {
   runtime_snapshot_t snap;
+  dataday kwh_days0[KWH_DAYS];
+  int8_t kwh_days_p0;
   String wifi_stat, wifi_scan;
   String ssid;
   runtime_snapshot(&snap);
+  kwh_days_snapshot(kwh_days0, &kwh_days_p0);
   body = "";
   body.reserve(16384);  // codex修改: 请求开始前预留接近最终页面大小的空间，减少拼接过程中的反复重分配
   wifi_scan.reserve(1024);
@@ -388,7 +391,7 @@ data:[");
   body_send_if_large();
   float kwh0;
   for (uint16_t i = 0; i < KWH_DAYS; i++) {
-    kwh0 = kwh_days[(kwh_days_p + i) % KWH_DAYS].kwh;
+    kwh0 = kwh_days0[(kwh_days_p0 + i) % KWH_DAYS].kwh;
     if (kwh0 > 3.0 * 24) continue;
     body_append_number(kwh0, 4);  // codex修改: 改用固定缓冲区输出数值
     body += ",";

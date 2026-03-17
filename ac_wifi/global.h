@@ -66,6 +66,12 @@ inline void now_snapshot(struct tm *tm0) {
   *tm0 = now;
   interrupts();  // codex修改: 时间结构体由节拍路径更新，读取前先复制快照避免字段撕裂
 }
+inline void kwh_days_snapshot(dataday *days, int8_t *p) {
+  noInterrupts();
+  memcpy(days, kwh_days, sizeof(kwh_days));
+  *p = kwh_days_p;
+  interrupts();  // codex修改: 日统计环形缓冲区会被前台刷新和每日写入共同改动，渲染前先整体复制避免图表读到混合数据
+}
 uint16_t wget() {
   uint16_t httpCode = http_get(nvram.nvram7 & NVRAM7_URL);  //先试试上次成功的url
   if (httpCode < 200 || httpCode >= 400) {
