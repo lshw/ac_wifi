@@ -136,8 +136,16 @@ void loop() {
       httpd_listen();
     }
     if (now0.tm_year < __YEAR__ - 1900 && set0.connected_is_ok) {
+      struct tm now_sync;
       Serial.println("getLocalTime()");
-      Serial.println(getLocalTime(&now, 1000));
+      if (getLocalTime(&now_sync, 1000)) {
+        noInterrupts();
+        now = now_sync;
+        interrupts();  // codex修改: 先授时到局部变量，再一次性替换共享时间结构体，避免和秒节拍并发写出半更新状态
+        Serial.println(1);
+      } else {
+        Serial.println(0);
+      }
     }
     httpd_loop();
     uint32_t now_ms = millis();
