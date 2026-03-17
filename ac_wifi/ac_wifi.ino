@@ -134,7 +134,8 @@ void loop() {
     }
   }
   system_soft_wdt_feed();
-  if (set_modi && (set_modi & SET_CHARGE)) {
+  uint8_t set_modi_flags = set_modi_read();
+  if (set_modi_flags & SET_CHARGE) {
     save_set(false);  // 保存 /sets.txt
   }
   yield();

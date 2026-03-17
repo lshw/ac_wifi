@@ -598,25 +598,25 @@ void httpsave() {
     } else if (httpd.argName(i).compareTo("I") == 0) {
       if (current > 0) {
         sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / current;
-        set_modi |= SET_CHARGE;
+        set_modi_mark(SET_CHARGE);
       }
       break;
     } else if (httpd.argName(i).compareTo("BZD") == 0) {  //输入白炽灯功率，需要根据电压，换算成当前功率，进行校准
       if (power > 0) {
         sets.ac_i_calibration = sets.ac_i_calibration * (httpd.arg(i).toFloat() + 1.0) / 220.0 * voltage / 220.0 * voltage / power;
-        set_modi |= SET_CHARGE;
+        set_modi_mark(SET_CHARGE);
       }
       break;
     } else if (httpd.argName(i).compareTo("V") == 0) {
       if (voltage > 0) {
         sets.ac_v_calibration = sets.ac_v_calibration * httpd.arg(i).toFloat() / voltage;
-        set_modi |= SET_CHARGE;
+        set_modi_mark(SET_CHARGE);
       }
       break;
     } else if (httpd.argName(i).compareTo("W") == 0) {
       if (power > 0) {
         sets.ac_i_calibration = sets.ac_i_calibration * httpd.arg(i).toFloat() / power;
-        set_modi |= SET_CHARGE;
+        set_modi_mark(SET_CHARGE);
       }
       break;
     } else if (httpd.argName(i).compareTo("tz") == 0) {

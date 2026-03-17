@@ -11,6 +11,23 @@ double get_kwh();
 #include "calibration.h"
 void update_kwh_count();  //更新kwh的脉冲数，
 uint8_t set_modi = 0;     //不等于0, 需要保存
+inline void set_modi_mark(uint8_t flags) {
+  noInterrupts();
+  set_modi |= flags;
+  interrupts();  // codex修改: 计量回调和前台保存逻辑都会改写脏标记，置位需放进临界区避免丢标记
+}
+inline void set_modi_clear(uint8_t flags) {
+  noInterrupts();
+  set_modi &= ~flags;
+  interrupts();  // codex修改: 保存成功后的清位也要原子化，避免覆盖回调刚写入的新脏标记
+}
+inline uint8_t set_modi_read() {
+  uint8_t flags;
+  noInterrupts();
+  flags = set_modi;
+  interrupts();  // codex修改: 主循环先读出脏标记快照，再决定是否保存，避免和回调并发读取撕裂
+  return flags;
+}
 struct {
   uint8_t nc;
   uint8_t nvram7;
@@ -134,7 +151,7 @@ void save_set(bool _default) {
       fp = SPIFFS.open("/sets.txt", "w");
     if (fp) {
       if (fp.write((uint8_t *)&sets, sizeof(sets)) == sizeof(sets)) {
-        set_modi &= ~SET_CHARGE;  // codex修改: 写盘成功后再清除脏标记
+        set_modi_clear(SET_CHARGE);  // codex修改: 写盘成功后再清除脏标记
       } else if (_default) {
         Serial.println(F("sets_default.txt写入不完整"));  // codex修改: 默认配置写盘失败时输出日志，避免静默丢失恢复基线
       } else {

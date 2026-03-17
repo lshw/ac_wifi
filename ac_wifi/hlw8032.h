@@ -45,12 +45,12 @@ void update_kwh_count() {  //根据需要修改并保存校准数据
   //电阻采样4个470k 加1个1k为1.881  //参数=0.0001*(R1+R2)/R2  R1=470k*4,R2=1K
   if (!(sets.ac_v_calibration > 1.0 && sets.ac_v_calibration < 3.00)) {
     sets.ac_v_calibration = 1.881;
-    set_modi |= SET_CHARGE;
+    set_modi_mark(SET_CHARGE);
   }
   //1m欧->1.0 ,10m欧->0.1,  0.5m欧 -> 2.0 1.81*1.1m欧->0.50226 // 参数=0.0001/R
   if (!(sets.ac_i_calibration > 0.1 && sets.ac_i_calibration < 2.00)) {
     sets.ac_i_calibration = 1.44 / (0.00199 * 1000);
-    set_modi |= SET_CHARGE;
+    set_modi_mark(SET_CHARGE);
   }
   if (p_cs == 0) {
     new_kwh_count = 0;  //无效
