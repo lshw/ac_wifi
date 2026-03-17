@@ -110,6 +110,17 @@ void loop() {
       switch_change(!digitalRead(SSR));  // codex修改: 把重操作移到主循环执行
     }
   }
+  uint8_t deferred_actions = deferred_action_take();
+  if (deferred_actions & DEFER_SAVE_SWITCH) {
+    sets.on_off = digitalRead(SSR);
+    save_set(false);
+    play((char *)"c");  // codex修改: 把定时回调里的保存和提示音移到主循环执行，避免在 Ticker 上下文访问 SPIFFS
+  }
+  if (deferred_actions & DEFER_SWITCH_OFF) {
+    switch_change(LOW);  // codex修改: 自动开关动作改由主循环执行，避免回调里直接驱动继电器和灯带
+  } else if (deferred_actions & DEFER_SWITCH_ON) {
+    switch_change(HIGH);  // codex修改: 同一轮只执行一个自动切换方向，避免边界条件下连续翻转
+  }
   if (set0.relink) {
     set0.relink = false;
     wifi_setup();

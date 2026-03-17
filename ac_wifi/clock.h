@@ -49,17 +49,15 @@ void sec() {
     }
   }
   if (switch_change_time > 60 && switch_change_time < 65 && sets.on_off != digitalRead(SSR)) {  //switch状态改变1分钟后， 保存
-    sets.on_off = digitalRead(SSR);
-    save_set(false);
-    play((char *)"c");
+    deferred_action_set(DEFER_SAVE_SWITCH);  // codex修改: 定时回调里只置延后动作，避免在 Ticker 上下文直接访问 SPIFFS 和蜂鸣器
   }
   switch_change_time++;
   if (digitalRead(SSR) == HIGH) {  //now off
     if (sets.switch_off_time > 0 && sets.switch_off_time < switch_change_time)
-      switch_change(LOW);
+      deferred_action_set(DEFER_SWITCH_OFF);  // codex修改: 自动开关动作改到主循环执行，避免回调里直接操作继电器和灯带
   } else {  //now on
     if (sets.switch_on_time > 0 && sets.switch_on_time < switch_change_time)
-      switch_change(HIGH);
+      deferred_action_set(DEFER_SWITCH_ON);  // codex修改: 自动开关动作改到主循环执行，保持回调里只做状态推进
   }
 }
 

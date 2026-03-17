@@ -27,6 +27,23 @@ extern float current, voltage, power, power_ys;
 extern float i_max;
 extern uint32_t ac_ok_count;
 extern uint16_t data100ms_p;
+volatile uint8_t deferred_action_flags = 0;
+#define DEFER_SAVE_SWITCH 0x01
+#define DEFER_SWITCH_ON 0x02
+#define DEFER_SWITCH_OFF 0x04
+inline void deferred_action_set(uint8_t flags) {
+  noInterrupts();
+  deferred_action_flags |= flags;
+  interrupts();  // codex修改: 定时回调和主循环共享延后动作事件位，置位需原子化避免丢事件
+}
+inline uint8_t deferred_action_take() {
+  uint8_t flags;
+  noInterrupts();
+  flags = deferred_action_flags;
+  deferred_action_flags = 0;
+  interrupts();  // codex修改: 主循环一次性取走并清空延后动作，避免和回调并发时丢掉待执行任务
+  return flags;
+}
 struct set0 {
   volatile uint8_t relink;
   volatile uint8_t reboot_now;
