@@ -90,6 +90,13 @@ inline void kwh_days_snapshot(dataday *days, int8_t *p) {
   *p = kwh_days_p;
   interrupts();  // codex修改: 日统计环形缓冲区会被前台刷新和每日写入共同改动，渲染前先整体复制避免图表读到混合数据
 }
+inline void power_history_snapshot(float *sec_data, uint16_t *sec_p, float *min_data) {
+  noInterrupts();
+  memcpy(sec_data, data100ms, sizeof(data100ms));
+  memcpy(min_data, datamins, sizeof(datamins));
+  *sec_p = data100ms_p;
+  interrupts();  // codex修改: 秒级和分钟级功率曲线由节拍路径持续更新，渲染前先整体复制避免首页图表读到半旧半新的数组
+}
 uint16_t wget() {
   uint16_t httpCode = http_get(nvram.nvram7 & NVRAM7_URL);  //先试试上次成功的url
   if (httpCode < 200 || httpCode >= 400) {

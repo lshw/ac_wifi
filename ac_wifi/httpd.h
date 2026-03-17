@@ -85,11 +85,15 @@ void http_ls() {
 }
 void handleRoot() {
   runtime_snapshot_t snap;
+  float data100ms0[600];
+  float datamins0[60];
+  uint16_t data100ms_p0;
   dataday kwh_days0[KWH_DAYS];
   int8_t kwh_days_p0;
   String wifi_stat, wifi_scan;
   String ssid;
   runtime_snapshot(&snap);
+  power_history_snapshot(data100ms0, &data100ms_p0, datamins0);
   kwh_days_snapshot(kwh_days0, &kwh_days_p0);
   body = "";
   body.reserve(16384);  // codex修改: 请求开始前预留接近最终页面大小的空间，减少拼接过程中的反复重分配
@@ -336,7 +340,7 @@ color:'red',\
 data:[");
   body_send_if_large();
   for (uint16_t i = 0; i < 600; i++) {
-    body_append_number(data100ms[(i + snap.data100ms_p) % 600], 1);  // codex修改: 用同一时刻的环形缓冲区索引快照，避免图表读到撕裂顺序
+    body_append_number(data100ms0[(i + data100ms_p0) % 600], 1);  // codex修改: 秒级功率曲线改用整块快照，避免一边渲染一边被节拍回调改写
     body += ",";
     body_send_if_large();
   }
@@ -360,7 +364,7 @@ color:'red',\
 data:[");
   body_send_if_large();
   for (uint16_t i = 0; i < 60; i++) {
-    body_append_number(datamins[(snap.now.tm_min + i + 1) % 60], 2);  // codex修改: 用时间快照生成图表索引，避免跨分钟时读到混合区间
+    body_append_number(datamins0[(snap.now.tm_min + i + 1) % 60], 2);  // codex修改: 分钟功率曲线也改用数组快照，避免秒节拍更新时读到混合值
     body += ",";
     body_send_if_large();
   }
