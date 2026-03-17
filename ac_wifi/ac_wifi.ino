@@ -323,5 +323,8 @@ void smart_config() {
       httpd_loop();
     }
   }
+  Serial.println(F("smart_config timeout"));  // codex修改: 超时退出时保留明确日志，避免和手动退出、成功退出混淆
   WiFi.stopSmartConfig();
+  wifi_off();          // codex修改: 超时路径也统一关闭 WiFi，避免残留 smart config 状态影响后续重连
+  set0.relink = true;  // codex修改: 超时退出后也走统一重连流程，保持与成功/手动退出一致
 }
