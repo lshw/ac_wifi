@@ -544,7 +544,9 @@ void httpsave() {
         if (spiffs_ok) {
           fp = SPIFFS.open("/ssid.txt", "w");
           if (fp) {
-            fp.println(data);
+            if (fp.println(data) == 0) {
+              Serial.println(F("保存ssid.txt失败"));  // codex修改: 保存 WiFi 配置时校验写入结果，避免静默失败
+            }
             fp.close();
             fp = SPIFFS.open("/ssid.txt", "r");
             if (fp) {
@@ -552,11 +554,15 @@ void httpsave() {
               Serial.print(fp.size());
               Serial.println(F("字节"));
               fp.close();
+            } else {
+              Serial.println(F("回读ssid.txt失败"));  // codex修改: 保存后回读失败时保留日志，便于排查文件系统异常
             }
+          } else {
+            Serial.println(F("打开ssid.txt失败"));  // codex修改: 补齐 WiFi 配置文件句柄检查
           }
         }
       } else if (data.length() < 2)
-        if (spiffs_ok) SPIFFS.remove("/ssid.txt");
+        if (spiffs_ok && !SPIFFS.remove("/ssid.txt")) Serial.println(F("删除ssid.txt失败"));  // codex修改: 删除旧 WiFi 配置失败时输出日志
       data = "";
     } else if (httpd.argName(i).compareTo("ac_name") == 0) {
       ac_name = httpd.arg(i);
@@ -564,8 +570,12 @@ void httpsave() {
       if (spiffs_ok) {
         fp = SPIFFS.open("/ac_name.txt", "w");
         if (fp) {
-          fp.println(ac_name);
+          if (fp.println(ac_name) == 0) {
+            Serial.println(F("保存ac_name.txt失败"));  // codex修改: 标识写入失败时输出日志，避免静默丢配置
+          }
           fp.close();
+        } else {
+          Serial.println(F("打开ac_name.txt失败"));  // codex修改: 补齐标识文件句柄检查
         }
       }
     } else if (httpd.argName(i).compareTo("kwh") == 0) {
@@ -628,13 +638,17 @@ void httpsave() {
       data = httpd.arg(i);
       data.trim();
       if (data.length() == 0) {
-        if (spiffs_ok) SPIFFS.remove("/url.txt");
+        if (spiffs_ok && !SPIFFS.remove("/url.txt")) Serial.println(F("删除url.txt失败"));  // codex修改: URL 配置删除失败时输出日志
       } else {
         if (spiffs_ok) {
           fp = SPIFFS.open("/url.txt", "w");
           if (fp) {
-            fp.println(data);
+            if (fp.println(data) == 0) {
+              Serial.println(F("保存url.txt失败"));  // codex修改: URL 配置写入失败时输出日志，避免静默保留旧地址
+            }
             fp.close();
+          } else {
+            Serial.println(F("打开url.txt失败"));  // codex修改: 补齐 URL 配置文件句柄检查
           }
         }
       }
@@ -643,13 +657,17 @@ void httpsave() {
       data = httpd.arg(i);
       data.trim();
       if (data.length() == 0) {
-        if (spiffs_ok) SPIFFS.remove("/url1.txt");
+        if (spiffs_ok && !SPIFFS.remove("/url1.txt")) Serial.println(F("删除url1.txt失败"));  // codex修改: 备用 URL 配置删除失败时输出日志
       } else {
         if (spiffs_ok) {
           fp = SPIFFS.open("/url1.txt", "w");
           if (fp) {
-            fp.println(data);
+            if (fp.println(data) == 0) {
+              Serial.println(F("保存url1.txt失败"));  // codex修改: 备用 URL 配置写入失败时输出日志
+            }
             fp.close();
+          } else {
+            Serial.println(F("打开url1.txt失败"));  // codex修改: 补齐备用 URL 配置文件句柄检查
           }
         }
       }
@@ -687,9 +705,9 @@ void httpsave() {
           kwh = get_kwh();
         }
         if (spiffs_ok) {
-          SPIFFS.remove("/nvram.txt");
-          SPIFFS.remove("/sets_default.txt");
-          SPIFFS.remove("/sets.txt");
+          if (!SPIFFS.remove("/nvram.txt")) Serial.println(F("删除nvram.txt失败"));                // codex修改: 恢复出厂时保留失败日志，避免残留旧配置却无提示
+          if (!SPIFFS.remove("/sets_default.txt")) Serial.println(F("删除sets_default.txt失败"));  // codex修改: 恢复出厂时保留失败日志，避免残留旧配置却无提示
+          if (!SPIFFS.remove("/sets.txt")) Serial.println(F("删除sets.txt失败"));                  // codex修改: 恢复出厂时保留失败日志，避免残留旧配置却无提示
         }
         nvram.crc32++;
         ESP.rtcUserMemoryWrite(0, (uint32_t *)&nvram, sizeof(nvram));
