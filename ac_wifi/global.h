@@ -57,6 +57,7 @@ struct set0 {
 } set0;  // codex修改: 共享状态不能继续用同一字节 bitfield，异步上下文分别改不同位时会互相覆盖，改成独立字节避免读改写丢标志
 struct runtime_snapshot_t {
   struct tm now;
+  double kwh;
   float current;
   float voltage;
   float power;
@@ -67,8 +68,14 @@ struct runtime_snapshot_t {
   uint16_t data100ms_p;
 };
 inline void runtime_snapshot(runtime_snapshot_t *snap) {
+  uint32_t ac_kwh_count0;
+  uint32_t ac_pf0;
+  double kwh0;
   noInterrupts();
   snap->now = now;
+  kwh0 = nvram.kwh;
+  ac_kwh_count0 = nvram.ac_kwh_count;
+  ac_pf0 = nvram.ac_pf;
   snap->current = current;
   snap->voltage = voltage;
   snap->power = power;
@@ -77,6 +84,9 @@ inline void runtime_snapshot(runtime_snapshot_t *snap) {
   snap->ac_ok_count = ac_ok_count;
   snap->switch_change_time = switch_change_time;
   snap->data100ms_p = data100ms_p;
+  if (ac_kwh_count0 > 0 && ac_pf0 > 0)
+    kwh0 += (double)ac_pf0 / ac_kwh_count0;
+  snap->kwh = kwh0;
   interrupts();  // codex修改: 先复制跨 Ticker/主循环共享的时间和计量值，再在前台使用，避免读到半更新状态
 }
 inline void now_snapshot(struct tm *tm0) {

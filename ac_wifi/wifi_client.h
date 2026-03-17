@@ -192,7 +192,7 @@ uint16_t http_get(uint8_t no) {
   url0 += F("ver=" VER "&sn=");
   url0 += hostname;
   url0 += F("&kwh=");
-  snprintf(numbuf, sizeof(numbuf), "%.8f", get_kwh());
+  snprintf(numbuf, sizeof(numbuf), "%.8f", snap.kwh);  // codex修改: 上报中的累计电量改用运行时快照，避免与同批功率电流数据来自不同时间点
   url0 += numbuf;
   url0 += F("&v=");
   snprintf(numbuf, sizeof(numbuf), "%d", sets.vol);

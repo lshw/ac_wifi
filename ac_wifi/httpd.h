@@ -246,7 +246,7 @@ if (confirm('连接到[' + ssid + ']?')) location.replace('add_ssid.php?data=' +
           + String(sets.vol) + F("');>") + String(sets.vol) + F("</mark><br>"
                                                                 "电压:")
           + String(snap.voltage) + F("V, 电流:") + String(snap.current) + F("A, 功率:") + String(snap.power) + F("W, 功率因数:") + String(snap.power_ys * 100.0) + F("%, 累积电量:")
-          + String(get_kwh(), 8) + F("KWh"
+          + String(snap.kwh, 8) + F("KWh"
                                      ",测试次数:")
           + String(snap.ac_ok_count)
           + F(",uptime:") + String(millis() / 1000) + F("秒"
@@ -516,7 +516,7 @@ void api() {
     String isotime_json = js_quote_escape(isotime(snap.now));
     httpd.send(200, F("application/json"), F("{"
                                              "\"NAME\":\"")
-                                             + ac_name_json + F("\",\"SN\":\"") + hostname_json + F("\",\"VER\":\"") + VER + "-" + GIT_VER + F("\",\"KWH\":") + String(get_kwh(), 8) + F(",\"V\":") + String(snap.voltage) + F(",\"I\":") + String(snap.current) + F(",\"W\":") + String(snap.power) + F(",\"PF\":") + String(snap.power_ys) + F(",\"TIME\":\"") + isotime_json + F("\",\"SWITCH\":") + String(!digitalRead(SSR)) + F(",\"SWITCH_CHANGE_TIME\":") + String(snap.switch_change_time) + "}");
+                                             + ac_name_json + F("\",\"SN\":\"") + hostname_json + F("\",\"VER\":\"") + VER + "-" + GIT_VER + F("\",\"KWH\":") + String(snap.kwh, 8) + F(",\"V\":") + String(snap.voltage) + F(",\"I\":") + String(snap.current) + F(",\"W\":") + String(snap.power) + F(",\"PF\":") + String(snap.power_ys) + F(",\"TIME\":\"") + isotime_json + F("\",\"SWITCH\":") + String(!digitalRead(SSR)) + F(",\"SWITCH_CHANGE_TIME\":") + String(snap.switch_change_time) + "}");
   }
   httpd.client().stop();
   yield();
