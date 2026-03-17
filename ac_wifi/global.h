@@ -97,6 +97,11 @@ inline void power_history_snapshot(float *sec_data, uint16_t *sec_p, float *min_
   *sec_p = data100ms_p;
   interrupts();  // codex修改: 秒级和分钟级功率曲线由节拍路径持续更新，渲染前先整体复制避免首页图表读到半旧半新的数组
 }
+inline void hour_history_snapshot(float *hour_data) {
+  noInterrupts();
+  memcpy(hour_data, datahour, sizeof(datahour));
+  interrupts();  // codex修改: 小时耗电数组会在整点更新并写文件，渲染前先复制避免首页图表读到混合小时数据
+}
 uint16_t wget() {
   uint16_t httpCode = http_get(nvram.nvram7 & NVRAM7_URL);  //先试试上次成功的url
   if (httpCode < 200 || httpCode >= 400) {

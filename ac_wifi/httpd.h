@@ -87,6 +87,7 @@ void handleRoot() {
   runtime_snapshot_t snap;
   float data100ms0[600];
   float datamins0[60];
+  float datahour0[24];
   uint16_t data100ms_p0;
   dataday kwh_days0[KWH_DAYS];
   int8_t kwh_days_p0;
@@ -94,6 +95,7 @@ void handleRoot() {
   String ssid;
   runtime_snapshot(&snap);
   power_history_snapshot(data100ms0, &data100ms_p0, datamins0);
+  hour_history_snapshot(datahour0);
   kwh_days_snapshot(kwh_days0, &kwh_days_p0);
   body = "";
   body.reserve(16384);  // codex修改: 请求开始前预留接近最终页面大小的空间，减少拼接过程中的反复重分配
@@ -379,7 +381,7 @@ color:'red',\
 data:[");
   body_send_if_large();
   for (uint16_t i = 0; i < 24; i++) {
-    body_append_number(datahour[(snap.now.tm_hour + i + 1) % 24] * 1000.0, 2);  // codex修改: 用时间快照生成图表索引，避免跨小时时读到混合区间
+    body_append_number(datahour0[(snap.now.tm_hour + i + 1) % 24] * 1000.0, 2);  // codex修改: 小时耗电曲线改用数组快照，避免整点更新时读到混合值
     body += ",";
     body_send_if_large();
   }
