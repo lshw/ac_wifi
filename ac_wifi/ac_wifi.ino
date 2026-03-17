@@ -300,25 +300,24 @@ void day() {
   double kwh_day0;
   runtime_snapshot(&snap);
   if (kwh_days_p < 0) return;  // codex修改: 再加一道保护，避免异常顺序下日统计索引未初始化时写越界
+  if (snap.now.tm_year <= 2021 - 1900) return;  // codex修改: 时间尚未有效时不能提前推进日基线，否则授时成功后当天累计会被直接吃掉
   kwh_day0 = kwh_day0_swap(snap.kwh);
   kwh_days[kwh_days_p].kwh = snap.kwh - kwh_day0;  // codex修改: 日统计也基于同一份累计电量快照结算，避免新日基线和旧日增量错位
   kwh_days[kwh_days_p].time = mktime(&snap.now);
-  if (snap.now.tm_year > 2021 - 1900) {
-    if (SPIFFS.begin()) {
-      File fp;
-      fp = SPIFFS.open(year_dat_path(snap.now.tm_year + 1900), "a");
-      if (fp) {
-        if (fp.write((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) != sizeof(dataday)) {
-          Serial.println(F("日统计写入不完整"));  // codex修改: 年统计写失败时保留日志，避免文件损坏被静默吞掉
-        }
-        fp.close();
-      } else {
-        Serial.println(F("日统计文件打开失败"));  // codex修改: 补齐年统计文件句柄检查，避免空句柄写入
+  if (SPIFFS.begin()) {
+    File fp;
+    fp = SPIFFS.open(year_dat_path(snap.now.tm_year + 1900), "a");
+    if (fp) {
+      if (fp.write((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) != sizeof(dataday)) {
+        Serial.println(F("日统计写入不完整"));  // codex修改: 年统计写失败时保留日志，避免文件损坏被静默吞掉
       }
-      SPIFFS.end();
+      fp.close();
+    } else {
+      Serial.println(F("日统计文件打开失败"));  // codex修改: 补齐年统计文件句柄检查，避免空句柄写入
     }
-    kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
+    SPIFFS.end();
   }
+  kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
 }
 void smart_config() {
   uint32_t colors[3] = { 0xf00000, 0x00f000, 0x0000f0 };
