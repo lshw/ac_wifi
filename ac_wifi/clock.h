@@ -35,6 +35,7 @@ void sec() {
   if (now.tm_sec >= 60) {
     now.tm_sec -= 60;
     now.tm_min++;
+    datamins[now.tm_min % 60] = 0.0;  // codex修改: 分钟切换时立即清空新分钟槽位，避免主循环稍后再清零把新分钟前几秒的峰值抹掉
     time_update_set(MIN_UP);
     if (now.tm_min >= 60) {
       now.tm_min -= 60;

@@ -256,7 +256,6 @@ void minute() {
   uint32_t last_save0 = last_save_read();
   uint32_t now_ms = millis();
   now_snapshot(&now0);
-  datamins[now0.tm_min] = 0.0;
   if ((now0.tm_min % 10) == 0)
     save_nvram();
   if ((nvram_save0 > 0 && millis_reached(nvram_save0, now_ms))
