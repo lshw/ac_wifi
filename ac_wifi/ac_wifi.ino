@@ -21,9 +21,10 @@ void run_20ms() {
     i_over -= 20;
   else
     i_over = 0;
-  if (millis() > dida0) {
+  uint32_t now_ms = millis();
+  while ((int32_t)(now_ms - dida0) >= 0) {
     dida0 += 1000;
-    sec();
+    sec();  // codex修改: 用到期时间循环补跑秒节拍，避免启动初期和回调抖动时漏秒或秒计数漂移
   }
   count_100ms++;
   if (count_100ms >= 5) {
@@ -39,6 +40,7 @@ void setup() {
   gpio_setup();
   load_nvram();  //从esp8266的nvram载入数据
   memset(&now, 0, sizeof(now));
+  dida0 = millis() + 1000;  // codex修改: 秒节拍基于当前时间启动，避免从 0 起步导致早期快速补秒
   _myTicker.attach_ms(20, run_20ms);
 
   wifi_country_t mycountry = {
