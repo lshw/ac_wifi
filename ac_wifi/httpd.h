@@ -36,7 +36,7 @@ void httpd_stream_begin(const __FlashStringHelper *javascript) {
   body += F("<html><head><title>");
   body += ac_name;
   body += F(" " GIT_VER "</title><meta http-equiv=Content-Type "
-                        "content='text/html;charset=utf-8'><script>"
+            "content='text/html;charset=utf-8'><script>"
             "function modi(url,text,Defaulttext) {"
             "var data=prompt(text,Defaulttext);"
             "if (data==null) {return false;}"
@@ -650,30 +650,30 @@ void httpsave() {
           fp = SPIFFS.open("/ssid.txt", "w");
           if (fp) {
             if (fp.println(data) == 0) {
-              Serial.println(
+              set0.console->println(
                   F("保存ssid.txt失败")); // codex修改: 保存 WiFi
                                           // 配置时校验写入结果，避免静默失败
             }
             fp.close();
             fp = SPIFFS.open("/ssid.txt", "r");
             if (fp) {
-              Serial.print(F("保存wifi设置到文件/ssid.txt "));
-              Serial.print(fp.size());
-              Serial.println(F("字节"));
+              set0.console->print(F("保存wifi设置到文件/ssid.txt "));
+              set0.console->print(fp.size());
+              set0.console->println(F("字节"));
               fp.close();
             } else {
-              Serial.println(F(
+              set0.console->println(F(
                   "回读ssid.txt失败")); // codex修改:
                                         // 保存后回读失败时保留日志，便于排查文件系统异常
             }
           } else {
-            Serial.println(
+            set0.console->println(
                 F("打开ssid.txt失败")); // codex修改: 补齐 WiFi 配置文件句柄检查
           }
         }
       } else if (data.length() < 2)
         if (spiffs_ok && !SPIFFS.remove("/ssid.txt"))
-          Serial.println(F(
+          set0.console->println(F(
               "删除ssid.txt失败")); // codex修改: 删除旧 WiFi 配置失败时输出日志
       data = "";
     } else if (httpd.argName(i).compareTo("ac_name") == 0) {
@@ -683,13 +683,13 @@ void httpsave() {
         fp = SPIFFS.open("/ac_name.txt", "w");
         if (fp) {
           if (fp.println(ac_name) == 0) {
-            Serial.println(F(
+            set0.console->println(F(
                 "保存ac_name.txt失败")); // codex修改:
                                          // 标识写入失败时输出日志，避免静默丢配置
           }
           fp.close();
         } else {
-          Serial.println(
+          set0.console->println(
               F("打开ac_name.txt失败")); // codex修改: 补齐标识文件句柄检查
         }
       }
@@ -762,20 +762,20 @@ void httpsave() {
       data.trim();
       if (data.length() == 0) {
         if (spiffs_ok && !SPIFFS.remove("/url.txt"))
-          Serial.println(
+          set0.console->println(
               F("删除url.txt失败")); // codex修改: URL 配置删除失败时输出日志
       } else {
         if (spiffs_ok) {
           fp = SPIFFS.open("/url.txt", "w");
           if (fp) {
             if (fp.println(data) == 0) {
-              Serial.println(F(
+              set0.console->println(F(
                   "保存url.txt失败")); // codex修改: URL
                                        // 配置写入失败时输出日志，避免静默保留旧地址
             }
             fp.close();
           } else {
-            Serial.println(
+            set0.console->println(
                 F("打开url.txt失败")); // codex修改: 补齐 URL 配置文件句柄检查
           }
         }
@@ -786,20 +786,23 @@ void httpsave() {
       data.trim();
       if (data.length() == 0) {
         if (spiffs_ok && !SPIFFS.remove("/url1.txt"))
-          Serial.println(F("删除url1.txt失败")); // codex修改: 备用 URL
-                                                 // 配置删除失败时输出日志
+          set0.console->println(
+              F("删除url1.txt失败")); // codex修改: 备用 URL
+                                      // 配置删除失败时输出日志
       } else {
         if (spiffs_ok) {
           fp = SPIFFS.open("/url1.txt", "w");
           if (fp) {
             if (fp.println(data) == 0) {
-              Serial.println(F("保存url1.txt失败")); // codex修改: 备用 URL
-                                                     // 配置写入失败时输出日志
+              set0.console->println(
+                  F("保存url1.txt失败")); // codex修改: 备用 URL
+                                          // 配置写入失败时输出日志
             }
             fp.close();
           } else {
-            Serial.println(F("打开url1.txt失败")); // codex修改: 补齐备用 URL
-                                                   // 配置文件句柄检查
+            set0.console->println(
+                F("打开url1.txt失败")); // codex修改: 补齐备用 URL
+                                        // 配置文件句柄检查
           }
         }
       }
@@ -840,15 +843,15 @@ void httpsave() {
         }
         if (spiffs_ok) {
           if (!SPIFFS.remove("/nvram.txt"))
-            Serial.println(F(
+            set0.console->println(F(
                 "删除nvram.txt失败")); // codex修改:
                                        // 恢复出厂时保留失败日志，避免残留旧配置却无提示
           if (!SPIFFS.remove("/sets_default.txt"))
-            Serial.println(F(
+            set0.console->println(F(
                 "删除sets_default.txt失败")); // codex修改:
                                               // 恢复出厂时保留失败日志，避免残留旧配置却无提示
           if (!SPIFFS.remove("/sets.txt"))
-            Serial.println(F(
+            set0.console->println(F(
                 "删除sets.txt失败")); // codex修改:
                                       // 恢复出厂时保留失败日志，避免残留旧配置却无提示
         }
@@ -903,9 +906,9 @@ void httpsave() {
 void httpd_listen() {
 
   httpd.on("/", handleRoot);
-  httpd.on("/save.php", httpsave); // 保存设置
-  httpd.on("/ls.php", http_ls);    // 保存设置
-  httpd.on("/api.php", api);       // api服务
+  httpd.on("/save.php", httpsave);    // 保存设置
+  httpd.on("/ls.php", http_ls);       // 保存设置
+  httpd.on("/api.php", api);          // api服务
   httpd.on("/sound.php", sound_play); // 播放音乐 http://xxxx/sound.php?play=123
   httpd.on("/add_ssid.php", http_add_ssid); // 保存设置
   httpd.on("/generate_204", http204);       // 安卓上网检测
@@ -929,8 +932,8 @@ void httpd_listen() {
             httpd_send_200(F("setTimeout(function(){ alert('升级成功!'); "
                              "window.location.href = '/';}, 20000);"));
           }
-          Serial.println(body);
-          Serial.flush();
+          set0.console->println(body);
+          set0.console->flush();
           delay(5);
           if (update_session_ok && update_session_crc == CRC_MAGIC) {
             led_send(0xFF0000L);
@@ -949,7 +952,7 @@ void httpd_listen() {
           //  ht16c21_cmd(0x88, 0); //停闪烁
           Serial.setDebugOutput(true);
           WiFiUDP::stopAll();
-          Serial.printf(PSTR("Update: %s\r\n"), upload.filename.c_str());
+          set0.console->printf(PSTR("Update: %s\r\n"), upload.filename.c_str());
           uint32_t maxSketchSpace =
               (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
           update_session_ok = false;
@@ -973,8 +976,8 @@ void httpd_listen() {
           }
           crc.update((uint8_t *)upload.buf, upload.currentSize);
           update_session_crc = crc.finalize();
-          Serial.printf(PSTR("size:%d,crc=%08x\r\n"), upload.totalSize,
-                        update_session_crc);
+          set0.console->printf(PSTR("size:%d,crc=%08x\r\n"), upload.totalSize,
+                               update_session_crc);
           if (Update.write(upload.buf, upload.currentSize) !=
               upload.currentSize) {
             Update.printError(Serial);
@@ -988,25 +991,27 @@ void httpd_listen() {
                   true)) { // true to set the size to the current progress
             update_session_crc = crc.finalize();
             if (update_session_crc != CRC_MAGIC)
-              Serial.printf(PSTR("File Update : %u\r\nCRC32 error ...\r\n"),
-                            upload.totalSize);
+              set0.console->printf(
+                  PSTR("File Update : %u\r\nCRC32 error ...\r\n"),
+                  upload.totalSize);
             else
-              Serial.printf(PSTR("Update Success: %u\r\nRebooting...\r\n"),
-                            upload.totalSize);
+              set0.console->printf(
+                  PSTR("Update Success: %u\r\nRebooting...\r\n"),
+                  upload.totalSize);
           } else {
             Update.printError(Serial);
             update_session_ok = false;
           }
           Serial.setDebugOutput(false);
-          Serial.printf(PSTR("crc=%08x\r\n"), update_session_crc);
+          set0.console->printf(PSTR("crc=%08x\r\n"), update_session_crc);
         }
         yield();
       });
   httpd.onNotFound(handleNotFound);
   httpd.begin();
 
-  // Serial.printf(PSTR("HTTP服务器启动! 用浏览器打开 http://%s.local\r\n"),
-  // hostname.c_str());
+  // set0.console->printf(PSTR("HTTP服务器启动! 用浏览器打开
+  // http://%s.local\r\n"), hostname.c_str());
 }
 #define httpd_loop() httpd.handleClient()
 

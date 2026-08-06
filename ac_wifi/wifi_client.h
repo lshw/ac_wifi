@@ -48,8 +48,8 @@ uint8_t hex2ch(char dat) {
 }
 void hexprint(uint8_t dat) {
   if (dat < 0x10)
-    Serial.write('0');
-  Serial.print(dat, HEX);
+    set0.console->write('0');
+  set0.console->print(dat, HEX);
 }
 
 void wifi_off() {
@@ -79,13 +79,13 @@ void wifi_setup() {
       fp.close();
     }
     fp = SPIFFS.open("/ssid.txt", "r");
-    Serial.print(F("载入wifi设置文件:/ssid.txt"));
+    set0.console->print(F("载入wifi设置文件:/ssid.txt"));
     ssid = "";
     passwd = "";
     if (fp) {
       uint16_t Fsize = fp.size();
-      Serial.print(Fsize);
-      Serial.println(F("字节"));
+      set0.console->print(Fsize);
+      set0.console->println(F("字节"));
       for (i = 0; i < Fsize; i++) {
         ch = fp.read();
         switch (ch) {
@@ -94,10 +94,10 @@ void wifi_setup() {
           if (ssid != "") {
             if (count < 255)
               count++; // codex修改: 正常换行结尾的配置也要计数，避免误加默认 AP
-            Serial.print(F("Ssid:"));
-            Serial.println(ssid);
-            Serial.print(F("Passwd:"));
-            Serial.println(passwd);
+            set0.console->print(F("Ssid:"));
+            set0.console->println(ssid);
+            set0.console->print(F("Passwd:"));
+            set0.console->println(passwd);
             WiFiMulti.addAP(ssid.c_str(), passwd.c_str());
           }
           is_ssid = true;
@@ -118,10 +118,10 @@ void wifi_setup() {
       if (ssid != "") {
         if (count < 5)
           count++;
-        Serial.print(F("Ssid:"));
-        Serial.println(ssid);
-        Serial.print(F("Passwd:"));
-        Serial.println(passwd);
+        set0.console->print(F("Ssid:"));
+        set0.console->println(ssid);
+        set0.console->print(F("Passwd:"));
+        set0.console->println(passwd);
         WiFiMulti.addAP(ssid.c_str(), passwd.c_str());
       }
     }
@@ -138,30 +138,30 @@ void wifi_status() {
   wl_status_t status = WiFi.status();
   switch (status) {
   case WL_CONNECTED:
-    Serial.println("WiFi 已连接");
+    set0.console->println("WiFi 已连接");
     break;
   case WL_NO_SSID_AVAIL:
-    Serial.println("找不到指定WiFi");
+    set0.console->println("找不到指定WiFi");
     break;
   case WL_CONNECT_FAILED:
-    Serial.println("WiFi连接失败");
+    set0.console->println("WiFi连接失败");
     break;
   case WL_IDLE_STATUS:
-    Serial.println("WiFi空闲");
+    set0.console->println("WiFi空闲");
     break;
   case WL_DISCONNECTED:
-    Serial.println("WiFi断开");
+    set0.console->println("WiFi断开");
     break;
   default:
-    Serial.println("未知状态");
+    set0.console->println("未知状态");
   }
 }
 bool wifi_connected_is_ok() {
   if (set0.connected_is_ok)
     return set0.connected_is_ok;
   if (wifi_station_get_connect_status() == STATION_GOT_IP) {
-    Serial.print(F("ip:"));
-    Serial.println(WiFi.localIP());
+    set0.console->print(F("ip:"));
+    set0.console->println(WiFi.localIP());
     set0.connected_is_ok = true;
     //  ht16c21_cmd(0x88, 0); //停止闪烁
     if (nvram.ch != wifi_get_channel()) {
@@ -181,12 +181,11 @@ bool wifi_connected_is_ok() {
       config[ap_id].bssid_set = 1;             // 同名ap，mac地址不同
       wifi_station_set_config(&config[ap_id]); // 保存成功的ssid,用于下次通讯
     } else {
-      Serial.println(F("当前AP索引无效")); // codex修改: 防止异常 ap_id
-                                           // 直接越界访问 station_config 数组
+      set0.console->println(
+          F("当前AP索引无效")); // codex修改: 防止异常 ap_id
+                                // 直接越界访问 station_config 数组
     }
-#ifdef NETLOG
     netlog_setup();
-#endif
     return true;
   }
   return false;
@@ -236,22 +235,22 @@ uint16_t http_get(uint8_t no) {
   url0 += F("&ms=");
   snprintf(numbuf, sizeof(numbuf), "%lu", millis());
   url0 += numbuf;
-  Serial.println(url0);     // 串口输出
-  http.begin(client, url0); // HTTP提交
+  set0.console->println(url0); // 串口输出
+  http.begin(client, url0);    // HTTP提交
   http.setTimeout(4000);
   int httpCode;
   for (uint8_t i = 0; i < 3; i++) {
     httpCode = http.GET();
     if (httpCode < 0) {
-      Serial.write('E');
+      set0.console->write('E');
       delay(20);
       continue;
     }
     // httpCode will be negative on error
     if (httpCode >= 200 && httpCode <= 299) {
       // HTTP header has been send and Server response header has been handled
-      Serial.print(F("[HTTP] GET... code:"));
-      Serial.println(httpCode);
+      set0.console->print(F("[HTTP] GET... code:"));
+      set0.console->println(httpCode);
       // file found at server
       if (httpCode == HTTP_CODE_OK) {
         if (http_response_is_update(http)) {
@@ -261,8 +260,8 @@ uint16_t http_get(uint8_t no) {
       }
       break;
     } else {
-      Serial.print(F("http error code "));
-      Serial.println(httpCode);
+      set0.console->print(F("http error code "));
+      set0.console->println(httpCode);
       break;
     }
   }
@@ -272,8 +271,8 @@ uint16_t http_get(uint8_t no) {
 }
 
 void update_progress(int cur, int total) {
-  Serial.printf(PSTR("HTTP update process at %d of %d bytes...\r\n"), cur,
-                total);
+  set0.console->printf(PSTR("HTTP update process at %d of %d bytes...\r\n"),
+                       cur, total);
 }
 
 bool http_update() {
@@ -285,26 +284,26 @@ bool http_update() {
   update_url += hostname;
   update_url +=
       F("&GIT=" GIT_VER "&ver=" VER); // 可以在header里下发x-MD5作为校验
-  Serial.print(F("下载firmware from "));
-  Serial.println(update_url);
+  set0.console->print(F("下载firmware from "));
+  set0.console->println(update_url);
   ESPhttpUpdate.onProgress(update_progress);
   t_httpUpdate_return ret = ESPhttpUpdate.update(client, update_url);
   update_url = "";
 
   switch (ret) {
   case HTTP_UPDATE_FAILED:
-    Serial.printf(PSTR("HTTP_UPDATE_FAILD Error (%d): %s\r\n"),
-                  ESPhttpUpdate.getLastError(),
-                  ESPhttpUpdate.getLastErrorString().c_str());
+    set0.console->printf(PSTR("HTTP_UPDATE_FAILD Error (%d): %s\r\n"),
+                         ESPhttpUpdate.getLastError(),
+                         ESPhttpUpdate.getLastErrorString().c_str());
     return false;
     break;
 
   case HTTP_UPDATE_NO_UPDATES:
-    Serial.println(F("HTTP_UPDATE_NO_UPDATES"));
+    set0.console->println(F("HTTP_UPDATE_NO_UPDATES"));
     break;
 
   case HTTP_UPDATE_OK:
-    Serial.println(F("HTTP_UPDATE_OK"));
+    set0.console->println(F("HTTP_UPDATE_OK"));
     return true;
     break;
   }

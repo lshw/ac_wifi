@@ -28,7 +28,7 @@ void wifi_status();
 uint8_t wifi_fail = 0;
 void sec10() { // 由loop调用
   wifi_status();
-  if (mart_status == 0 && WiFi.localIP() == IPAddress(0, 0, 0, 0)) {
+  if (smart_status == 0 && WiFi.localIP() == IPAddress(0, 0, 0, 0)) {
     wifi_fail++;
     if (wifi_fail >= 10) {
       wifi_fail = 0;
@@ -74,7 +74,7 @@ void sec() {
       deferred_action_set(
           DEFER_SWITCH_OFF); // codex修改:
                              // 自动开关动作改到主循环执行，避免回调里直接操作继电器和灯带
-  } else {                   // now on
+  } else { // now on
     if (sets.switch_on_time > 0 && sets.switch_on_time < switch_change_time)
       deferred_action_set(
           DEFER_SWITCH_ON); // codex修改:

@@ -37,7 +37,8 @@ void run_20ms() {
 void setup() {
   ESP.wdtEnable(50000);
   Serial.begin(4800, SERIAL_8E1); // hlw8032需要这个速度
-  load_set();                     // 从files载入数据
+  set0.console = &Serial;
+  load_set(); // 从files载入数据
   gpio_setup();
   load_nvram(); // 从esp8266的nvram载入数据
   memset(&now, 0, sizeof(now));
@@ -75,37 +76,36 @@ void setup() {
   hostname.toUpperCase();
   if (ac_name == "")
     ac_name = hostname;
-  Serial.print(F("SDK Ver="));
-  Serial.println(ESP.getSdkVersion());
+  set0.console->print(F("SDK Ver="));
+  set0.console->println(ESP.getSdkVersion());
 
-  Serial.print(F("Software Ver=" VER "\r\nBuildtime="));
-  Serial.print(__YEAR__);
-  Serial.write('-');
+  set0.console->print(F("Software Ver=" VER "\r\nBuildtime="));
+  set0.console->print(__YEAR__);
+  set0.console->write('-');
   if (__MONTH__ < 10)
-    Serial.write('0');
-  Serial.print(__MONTH__);
-  Serial.write('-');
+    set0.console->write('0');
+  set0.console->print(__MONTH__);
+  set0.console->write('-');
   if (__DAY__ < 10)
-    Serial.write('0');
-  Serial.print(__DAY__);
-  Serial.println(F(" " __TIME__));
-  Serial.print(F("Hostname: "));
-  Serial.println(ac_name);
-  Serial.print(F("SN: "));
-  Serial.println(hostname);
-  Serial.flush();
+    set0.console->write('0');
+  set0.console->print(__DAY__);
+  set0.console->println(F(" " __TIME__));
+  set0.console->print(F("Hostname: "));
+  set0.console->println(ac_name);
+  set0.console->print(F("SN: "));
+  set0.console->println(hostname);
+  set0.console->flush();
   wifi_setup();
   ESP.wdtEnable(5000);
   body.reserve(
       16384); // codex修改:
               // 首页包含多段图表数据，预留更大缓冲区以减少动态扩容和堆碎片
-  Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
+  set0.console->printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
 }
 
 uint32_t last_wget = 0;
 uint32_t last_10sec = 0;
-volatile uint8_t smart_status =
-    0; // codex修改: 被 GPIO 中断读取、被主循环修改的共享状态需声明为 volatile
+
 void loop() {
   struct tm now0;
   now_snapshot(&now0);
@@ -151,7 +151,7 @@ void loop() {
     }
     if (now0.tm_year < __YEAR__ - 1900 && set0.connected_is_ok) {
       struct tm now_sync;
-      Serial.println("getLocalTime()");
+      set0.console->println("getLocalTime()");
       if (getLocalTime(&now_sync, 1000)) {
         noInterrupts();
         now = now_sync;
@@ -159,9 +159,9 @@ void loop() {
                       // 先授时到局部变量，再一次性替换共享时间结构体，避免和秒节拍并发写出半更新状态
         time_update_take(); // codex修改:
                             // 授时成功后清掉无效时间阶段遗留的分钟/小时/天事件，避免刚校时就误触发一次结算
-        Serial.println(1);
+        set0.console->println(1);
       } else {
-        Serial.println(0);
+        set0.console->println(0);
       }
     }
     httpd_loop();
@@ -208,8 +208,8 @@ void loop() {
   }
   system_soft_wdt_feed();
   if (set0.reboot_now) {
-    Serial.println(F("reboot..."));
-    Serial.flush();
+    set0.console->println(F("reboot..."));
+    set0.console->flush();
     nvram_save_set(millis());
     save_nvram_file();
     set0.reboot_now = false;
@@ -223,22 +223,20 @@ void loop() {
     noInterrupts();
     keydown_ms = 0; // codex修改: 先复制再判断，避免和按键中断并发读写
     interrupts();
-    Serial.println(F("smart_config() begin"));
+    set0.console->println(F("smart_config() begin"));
     smart_status = 1;
     smart_config();
     led_send(sets.color);
     smart_status = 3; // 退出进行中
-    Serial.println(F("smart_config() end"));
+    set0.console->println(F("smart_config() end"));
   }
   if (smart_status == 3 && digitalRead(KEYWORD)) { // 等待松开按键就结束过程
-    Serial.println(F("smart_config 结束"));
+    set0.console->println(F("smart_config 结束"));
     smart_status = 0;
     wifi_off();
     set0.relink = true;
   }
-#ifdef NETLOG
   netlog_loop();
-#endif
 }
 
 void load_kwh_days() {
@@ -296,8 +294,8 @@ void minute() {
       millis_reached(last_save0 + 120000, now_ms) ||
       millis_before(last_save0, now_ms))
     save_nvram_file();
-  Serial.println(isotime(now0));
-  Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
+  set0.console->println(isotime(now0));
+  set0.console->printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
 }
 extern float datahour[24]; // 96字节  每一小时的耗电量
 void hour() {
@@ -319,13 +317,14 @@ void hour() {
     if (fp) {
       if (fp.write((uint8_t *)&datahour, sizeof(datahour)) !=
           sizeof(datahour)) {
-        Serial.println(F("hours.dat写入不完整")); // codex修改:
-                                                  // 小时统计文件改为整块覆盖写，保证重启后读取到最新
-                                                  // 24 小时快照而不是历史首块
+        set0.console->println(F(
+            "hours.dat写入不完整")); // codex修改:
+                                     // 小时统计文件改为整块覆盖写，保证重启后读取到最新
+                                     // 24 小时快照而不是历史首块
       }
       fp.close();
     } else {
-      Serial.println(F(
+      set0.console->println(F(
           "hours.dat打开失败")); // codex修改:
                                  // 覆盖保存小时统计失败时输出明确日志，避免重启后继续读到陈旧快照
     }
@@ -353,13 +352,13 @@ void day() {
     if (fp) {
       if (fp.write((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) !=
           sizeof(dataday)) {
-        Serial.println(F(
+        set0.console->println(F(
             "日统计写入不完整")); // codex修改:
                                   // 年统计写失败时保留日志，避免文件损坏被静默吞掉
       }
       fp.close();
     } else {
-      Serial.println(
+      set0.console->println(
           F("日统计文件打开失败")); // codex修改:
                                     // 补齐年统计文件句柄检查，避免空句柄写入
     }
@@ -382,7 +381,7 @@ void smart_config() {
     yield();
     if (smart_status == 2 &&
         digitalRead(KEYWORD) == LOW) { // 松开按键后，又按下按键
-      Serial.println(F("key down exit"));
+      set0.console->println(F("key down exit"));
       WiFi.stopSmartConfig();
       wifi_off();
       set0.relink = true;
@@ -394,23 +393,23 @@ void smart_config() {
       wifi_set_clean();
       wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
       WiFi.setAutoConnect(true);
-      Serial.println(F("OK"));
+      set0.console->println(F("OK"));
       WiFi.stopSmartConfig();
       wifi_off();
       set0.relink = true;
       return;
     }
     if (i % 5 == 0)
-      Serial.write('.');
+      set0.console->write('.');
     if (i % 100 == 0)
-      Serial.println();
+      set0.console->println();
     yield();
     system_soft_wdt_feed(); // 各loop里要根据需要执行喂狗命令
     if (wifi_connected_is_ok()) {
       httpd_loop();
     }
   }
-  Serial.println(F(
+  set0.console->println(F(
       "smart_config timeout")); // codex修改:
                                 // 超时退出时保留明确日志，避免和手动退出、成功退出混淆
   WiFi.stopSmartConfig();

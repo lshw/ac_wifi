@@ -17,10 +17,11 @@ double get_kwh() { // 获取当前数据
   kwh = nvram.kwh;
   if (nvram.ac_kwh_count > 0 && nvram.ac_pf > 0)
     kwh += (double)nvram.ac_pf / nvram.ac_kwh_count;
-  LOG("get_kwh() nvram.kwh=%s"
-      ",nvram.ac_kwh_count=%d"
-      ",nvram.ac_pf=%d\r\n",
-      String(nvram.kwh, 8).c_str(), nvram.ac_kwh_count, nvram.ac_pf);
+  set0.console->printf("get_kwh() nvram.kwh=%s"
+                       ",nvram.ac_kwh_count=%d"
+                       ",nvram.ac_pf=%d\r\n",
+                       String(nvram.kwh, 8).c_str(), nvram.ac_kwh_count,
+                       nvram.ac_pf);
   return kwh;
 }
 
@@ -29,7 +30,8 @@ void update_pf() { // 更新kwh累计， 清理脉冲计数
     return; // hlm8032未开始工作
   if (nvram.ac_pf0 == pf)
     return; // 未变化
-  LOG("update_pf()i "
+  set0.console->printf(
+      "update_pf()i "
       "nvram.ac_pf=%d,nvram.ac_pf0=%d,nvram.ac_kwh_count=%d,pf=%d\r\n",
       nvram.ac_pf, nvram.ac_pf0, nvram.ac_kwh_count, pf);
   if (nvram.ac_pf0 < pf) {
@@ -41,7 +43,8 @@ void update_pf() { // 更新kwh累计， 清理脉冲计数
     nvram.ac_pf -= nvram.ac_kwh_count;
   }
   save_nvram();
-  LOG("update_pf()o "
+  set0.console->printf(
+      "update_pf()o "
       "nvram.ac_pf=%d,nvram.ac_pf0=%d,nvram.ac_kwh_count=%d,pf=%d\r\n",
       nvram.ac_pf, nvram.ac_pf0, nvram.ac_kwh_count, pf);
 }
@@ -77,27 +80,27 @@ void update_kwh_count() { // 根据需要修改并保存校准数据
 
 uint32_t ac_ok_count = 0;
 uint16_t com_len = 0;
-void ac_20ms() {                       // 每20ms执行一次
-  if (com_len != Serial.available()) { // 串口接受中， 就再等待20ms
-    com_len = Serial.available();
+void ac_20ms() {                              // 每20ms执行一次
+  if (com_len != set0.console->available()) { // 串口接受中， 就再等待20ms
+    com_len = set0.console->available();
     return;
   }
   if (com_len < 24) { // 数据不完整， 清理掉
-    while (Serial.available()) {
-      Serial.read();
+    while (set0.console->available()) {
+      set0.console->read();
     }
     com_len = 0;
     return;
   }
   com_len = 0;
   set0.ac_ok = false; // 先设置数据无效
-  if (Serial.available() > 24) {
-    while (Serial.available() > 24) { // 对齐
-      Serial.read();
+  if (set0.console->available() > 24) {
+    while (set0.console->available() > 24) { // 对齐
+      set0.console->read();
     }
   }
   memset(ac_buf, 1, sizeof(ac_buf));
-  if (Serial.read((char *)ac_buf, 24) !=
+  if (set0.console->read((char *)ac_buf, 24) !=
       24) { // codex修改: 串口短读时直接丢弃本帧，避免半帧数据继续参与校验和解码
     ac_buf[23] = 1;
     return;
@@ -127,7 +130,7 @@ void ac_decode() { // hlm8032数据解码
   set0.ac_ok = false;
   pf0 = (uint32_t)((ac_buf[20] & 0x80) << 9 | (ac_buf[21] << 8) | ac_buf[22]);
   if (pf0 < pf) {
-    LOG("error:pf0<pf, %d < %d\r\n", pf0, pf);
+    set0.console->printf("error:pf0<pf, %d < %d\r\n", pf0, pf);
   }
   pf = pf0;
   state = ac_buf[0];

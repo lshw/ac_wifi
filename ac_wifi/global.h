@@ -13,6 +13,10 @@
 CRC32 crc;
 Ticker _myTicker;
 extern float i_max;
+volatile uint8_t smart_status = 0;
+void wifi_setup();
+void netlog_setup();
+void netlog_loop();
 int16_t update_timeok = 0; // 0-马上wget ，-1 关闭，>0  xx分钟后wget
 uint8_t timer3 = 30;       // 最长30秒等待上线
 volatile uint16_t i_over =
@@ -50,17 +54,6 @@ inline uint8_t deferred_action_take() {
                 // 主循环一次性取走并清空延后动作，避免和回调并发时丢掉待执行任务
   return flags;
 }
-struct set0 {
-  volatile uint8_t relink;
-  volatile uint8_t reboot_now;
-  volatile uint8_t connected_is_ok;
-  volatile uint8_t power_down;
-  volatile uint8_t ac_init;
-  volatile uint8_t ac_ok;
-  volatile uint8_t httpd_up;
-  volatile uint8_t pwm_on;
-} set0; // codex修改: 共享状态不能继续用同一字节
-        // bitfield，异步上下文分别改不同位时会互相覆盖，改成独立字节避免读改写丢标志
 struct runtime_snapshot_t {
   struct tm now;
   double kwh;
@@ -125,7 +118,8 @@ inline void hour_history_snapshot(float *hour_data) {
                 // 小时耗电数组会在整点更新并写文件，渲染前先复制避免首页图表读到混合小时数据
 }
 uint16_t wget() {
-  uint16_t httpCode = http_get(nvram.nvram7 & NVRAM7_URL); // 先试试上次成功的url
+  uint16_t httpCode =
+      http_get(nvram.nvram7 & NVRAM7_URL); // 先试试上次成功的url
   if (httpCode < 200 || httpCode >= 400) {
     nvram.nvram7 = (nvram.nvram7 & ~NVRAM7_URL) | (~nvram.nvram7 & NVRAM7_URL);
     save_nvram();
@@ -156,33 +150,33 @@ String get_url(uint8_t no) {
       fp.close();
       if (ret.startsWith("http://www.cfido.com/")) {
         if (!SPIFFS.remove("/url.txt"))
-          Serial.println(F(
+          set0.console->println(F(
               "清理旧url.txt失败")); // codex修改:
                                      // 老域名迁移失败时输出日志，避免配置长期停留在旧文件
         if (!SPIFFS.remove("/url1.txt"))
-          Serial.println(F(
+          set0.console->println(F(
               "清理旧url1.txt失败")); // codex修改:
                                       // 老域名迁移失败时输出日志，避免静默保留旧配置
         ret.replace("www.cfido.com/", "temp.cfido.com:808/");
       } else if (ret.startsWith("http://www.wf163.com/")) {
         if (!SPIFFS.remove("/url.txt"))
-          Serial.println(F(
+          set0.console->println(F(
               "清理旧url.txt失败")); // codex修改:
                                      // 老域名迁移失败时输出日志，避免配置长期停留在旧文件
         if (!SPIFFS.remove("/url1.txt"))
-          Serial.println(F(
+          set0.console->println(F(
               "清理旧url1.txt失败")); // codex修改:
                                       // 老域名迁移失败时输出日志，避免静默保留旧配置
         ret.replace("www.wf163.com/", "temp2.wf163.com:808/");
       }
     } else {
-      Serial.println(F(
+      set0.console->println(F(
           "URL配置文件打开失败, 使用默认地址")); // codex修改: URL
                                                  // 文件不可读时明确回退默认地址，避免静默沿用空值
     }
     SPIFFS.end();
   } else {
-    Serial.println(
+    set0.console->println(
         F("SPIFFS打开失败, 使用默认URL")); // codex修改:
                                            // 文件系统不可用时保留可诊断日志
   }
@@ -208,23 +202,24 @@ String get_ssid() {
       ssid = "test:cfido.com";
       if (fp) {
         if (fp.println(ssid) == 0) {
-          Serial.println(F(
+          set0.console->println(F(
               "写入默认ssid失败")); // codex修改: 默认 WiFi
                                     // 配置落盘失败时输出日志，避免静默只留内存值
         }
         fp.close();
       } else {
-        Serial.println(F("创建ssid.txt失败")); // codex修改: 默认 WiFi
-                                               // 配置写入失败时给出明确日志
+        set0.console->println(
+            F("创建ssid.txt失败")); // codex修改: 默认 WiFi
+                                    // 配置写入失败时给出明确日志
       }
     }
   } else {
-    Serial.println(F(
+    set0.console->println(F(
         "SPIFFS打开失败, 使用默认ssid设置")); // codex修改:
                                               // 文件系统不可用时直接回退默认配置，避免返回空字符串
     ssid = F("test:cfido.com");
   }
-  Serial.println(ssid);
+  set0.console->println(ssid);
   if (spiffs_ok)
     SPIFFS.end();
   return ssid;
@@ -272,13 +267,13 @@ String fp_gets(File fp) {
 void wifi_set_clean() {
   if (SPIFFS.begin()) {
     if (!SPIFFS.remove("/ssid.txt")) {
-      Serial.println(F(
+      set0.console->println(F(
           "删除ssid.txt失败")); // codex修改: 清空 WiFi
                                 // 配置失败时输出日志，避免误以为已恢复为空配置
     }
     SPIFFS.end();
   } else {
-    Serial.println(F(
+    set0.console->println(F(
         "SPIFFS打开失败, 无法清空WiFi配置")); // codex修改:
                                               // 文件系统不可用时明确提示清空操作未执行
   }
@@ -313,18 +308,19 @@ void wifi_set_add(const char *wps_ssid, const char *wps_password) {
     fp = SPIFFS.open("/ssid.txt", "w");
     if (fp) {
       if (fp.print(wifi_sets) != wifi_sets.length()) {
-        Serial.println(
+        set0.console->println(
             F("ssid.txt写入不完整")); // codex修改: WiFi
                                       // 配置重写失败时输出日志，避免静默丢配置
       }
       fp.close();
     } else {
-      Serial.println(F("ssid.txt打开失败")); // codex修改: 补齐 WiFi
-                                             // 配置文件句柄检查，避免空句柄写入
+      set0.console->println(
+          F("ssid.txt打开失败")); // codex修改: 补齐 WiFi
+                                  // 配置文件句柄检查，避免空句柄写入
     }
     SPIFFS.end();
   } else {
-    Serial.println(F(
+    set0.console->println(F(
         "SPIFFS打开失败, 无法保存WiFi配置")); // codex修改:
                                               // 文件系统不可用时明确提示配置未落盘
   }
@@ -333,12 +329,12 @@ void wifi_set_add(const char *wps_ssid, const char *wps_password) {
 void dump_hex(char *msg, uint16_t len) {
   for (uint16_t i = 0; i < len; i++) {
     if ((i % 0x10) == 0)
-      Serial.printf(PSTR("\r\n[%04X]"), i);
+      set0.console->printf(PSTR("\r\n[%04X]"), i);
     if ((i % 0x10) == 8)
-      Serial.write(' ');
-    Serial.printf(PSTR(" %02X"), msg[i]);
+      set0.console->write(' ');
+    set0.console->printf(PSTR(" %02X"), msg[i]);
   }
-  Serial.println();
+  set0.console->println();
 }
 
 uint32_t calculateCRC32(const uint8_t *data, size_t length) {

@@ -4,7 +4,6 @@
 #define VER "2.1"
 #define CRC_MAGIC 1
 String hostname = "AC-";
-#define NETLOG // 打开netlog
 #define DEFAULT_URL0 "http://ac_wifi.cfido.com:808/ac_wifi.php"
 #define DEFAULT_URL1 "http://ac_wifi.wf163.com:808/ac_wifi.php"
 inline bool millis_reached(uint32_t deadline, uint32_t now_ms = millis()) {
@@ -20,4 +19,15 @@ inline bool millis_before(uint32_t deadline, uint32_t now_ms = millis()) {
 #define SSR 4     // SSD
 #define KEYWORD 0 // 按键
 
+struct set0 {
+  volatile uint8_t relink;
+  volatile uint8_t reboot_now;
+  volatile uint8_t connected_is_ok;
+  volatile uint8_t power_down;
+  volatile uint8_t ac_init;
+  volatile uint8_t ac_ok;
+  volatile uint8_t httpd_up;
+  volatile uint8_t pwm_on;
+  Stream *console = NULL;
+} set0;
 #endif //_CONFIG_H_

@@ -39,9 +39,9 @@ struct {
   uint32_t ac_kwh_count = 0; // 几个脉冲一度电。
   double kwh;                // 总度数
   uint32_t ac_pf; // 未换算成度数的pf计数,  超过 sets.ac_kwh_count 就进1到ac_kwh
-  uint32_t ac_pf0; // 已统计的HLW8032的pf 如果实际的小于这个数据，
-                   // 就要把它加上8032的读数， 加到 sets.ac_pf,
-                   // 并且设置本行为8032读数。
+  uint32_t ac_pf0;         // 已统计的HLW8032的pf 如果实际的小于这个数据，
+                           // 就要把它加上8032的读数， 加到 sets.ac_pf,
+                           // 并且设置本行为8032读数。
   double kwh_hour0 = -1.0; // 最后一个小时的kwh初值
   double kwh_day0 = -1.0;  // 最后一天的kwh初值
   uint32_t reserved1[5];   // 保留以后使用
@@ -146,18 +146,19 @@ void save_nvram_file() {
       if (fp.write((uint8_t *)&nvram, sizeof(nvram)) == sizeof(nvram)) {
         nvram_save_set(0); // codex修改: 只有文件写成功后才清除待保存标志
       } else {
-        Serial.println(F(
+        set0.console->println(F(
             "nvram.txt写入不完整")); // codex修改: RTC
                                      // 数据落盘失败时输出日志，避免静默丢失持久化状态
       }
       fp.close();
     } else {
-      Serial.println(F("打开nvram.txt失败")); // codex修改: 补齐 NVRAM
-                                              // 文件句柄检查，避免空句柄写入
+      set0.console->println(
+          F("打开nvram.txt失败")); // codex修改: 补齐 NVRAM
+                                   // 文件句柄检查，避免空句柄写入
     }
     SPIFFS.end();
   } else {
-    Serial.println(F(
+    set0.console->println(F(
         "SPIFFS打开失败, 无法保存nvram")); // codex修改:
                                            // 文件系统不可用时明确提示持久化未执行
   }
@@ -189,7 +190,7 @@ void load_nvram() {
                 // 确认损坏并回退为全零时，才重建小时/日耗电基线，避免每次重启都丢失当前周期累计值
       update_kwh_count(); // 校准数据初始化
       if (spiffs_ok && !SPIFFS.remove("/hours.dat")) {
-        Serial.println(F(
+        set0.console->println(F(
             "删除hours.dat失败")); // codex修改:
                                    // 小时统计损坏后清理失败时输出日志，避免旧文件残留无提示
       }
@@ -211,8 +212,8 @@ void load_nvram() {
     if (spiffs_ok)
       SPIFFS.end();
   } else {
-    Serial.print(F("\r\nwifi channel="));
-    Serial.println(nvram.ch);
+    set0.console->print(F("\r\nwifi channel="));
+    set0.console->println(nvram.ch);
     WRITE_PERI_REG(0x600011f4, 1 << 16 | nvram.ch);
   }
 
@@ -237,28 +238,29 @@ void save_set(bool _default) {
       if (fp.write((uint8_t *)&sets, sizeof(sets)) == sizeof(sets)) {
         set_modi_clear(SET_CHARGE); // codex修改: 写盘成功后再清除脏标记
       } else if (_default) {
-        Serial.println(F(
+        set0.console->println(F(
             "sets_default.txt写入不完整")); // codex修改:
                                             // 默认配置写盘失败时输出日志，避免静默丢失恢复基线
       } else {
-        Serial.println(F(
+        set0.console->println(F(
             "sets.txt写入不完整")); // codex修改:
                                     // 当前配置写盘失败时输出日志，避免静默丢配置
       }
       fp.close();
     } else if (_default) {
-      Serial.println(
+      set0.console->println(
           F("打开sets_default.txt失败")); // codex修改: 默认配置文件句柄检查
     } else {
-      Serial.println(F("打开sets.txt失败")); // codex修改: 当前配置文件句柄检查
+      set0.console->println(
+          F("打开sets.txt失败")); // codex修改: 当前配置文件句柄检查
     }
     SPIFFS.end();
   } else if (_default) {
-    Serial.println(F(
+    set0.console->println(F(
         "SPIFFS打开失败, 无法保存默认配置")); // codex修改:
                                               // 文件系统不可用时明确提示默认配置未落盘
   } else {
-    Serial.println(F(
+    set0.console->println(F(
         "SPIFFS打开失败, 无法保存配置")); // codex修改:
                                           // 文件系统不可用时明确提示当前配置未落盘
   }

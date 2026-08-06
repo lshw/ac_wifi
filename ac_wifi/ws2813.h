@@ -1,8 +1,9 @@
 #ifndef __WS2813_H__
 #define __WS2813_H__
-#define LEDP 13                                        /* 接ws2813的 gpio */
-#define _300ns ((uint32_t)F_CPU / (1000000000L / 300)) /*300n需要的时钟周期数 \
-                                                        */
+#define LEDP 13 /* 接ws2813的 gpio */
+#define _300ns                                                                 \
+  ((uint32_t)F_CPU / (1000000000L / 300)) /*300n需要的时钟周期数       \
+                                           */
 #define _780ns ((uint32_t)F_CPU / (1000000000L / 780))
 #define _1000ns ((uint32_t)F_CPU / (1000000000L / 1000))
 uint32_t pinMask = _BV(LEDP);
