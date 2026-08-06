@@ -58,7 +58,8 @@ $arduino_cli compile \
 $project 2>&1 |tee /tmp/${me}_info.log 
 if [ -e $build/${project}.ino.bin ] ; then
 #esp8266
-  tail -n 100 /tmp/${me}_info.log |sed -n "s/^. Instruction RAM (IRAM_ATTR, ICACHE_RAM_ATTR), used \([0-9]*\) .* (\([0-9]*\)%).*$/RAM:使用\1字节(\2%)/p"
+  tail -n 100 /tmp/${me}_info.log |sed -n "s/^. Variables and constants in RAM (global, static), used \([0-9]*\) .* (\([0-9]*\)%).*$/RAM:使用\1字节(\2%)/p"
+  tail -n 100 /tmp/${me}_info.log |sed -n "s/^. Instruction RAM (IRAM_ATTR, ICACHE_RAM_ATTR), used \([0-9]*\) .* (\([0-9]*\)%).*$/IRAM:使用\1字节(\2%)/p"
   tail -n 100 /tmp/${me}_info.log |sed -n "s/^. Code in flash (default, ICACHE_FLASH_ATTR), used \([0-9]*\) .* (\(39\)%)$/ROM:使用\1字节(\1%)/p"
 #esp32-c3
   tail -n 100 /tmp/${me}_info.log |sed -n "s/^Global variables use \([0-9]*\) bytes (\([0-9]*\)%) of dynamic memory, leaving \([0-9]*\) bytes for local variables. .*$/RAM:使用\1字节(\2%),全局变量:\2字节/p"
@@ -76,6 +77,7 @@ echo $ver
 exit
 
 esp8266
+. Variables and constants in RAM (global, static), used 37512 / 80192 bytes (46%)
 . Instruction RAM (IRAM_ATTR, ICACHE_RAM_ATTR), used 45811 / 65536 bytes (69%)
 . Code in flash (default, ICACHE_FLASH_ATTR), used 410180 / 1048576 bytes (39%)
 esp32-c3

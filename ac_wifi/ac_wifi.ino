@@ -65,7 +65,7 @@ void setup() {
   delay(1);
   save_nvram();
 #ifdef GIT_VER
-  Serial.println(F("Git Ver=" GIT_VER));
+  set0.console->println(F("Git Ver=" GIT_VER));
 #endif
   String hostname0 = String(ESP.getChipId(), HEX);
   // 补零到8位
@@ -76,24 +76,11 @@ void setup() {
   hostname.toUpperCase();
   if (ac_name == "")
     ac_name = hostname;
-  set0.console->print(F("SDK Ver="));
-  set0.console->println(ESP.getSdkVersion());
-
-  set0.console->print(F("Software Ver=" VER "\r\nBuildtime="));
-  set0.console->print(__YEAR__);
-  set0.console->write('-');
-  if (__MONTH__ < 10)
-    set0.console->write('0');
-  set0.console->print(__MONTH__);
-  set0.console->write('-');
-  if (__DAY__ < 10)
-    set0.console->write('0');
-  set0.console->print(__DAY__);
-  set0.console->println(F(" " __TIME__));
-  set0.console->print(F("Hostname: "));
-  set0.console->println(ac_name);
-  set0.console->print(F("SN: "));
-  set0.console->println(hostname);
+  set0.console->printf(PSTR("SDK Ver=%s Software Ver=" VER
+                            "\r\nBuildtime=%04d-%02d-%02d " __TIME__
+                            "\r\nHostname: %s \r\nSN: %s\r\n"),
+                       ESP.getSdkVersion(), __YEAR__, __MONTH__, __DAY__,
+                       ac_name, hostname.c_str());
   set0.console->flush();
   wifi_setup();
   ESP.wdtEnable(5000);
