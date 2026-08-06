@@ -23,8 +23,16 @@ inline uint8_t time_update_take() {
   return flags;
 }
 void wifi_status();
+uint8_t wifi_fail = 0;
 void sec10() {  //由loop调用
   wifi_status();
+  if (WiFi.localIP() == IPAddress(0, 0, 0, 0)) {
+    wifi_fail++;
+    if(wifi_fail >= 10) {
+    wifi_fail = 0;
+    wifi_setup();
+    }
+  }else wifi_fail = 0;
 }
 void sec() {
   now.tm_sec++;
