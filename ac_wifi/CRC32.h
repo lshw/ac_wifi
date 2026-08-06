@@ -4,12 +4,9 @@
 // SPDX-License-Identifier:	MIT
 //
 
-
 #pragma once
 
-
 #include "Arduino.h"
-
 
 /// \brief A class for calculating the CRC32 checksum from arbitrary data.
 /// \sa http://forum.arduino.cc/index.php?topic=91179.0
@@ -23,24 +20,20 @@ public:
 
   /// \brief Update the current checksum caclulation with the given data.
   /// \param data The data to add to the checksum.
-  void update(const uint8_t& data);
+  void update(const uint8_t &data);
 
   /// \brief Update the current checksum caclulation with the given data.
   /// \tparam Type The data type to read.
   /// \param data The data to add to the checksum.
-  template<typename Type>
-  void update(const Type& data) {
-    update(&data, 1);
-  }
+  template <typename Type> void update(const Type &data) { update(&data, 1); }
 
   /// \brief Update the current checksum caclulation with the given data.
   /// \tparam Type The data type to read.
   /// \param data The array to add to the checksum.
   /// \param size Size of the array to add.
-  template<typename Type>
-  void update(const Type* data, size_t size) {
+  template <typename Type> void update(const Type *data, size_t size) {
     size_t nBytes = size * sizeof(Type);
-    const uint8_t* pData = (const uint8_t*)data;
+    const uint8_t *pData = (const uint8_t *)data;
 
     for (size_t i = 0; i < nBytes; i++) {
       update(pData[i]);
@@ -55,8 +48,8 @@ public:
   /// \param data A pointer to the data to add to the checksum.
   /// \param size The size of the data to add to the checksum.
   /// \returns the calculated checksum.
-  template<typename Type>
-  static uint32_t calculate(const Type* data, size_t size) {
+  template <typename Type>
+  static uint32_t calculate(const Type *data, size_t size) {
     CRC32 crc;
     crc.update(data, size);
     return crc.finalize();

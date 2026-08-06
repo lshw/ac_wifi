@@ -12,6 +12,10 @@ echo $project
 
 cd $( dirname $0 )
 
+which clang-format
+if [ $? == 0 ] ; then
+ clang-format -i *.h *.ino
+fi
 
 
 CRC_MAGIC=$( grep CRC_MAGIC config.h | awk '{printf $3}' )

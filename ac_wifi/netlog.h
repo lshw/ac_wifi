@@ -4,9 +4,11 @@
 #include <ESP8266WebServer.h>
 WiFiServer tcpServer(23);
 WiFiClient netlog;
-#define LOG(format, ...) \
-  if (netlog.connected()) netlog.printf(PSTR(format), ##__VA_ARGS__); \
-  if (Serial) Serial.printf(PSTR(format), ##__VA_ARGS__);
+#define LOG(format, ...)                                                       \
+  if (netlog.connected())                                                      \
+    netlog.printf(PSTR(format), ##__VA_ARGS__);                                \
+  if (Serial)                                                                  \
+    Serial.printf(PSTR(format), ##__VA_ARGS__);
 
 void netlog_setup() {
   tcpServer.begin();
@@ -24,4 +26,4 @@ void netlog_loop() {
   }
 }
 
-#endif  //__NETLOG_H__
+#endif //__NETLOG_H__

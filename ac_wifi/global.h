@@ -1,22 +1,25 @@
 #ifndef __GLOBAL_H__
 #define __GLOBAL_H__
+#include "Ticker.h"
 #include "config.h"
 #include "nvram.h"
-#include <time.h>
-#include "Ticker.h"
 #include <ESP8266WiFiMulti.h>
 #include <WiFiUdp.h>
+#include <time.h>
 
-#include "ws2813.h"
-#include "datalog.h"
 #include "CRC32.h"
+#include "datalog.h"
+#include "ws2813.h"
 CRC32 crc;
 Ticker _myTicker;
 extern float i_max;
-int16_t update_timeok = 0;  //0-马上wget ，-1 关闭，>0  xx分钟后wget
-uint8_t timer3 = 30;        //最长30秒等待上线
-volatile uint16_t i_over = 0;        // codex修改: 由 20ms 回调和计量解码共享的过流倒计时需声明为 volatile
-volatile uint32_t switch_change_time = 0;  // codex修改: 由秒级时钟更新、主循环和 HTTP 读取的共享计时值需声明为 volatile
+int16_t update_timeok = 0; // 0-马上wget ，-1 关闭，>0  xx分钟后wget
+uint8_t timer3 = 30;       // 最长30秒等待上线
+volatile uint16_t i_over =
+    0; // codex修改: 由 20ms 回调和计量解码共享的过流倒计时需声明为 volatile
+volatile uint32_t switch_change_time =
+    0; // codex修改: 由秒级时钟更新、主循环和 HTTP 读取的共享计时值需声明为
+       // volatile
 bool wifi_connected_is_ok();
 extern uint8_t sound_buf[100];
 uint16_t http_get(uint8_t);
@@ -35,14 +38,16 @@ volatile uint8_t deferred_action_flags = 0;
 inline void deferred_action_set(uint8_t flags) {
   noInterrupts();
   deferred_action_flags |= flags;
-  interrupts();  // codex修改: 定时回调和主循环共享延后动作事件位，置位需原子化避免丢事件
+  interrupts(); // codex修改:
+                // 定时回调和主循环共享延后动作事件位，置位需原子化避免丢事件
 }
 inline uint8_t deferred_action_take() {
   uint8_t flags;
   noInterrupts();
   flags = deferred_action_flags;
   deferred_action_flags = 0;
-  interrupts();  // codex修改: 主循环一次性取走并清空延后动作，避免和回调并发时丢掉待执行任务
+  interrupts(); // codex修改:
+                // 主循环一次性取走并清空延后动作，避免和回调并发时丢掉待执行任务
   return flags;
 }
 struct set0 {
@@ -54,7 +59,8 @@ struct set0 {
   volatile uint8_t ac_ok;
   volatile uint8_t httpd_up;
   volatile uint8_t pwm_on;
-} set0;  // codex修改: 共享状态不能继续用同一字节 bitfield，异步上下文分别改不同位时会互相覆盖，改成独立字节避免读改写丢标志
+} set0; // codex修改: 共享状态不能继续用同一字节
+        // bitfield，异步上下文分别改不同位时会互相覆盖，改成独立字节避免读改写丢标志
 struct runtime_snapshot_t {
   struct tm now;
   double kwh;
@@ -87,43 +93,50 @@ inline void runtime_snapshot(runtime_snapshot_t *snap) {
   if (ac_kwh_count0 > 0 && ac_pf0 > 0)
     kwh0 += (double)ac_pf0 / ac_kwh_count0;
   snap->kwh = kwh0;
-  interrupts();  // codex修改: 先复制跨 Ticker/主循环共享的时间和计量值，再在前台使用，避免读到半更新状态
+  interrupts(); // codex修改: 先复制跨
+                // Ticker/主循环共享的时间和计量值，再在前台使用，避免读到半更新状态
 }
 inline void now_snapshot(struct tm *tm0) {
   noInterrupts();
   *tm0 = now;
-  interrupts();  // codex修改: 时间结构体由节拍路径更新，读取前先复制快照避免字段撕裂
+  interrupts(); // codex修改:
+                // 时间结构体由节拍路径更新，读取前先复制快照避免字段撕裂
 }
 inline void kwh_days_snapshot(dataday *days, int8_t *p) {
   noInterrupts();
   memcpy(days, kwh_days, sizeof(kwh_days));
   *p = kwh_days_p;
-  interrupts();  // codex修改: 日统计环形缓冲区会被前台刷新和每日写入共同改动，渲染前先整体复制避免图表读到混合数据
+  interrupts(); // codex修改:
+                // 日统计环形缓冲区会被前台刷新和每日写入共同改动，渲染前先整体复制避免图表读到混合数据
 }
-inline void power_history_snapshot(float *sec_data, uint16_t *sec_p, float *min_data) {
+inline void power_history_snapshot(float *sec_data, uint16_t *sec_p,
+                                   float *min_data) {
   noInterrupts();
   memcpy(sec_data, data100ms, sizeof(data100ms));
   memcpy(min_data, datamins, sizeof(datamins));
   *sec_p = data100ms_p;
-  interrupts();  // codex修改: 秒级和分钟级功率曲线由节拍路径持续更新，渲染前先整体复制避免首页图表读到半旧半新的数组
+  interrupts(); // codex修改:
+                // 秒级和分钟级功率曲线由节拍路径持续更新，渲染前先整体复制避免首页图表读到半旧半新的数组
 }
 inline void hour_history_snapshot(float *hour_data) {
   noInterrupts();
   memcpy(hour_data, datahour, sizeof(datahour));
-  interrupts();  // codex修改: 小时耗电数组会在整点更新并写文件，渲染前先复制避免首页图表读到混合小时数据
+  interrupts(); // codex修改:
+                // 小时耗电数组会在整点更新并写文件，渲染前先复制避免首页图表读到混合小时数据
 }
 uint16_t wget() {
-  uint16_t httpCode = http_get(nvram.nvram7 & NVRAM7_URL);  //先试试上次成功的url
+  uint16_t httpCode = http_get(nvram.nvram7 & NVRAM7_URL); // 先试试上次成功的url
   if (httpCode < 200 || httpCode >= 400) {
     nvram.nvram7 = (nvram.nvram7 & ~NVRAM7_URL) | (~nvram.nvram7 & NVRAM7_URL);
     save_nvram();
-    nvram_save_set(0);                               //不需要保存 url选择， 到file
-    httpCode = http_get(nvram.nvram7 & NVRAM7_URL);  //再试试另一个的url
+    nvram_save_set(0); // 不需要保存 url选择， 到file
+    httpCode = http_get(nvram.nvram7 & NVRAM7_URL); // 再试试另一个的url
   }
   return httpCode;
 }
 const char *url_file_path(uint8_t no) {
-  if (no == 0 || no == '0') return "/url.txt";
+  if (no == 0 || no == '0')
+    return "/url.txt";
   return "/url1.txt";
 }
 
@@ -131,8 +144,10 @@ String get_url(uint8_t no) {
   File fp;
   String ret;
   bool spiffs_ok = SPIFFS.begin();
-  if (no == 0 || no == '0') ret = String(DEFAULT_URL0);
-  else ret = String(DEFAULT_URL1);
+  if (no == 0 || no == '0')
+    ret = String(DEFAULT_URL0);
+  else
+    ret = String(DEFAULT_URL1);
   if (spiffs_ok) {
     fp = SPIFFS.open(url_file_path(no), "r");
     if (fp) {
@@ -140,20 +155,36 @@ String get_url(uint8_t no) {
       ret.trim();
       fp.close();
       if (ret.startsWith("http://www.cfido.com/")) {
-        if (!SPIFFS.remove("/url.txt")) Serial.println(F("清理旧url.txt失败"));    // codex修改: 老域名迁移失败时输出日志，避免配置长期停留在旧文件
-        if (!SPIFFS.remove("/url1.txt")) Serial.println(F("清理旧url1.txt失败"));  // codex修改: 老域名迁移失败时输出日志，避免静默保留旧配置
+        if (!SPIFFS.remove("/url.txt"))
+          Serial.println(F(
+              "清理旧url.txt失败")); // codex修改:
+                                     // 老域名迁移失败时输出日志，避免配置长期停留在旧文件
+        if (!SPIFFS.remove("/url1.txt"))
+          Serial.println(F(
+              "清理旧url1.txt失败")); // codex修改:
+                                      // 老域名迁移失败时输出日志，避免静默保留旧配置
         ret.replace("www.cfido.com/", "temp.cfido.com:808/");
       } else if (ret.startsWith("http://www.wf163.com/")) {
-        if (!SPIFFS.remove("/url.txt")) Serial.println(F("清理旧url.txt失败"));    // codex修改: 老域名迁移失败时输出日志，避免配置长期停留在旧文件
-        if (!SPIFFS.remove("/url1.txt")) Serial.println(F("清理旧url1.txt失败"));  // codex修改: 老域名迁移失败时输出日志，避免静默保留旧配置
+        if (!SPIFFS.remove("/url.txt"))
+          Serial.println(F(
+              "清理旧url.txt失败")); // codex修改:
+                                     // 老域名迁移失败时输出日志，避免配置长期停留在旧文件
+        if (!SPIFFS.remove("/url1.txt"))
+          Serial.println(F(
+              "清理旧url1.txt失败")); // codex修改:
+                                      // 老域名迁移失败时输出日志，避免静默保留旧配置
         ret.replace("www.wf163.com/", "temp2.wf163.com:808/");
       }
     } else {
-      Serial.println(F("URL配置文件打开失败, 使用默认地址"));  // codex修改: URL 文件不可读时明确回退默认地址，避免静默沿用空值
+      Serial.println(F(
+          "URL配置文件打开失败, 使用默认地址")); // codex修改: URL
+                                                 // 文件不可读时明确回退默认地址，避免静默沿用空值
     }
     SPIFFS.end();
   } else {
-    Serial.println(F("SPIFFS打开失败, 使用默认URL"));  // codex修改: 文件系统不可用时保留可诊断日志
+    Serial.println(
+        F("SPIFFS打开失败, 使用默认URL")); // codex修改:
+                                           // 文件系统不可用时保留可诊断日志
   }
   if (ret == "") {
     if (no == 0 || no == '0')
@@ -177,19 +208,25 @@ String get_ssid() {
       ssid = "test:cfido.com";
       if (fp) {
         if (fp.println(ssid) == 0) {
-          Serial.println(F("写入默认ssid失败"));  // codex修改: 默认 WiFi 配置落盘失败时输出日志，避免静默只留内存值
+          Serial.println(F(
+              "写入默认ssid失败")); // codex修改: 默认 WiFi
+                                    // 配置落盘失败时输出日志，避免静默只留内存值
         }
         fp.close();
       } else {
-        Serial.println(F("创建ssid.txt失败"));  // codex修改: 默认 WiFi 配置写入失败时给出明确日志
+        Serial.println(F("创建ssid.txt失败")); // codex修改: 默认 WiFi
+                                               // 配置写入失败时给出明确日志
       }
     }
   } else {
-    Serial.println(F("SPIFFS打开失败, 使用默认ssid设置"));  // codex修改: 文件系统不可用时直接回退默认配置，避免返回空字符串
+    Serial.println(F(
+        "SPIFFS打开失败, 使用默认ssid设置")); // codex修改:
+                                              // 文件系统不可用时直接回退默认配置，避免返回空字符串
     ssid = F("test:cfido.com");
   }
   Serial.println(ssid);
-  if (spiffs_ok) SPIFFS.end();
+  if (spiffs_ok)
+    SPIFFS.end();
   return ssid;
 }
 
@@ -198,8 +235,10 @@ String fp_gets(File fp) {
   String ret = "";
   while (1) {
     ch = fp.read();
-    if (ch == -1) return ret;
-    if (ch != 0xd && ch != 0xa) break;
+    if (ch == -1)
+      return ret;
+    if (ch != 0xd && ch != 0xa)
+      break;
   }
   while (ch != -1 && ch != 0xd && ch != 0xa) {
     ret += (char)ch;
@@ -209,40 +248,47 @@ String fp_gets(File fp) {
   return ret;
 }
 
-#define __YEAR__ ((((__DATE__[7] - '0') * 10 + (__DATE__[8] - '0')) * 10 \
-                   + (__DATE__[9] - '0')) \
-                    * 10 \
-                  + (__DATE__[10] - '0'))
+#define __YEAR__                                                               \
+  ((((__DATE__[7] - '0') * 10 + (__DATE__[8] - '0')) * 10 +                    \
+    (__DATE__[9] - '0')) *                                                     \
+       10 +                                                                    \
+   (__DATE__[10] - '0'))
 
-#define __MONTH__ (__DATE__[2] == 'n'   ? (__DATE__[1] == 'a' ? 1 : 6) /*Jan:Jun*/ \
-                   : __DATE__[2] == 'b' ? 2 \
-                   : __DATE__[2] == 'r' ? (__DATE__[0] == 'M' ? 3 : 4) \
-                   : __DATE__[2] == 'y' ? 5 \
-                   : __DATE__[2] == 'l' ? 7 \
-                   : __DATE__[2] == 'g' ? 8 \
-                   : __DATE__[2] == 'p' ? 9 \
-                   : __DATE__[2] == 't' ? 10 \
-                   : __DATE__[2] == 'v' ? 11 \
-                                        : 12)
+#define __MONTH__                                                              \
+  (__DATE__[2] == 'n'   ? (__DATE__[1] == 'a' ? 1 : 6) /*Jan:Jun*/             \
+   : __DATE__[2] == 'b' ? 2                                                    \
+   : __DATE__[2] == 'r' ? (__DATE__[0] == 'M' ? 3 : 4)                         \
+   : __DATE__[2] == 'y' ? 5                                                    \
+   : __DATE__[2] == 'l' ? 7                                                    \
+   : __DATE__[2] == 'g' ? 8                                                    \
+   : __DATE__[2] == 'p' ? 9                                                    \
+   : __DATE__[2] == 't' ? 10                                                   \
+   : __DATE__[2] == 'v' ? 11                                                   \
+                        : 12)
 
-#define __DAY__ ((__DATE__[4] == ' ' ? 0 : __DATE__[4] - '0') * 10 \
-                 + (__DATE__[5] - '0'))
+#define __DAY__                                                                \
+  ((__DATE__[4] == ' ' ? 0 : __DATE__[4] - '0') * 10 + (__DATE__[5] - '0'))
 
 void wifi_set_clean() {
   if (SPIFFS.begin()) {
     if (!SPIFFS.remove("/ssid.txt")) {
-      Serial.println(F("删除ssid.txt失败"));  // codex修改: 清空 WiFi 配置失败时输出日志，避免误以为已恢复为空配置
+      Serial.println(F(
+          "删除ssid.txt失败")); // codex修改: 清空 WiFi
+                                // 配置失败时输出日志，避免误以为已恢复为空配置
     }
     SPIFFS.end();
   } else {
-    Serial.println(F("SPIFFS打开失败, 无法清空WiFi配置"));  // codex修改: 文件系统不可用时明确提示清空操作未执行
+    Serial.println(F(
+        "SPIFFS打开失败, 无法清空WiFi配置")); // codex修改:
+                                              // 文件系统不可用时明确提示清空操作未执行
   }
 }
 void wifi_set_add(const char *wps_ssid, const char *wps_password) {
   File fp;
   int8_t mh_offset;
   String wifi_sets, line;
-  if (wps_ssid[0] == 0) return;
+  if (wps_ssid[0] == 0)
+    return;
   if (SPIFFS.begin()) {
     fp = SPIFFS.open("/ssid.txt", "r");
     wifi_sets = String(wps_ssid) + ":" + String(wps_password) + "\r\n";
@@ -255,7 +301,8 @@ void wifi_set_add(const char *wps_ssid, const char *wps_password) {
         if (line.length() > 110)
           line = line.substring(0, 110);
         mh_offset = line.indexOf(':');
-        if (mh_offset < 2) continue;
+        if (mh_offset < 2)
+          continue;
         if (line.substring(0, mh_offset) == wps_ssid)
           continue;
         else
@@ -266,22 +313,29 @@ void wifi_set_add(const char *wps_ssid, const char *wps_password) {
     fp = SPIFFS.open("/ssid.txt", "w");
     if (fp) {
       if (fp.print(wifi_sets) != wifi_sets.length()) {
-        Serial.println(F("ssid.txt写入不完整"));  // codex修改: WiFi 配置重写失败时输出日志，避免静默丢配置
+        Serial.println(
+            F("ssid.txt写入不完整")); // codex修改: WiFi
+                                      // 配置重写失败时输出日志，避免静默丢配置
       }
       fp.close();
     } else {
-      Serial.println(F("ssid.txt打开失败"));  // codex修改: 补齐 WiFi 配置文件句柄检查，避免空句柄写入
+      Serial.println(F("ssid.txt打开失败")); // codex修改: 补齐 WiFi
+                                             // 配置文件句柄检查，避免空句柄写入
     }
     SPIFFS.end();
   } else {
-    Serial.println(F("SPIFFS打开失败, 无法保存WiFi配置"));  // codex修改: 文件系统不可用时明确提示配置未落盘
+    Serial.println(F(
+        "SPIFFS打开失败, 无法保存WiFi配置")); // codex修改:
+                                              // 文件系统不可用时明确提示配置未落盘
   }
 }
 
 void dump_hex(char *msg, uint16_t len) {
   for (uint16_t i = 0; i < len; i++) {
-    if ((i % 0x10) == 0) Serial.printf(PSTR("\r\n[%04X]"), i);
-    if ((i % 0x10) == 8) Serial.write(' ');
+    if ((i % 0x10) == 0)
+      Serial.printf(PSTR("\r\n[%04X]"), i);
+    if ((i % 0x10) == 8)
+      Serial.write(' ');
     Serial.printf(PSTR(" %02X"), msg[i]);
   }
   Serial.println();
@@ -292,24 +346,25 @@ uint32_t calculateCRC32(const uint8_t *data, size_t length) {
 }
 
 uint32_t led_half() {
-  return ((sets.color / 4) & 0xff0000)
-         | (((sets.color & 0xff00) / 4) & 0xff00)
-         | ((sets.color & 0xff) / 4);
+  return ((sets.color / 4) & 0xff0000) |
+         (((sets.color & 0xff00) / 4) & 0xff00) | ((sets.color & 0xff) / 4);
 }
 
 void switch_change(bool onff) {
   switch_change_time = 0;
   digitalWrite(SSR, onff);
-  if (onff == HIGH) {  //关机
+  if (onff == HIGH) { // 关机
     play((char *)"321");
     led_send(led_half());
-  } else {  //开机
+  } else { // 开机
     play((char *)"123");
     led_send(sets.color);
   }
 }
-inline char *strncpy(char *dest, uint16_t size, const __FlashStringHelper *ifsh) {
-  if (size == 0) return dest;
+inline char *strncpy(char *dest, uint16_t size,
+                     const __FlashStringHelper *ifsh) {
+  if (size == 0)
+    return dest;
   uint16_t i = 0;
   char bc;
   PGM_P p = reinterpret_cast<PGM_P>(ifsh);
@@ -318,17 +373,17 @@ inline char *strncpy(char *dest, uint16_t size, const __FlashStringHelper *ifsh)
     dest[i] = bc;
     i++;
   }
-  dest[i] = 0;  // codex修改: 始终在缓冲区范围内补零，避免 size 边界写越界
+  dest[i] = 0; // codex修改: 始终在缓冲区范围内补零，避免 size 边界写越界
   return dest;
 }
 String int2str(uint8_t dat) {
-  if (dat < 10) return String("0") + String(dat);
+  if (dat < 10)
+    return String("0") + String(dat);
   return String(dat);
 }
 String time_ymd(struct tm tm0) {
-  return String(tm0.tm_year + 1900)
-         + "-" + int2str(tm0.tm_mon + 1)
-         + "-" + int2str(tm0.tm_mday);
+  return String(tm0.tm_year + 1900) + "-" + int2str(tm0.tm_mon + 1) + "-" +
+         int2str(tm0.tm_mday);
 }
 String time_ymd(time_t t) {
   struct tm tm0;
@@ -337,10 +392,8 @@ String time_ymd(time_t t) {
 }
 
 String isotime(struct tm tm0) {
-  return time_ymd(tm0)
-         + " " + int2str(tm0.tm_hour)
-         + ":" + int2str(tm0.tm_min)
-         + ":" + int2str(tm0.tm_sec);
+  return time_ymd(tm0) + " " + int2str(tm0.tm_hour) + ":" +
+         int2str(tm0.tm_min) + ":" + int2str(tm0.tm_sec);
 }
 
 String html_escape(const String &src) {
@@ -348,12 +401,18 @@ String html_escape(const String &src) {
   ret.reserve(src.length() + 8);
   for (uint16_t i = 0; i < src.length(); i++) {
     char ch = src[i];
-    if (ch == '&') ret += F("&amp;");
-    else if (ch == '<') ret += F("&lt;");
-    else if (ch == '>') ret += F("&gt;");
-    else if (ch == '"') ret += F("&quot;");
-    else if (ch == '\'') ret += F("&#39;");
-    else ret += ch;
+    if (ch == '&')
+      ret += F("&amp;");
+    else if (ch == '<')
+      ret += F("&lt;");
+    else if (ch == '>')
+      ret += F("&gt;");
+    else if (ch == '"')
+      ret += F("&quot;");
+    else if (ch == '\'')
+      ret += F("&#39;");
+    else
+      ret += ch;
   }
   return ret;
 }
@@ -363,17 +422,21 @@ String js_quote_escape(const String &src) {
   ret.reserve(src.length() + 8);
   for (uint16_t i = 0; i < src.length(); i++) {
     char ch = src[i];
-    if (ch == '\\' || ch == '\'' || ch == '"') ret += '\\';
-    if (ch == '\r') ret += F("\\r");
-    else if (ch == '\n') ret += F("\\n");
-    else ret += ch;
+    if (ch == '\\' || ch == '\'' || ch == '"')
+      ret += '\\';
+    if (ch == '\r')
+      ret += F("\\r");
+    else if (ch == '\n')
+      ret += F("\\n");
+    else
+      ret += ch;
   }
   return ret;
 }
 
 String ls() {
   String result;
-  result.reserve(1024);  // 预留1KB空间（根据预期内容大小调整）
+  result.reserve(1024); // 预留1KB空间（根据预期内容大小调整）
   Dir dir = SPIFFS.openDir("/");
   while (dir.next()) {
     result += dir.fileName();

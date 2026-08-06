@@ -2,15 +2,15 @@
 extern "C" {
 #include "user_interface.h"
 }
+#include "clock.h"
 #include "config.h"
 #include "global.h"
-#include "netlog.h"
-#include "hlw8032.h"
 #include "gpio.h"
-#include "clock.h"
-#include "wifi_client.h"
+#include "hlw8032.h"
 #include "httpd.h"
+#include "netlog.h"
 #include "pwm_speeker.h"
+#include "wifi_client.h"
 uint32_t dida0 = 0;
 uint8_t count_100ms = 0;
 void run_20ms() {
@@ -24,7 +24,8 @@ void run_20ms() {
   uint32_t now_ms = millis();
   while ((int32_t)(now_ms - dida0) >= 0) {
     dida0 += 1000;
-    sec();  // codex修改: 用到期时间循环补跑秒节拍，避免启动初期和回调抖动时漏秒或秒计数漂移
+    sec(); // codex修改:
+           // 用到期时间循环补跑秒节拍，避免启动初期和回调抖动时漏秒或秒计数漂移
   }
   count_100ms++;
   if (count_100ms >= 5) {
@@ -35,25 +36,27 @@ void run_20ms() {
 }
 void setup() {
   ESP.wdtEnable(50000);
-  Serial.begin(4800, SERIAL_8E1);  //hlw8032需要这个速度
-  load_set();                      //从files载入数据
+  Serial.begin(4800, SERIAL_8E1); // hlw8032需要这个速度
+  load_set();                     // 从files载入数据
   gpio_setup();
-  load_nvram();  //从esp8266的nvram载入数据
+  load_nvram(); // 从esp8266的nvram载入数据
   memset(&now, 0, sizeof(now));
-  dida0 = millis() + 1000;  // codex修改: 秒节拍基于当前时间启动，避免从 0 起步导致早期快速补秒
+  dida0 =
+      millis() +
+      1000; // codex修改: 秒节拍基于当前时间启动，避免从 0 起步导致早期快速补秒
   _myTicker.attach_ms(20, run_20ms);
 
   wifi_country_t mycountry = {
-    .cc = "CN",
-    .schan = 1,
-    .nchan = 13,
-    .policy = WIFI_COUNTRY_POLICY_MANUAL,
+      .cc = "CN",
+      .schan = 1,
+      .nchan = 13,
+      .policy = WIFI_COUNTRY_POLICY_MANUAL,
   };
 
   wifi_set_country(&mycountry);
   wifi_station_connect();
   pinMode(LEDP, OUTPUT);
-  play((char *)"1");  //滴～～
+  play((char *)"1"); // 滴～～
   delay(1);
   led_send(sets.color);
   delay(1);
@@ -78,10 +81,12 @@ void setup() {
   Serial.print(F("Software Ver=" VER "\r\nBuildtime="));
   Serial.print(__YEAR__);
   Serial.write('-');
-  if (__MONTH__ < 10) Serial.write('0');
+  if (__MONTH__ < 10)
+    Serial.write('0');
   Serial.print(__MONTH__);
   Serial.write('-');
-  if (__DAY__ < 10) Serial.write('0');
+  if (__DAY__ < 10)
+    Serial.write('0');
   Serial.print(__DAY__);
   Serial.println(F(" " __TIME__));
   Serial.print(F("Hostname: "));
@@ -91,13 +96,16 @@ void setup() {
   Serial.flush();
   wifi_setup();
   ESP.wdtEnable(5000);
-  body.reserve(16384);  // codex修改: 首页包含多段图表数据，预留更大缓冲区以减少动态扩容和堆碎片
+  body.reserve(
+      16384); // codex修改:
+              // 首页包含多段图表数据，预留更大缓冲区以减少动态扩容和堆碎片
   Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
 }
 
 uint32_t last_wget = 0;
 uint32_t last_10sec = 0;
-volatile uint8_t smart_status = 0;  // codex修改: 被 GPIO 中断读取、被主循环修改的共享状态需声明为 volatile
+volatile uint8_t smart_status =
+    0; // codex修改: 被 GPIO 中断读取、被主循环修改的共享状态需声明为 volatile
 void loop() {
   struct tm now0;
   now_snapshot(&now0);
@@ -107,22 +115,28 @@ void loop() {
     key_toggle_pending = false;
     interrupts();
     if (do_toggle) {
-      switch_change(!digitalRead(SSR));  // codex修改: 把重操作移到主循环执行
+      switch_change(!digitalRead(SSR)); // codex修改: 把重操作移到主循环执行
     }
   }
   uint8_t deferred_actions = deferred_action_take();
   if (deferred_actions & DEFER_SAVE_SWITCH) {
     sets.on_off = digitalRead(SSR);
     save_set(false);
-    play((char *)"c");  // codex修改: 把定时回调里的保存和提示音移到主循环执行，避免在 Ticker 上下文访问 SPIFFS
+    play((char *)"c"); // codex修改:
+                       // 把定时回调里的保存和提示音移到主循环执行，避免在
+                       // Ticker 上下文访问 SPIFFS
   }
   if (deferred_actions & DEFER_SWITCH_OFF) {
-    switch_change(LOW);  // codex修改: 自动开关动作改由主循环执行，避免回调里直接驱动继电器和灯带
+    switch_change(
+        LOW); // codex修改:
+              // 自动开关动作改由主循环执行，避免回调里直接驱动继电器和灯带
   } else if (deferred_actions & DEFER_SWITCH_ON) {
-    switch_change(HIGH);  // codex修改: 同一轮只执行一个自动切换方向，避免边界条件下连续翻转
+    switch_change(HIGH); // codex修改:
+                         // 同一轮只执行一个自动切换方向，避免边界条件下连续翻转
   }
   if (deferred_actions & DEFER_WIFI_OFF) {
-    wifi_off();  // codex修改: 把计量回调里的断网动作移到主循环执行，避免在 20ms 路径直接切换 WiFi 硬件
+    wifi_off(); // codex修改: 把计量回调里的断网动作移到主循环执行，避免在 20ms
+                // 路径直接切换 WiFi 硬件
   }
   if (set0.relink) {
     set0.relink = false;
@@ -141,8 +155,10 @@ void loop() {
       if (getLocalTime(&now_sync, 1000)) {
         noInterrupts();
         now = now_sync;
-        interrupts();  // codex修改: 先授时到局部变量，再一次性替换共享时间结构体，避免和秒节拍并发写出半更新状态
-        time_update_take();  // codex修改: 授时成功后清掉无效时间阶段遗留的分钟/小时/天事件，避免刚校时就误触发一次结算
+        interrupts(); // codex修改:
+                      // 先授时到局部变量，再一次性替换共享时间结构体，避免和秒节拍并发写出半更新状态
+        time_update_take(); // codex修改:
+                            // 授时成功后清掉无效时间阶段遗留的分钟/小时/天事件，避免刚校时就误触发一次结算
         Serial.println(1);
       } else {
         Serial.println(0);
@@ -151,7 +167,9 @@ void loop() {
     httpd_loop();
     uint32_t now_ms = millis();
     if (millis_reached(last_wget, now_ms)) {
-      last_wget = now_ms + 1000 * 3600 * 4;  // codex修改: 用溢出安全的到期判断维持 4 小时上报节拍，避免长期运行后停止或提前触发
+      last_wget = now_ms +
+                  1000 * 3600 * 4; // codex修改: 用溢出安全的到期判断维持 4
+                                   // 小时上报节拍，避免长期运行后停止或提前触发
       wget();
     }
     yield();
@@ -162,12 +180,14 @@ void loop() {
   system_soft_wdt_feed();
   uint8_t set_modi_flags = set_modi_read();
   if (set_modi_flags & SET_CHARGE) {
-    save_set(false);  // 保存 /sets.txt
+    save_set(false); // 保存 /sets.txt
   }
   yield();
   now_snapshot(&now0);
   if (kwh_days_p == -1 && now0.tm_year > 121) {
-    load_kwh_days();  // codex修改: 先在消费 DAY_UP 事件前初始化日统计环形缓冲区，避免首次有效日期切换时用 -1 索引写入
+    load_kwh_days(); // codex修改: 先在消费 DAY_UP
+                     // 事件前初始化日统计环形缓冲区，避免首次有效日期切换时用
+                     // -1 索引写入
   }
   uint8_t time_flags = time_update_take();
   if (time_flags & DAY_UP) {
@@ -198,18 +218,19 @@ void loop() {
   noInterrupts();
   uint32_t keydown_ms0 = keydown_ms;
   interrupts();
-  if (smart_status == 0 && keydown_ms0 > 0 && millis() - keydown_ms0 > 5000 && digitalRead(KEYWORD) == LOW) {
+  if (smart_status == 0 && keydown_ms0 > 0 && millis() - keydown_ms0 > 5000 &&
+      digitalRead(KEYWORD) == LOW) {
     noInterrupts();
-    keydown_ms = 0;  // codex修改: 先复制再判断，避免和按键中断并发读写
+    keydown_ms = 0; // codex修改: 先复制再判断，避免和按键中断并发读写
     interrupts();
     Serial.println(F("smart_config() begin"));
     smart_status = 1;
     smart_config();
     led_send(sets.color);
-    smart_status = 3;  //退出进行中
+    smart_status = 3; // 退出进行中
     Serial.println(F("smart_config() end"));
   }
-  if (smart_status == 3 && digitalRead(KEYWORD)) {  //等待松开按键就结束过程
+  if (smart_status == 3 && digitalRead(KEYWORD)) { // 等待松开按键就结束过程
     Serial.println(F("smart_config 结束"));
     smart_status = 0;
     wifi_off();
@@ -232,7 +253,9 @@ void load_kwh_days() {
       fp = SPIFFS.open(fn, "r");
       if (fp) {
         while (fp.available() >= (int)sizeof(dataday)) {
-          if (fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) != sizeof(dataday)) break;  // codex修改: 只接受完整记录
+          if (fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) !=
+              sizeof(dataday))
+            break; // codex修改: 只接受完整记录
           kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
         }
         fp.close();
@@ -243,7 +266,9 @@ void load_kwh_days() {
       fp = SPIFFS.open(fn, "r");
       if (fp) {
         while (fp.available() >= (int)sizeof(dataday)) {
-          if (fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) != sizeof(dataday)) break;  // codex修改: 只接受完整记录
+          if (fp.read((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) !=
+              sizeof(dataday))
+            break; // codex修改: 只接受完整记录
           kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
         }
         fp.close();
@@ -258,7 +283,7 @@ String year_dat_path(int year) {
   snprintf(path, sizeof(path), "/%d.dat", year);
   return String(path);
 }
-extern float datamins[60];  //240 byte 每分钟最大功率
+extern float datamins[60]; // 240 byte 每分钟最大功率
 void minute() {
   struct tm now0;
   uint32_t nvram_save0 = nvram_save_read();
@@ -267,32 +292,42 @@ void minute() {
   now_snapshot(&now0);
   if ((now0.tm_min % 10) == 0)
     save_nvram();
-  if ((nvram_save0 > 0 && millis_reached(nvram_save0, now_ms))
-      || millis_reached(last_save0 + 120000, now_ms)
-      || millis_before(last_save0, now_ms))
+  if ((nvram_save0 > 0 && millis_reached(nvram_save0, now_ms)) ||
+      millis_reached(last_save0 + 120000, now_ms) ||
+      millis_before(last_save0, now_ms))
     save_nvram_file();
   Serial.println(isotime(now0));
   Serial.printf(PSTR("空闲ram:%ld\r\n"), ESP.getFreeHeap());
 }
-extern float datahour[24];  //96字节  每一小时的耗电量
+extern float datahour[24]; // 96字节  每一小时的耗电量
 void hour() {
   runtime_snapshot_t snap;
   double kwh_hour0;
   runtime_snapshot(&snap);
-  if (snap.now.tm_year <= 2021 - 1900) return;  // codex修改: 时间尚未有效时不能提前推进小时基线，否则授时成功后当前小时累计会被直接吃掉
+  if (snap.now.tm_year <= 2021 - 1900)
+    return; // codex修改:
+            // 时间尚未有效时不能提前推进小时基线，否则授时成功后当前小时累计会被直接吃掉
   kwh_hour0 = kwh_hour0_swap(snap.kwh);
-  datahour[snap.now.tm_hour] = snap.kwh - kwh_hour0;  // codex修改: 小时统计改成单次累计电量快照结算，避免前后两次 get_kwh() 跨采样周期导致丢量或重复
+  datahour[snap.now.tm_hour] =
+      snap.kwh -
+      kwh_hour0; // codex修改: 小时统计改成单次累计电量快照结算，避免前后两次
+                 // get_kwh() 跨采样周期导致丢量或重复
   save_nvram();
   if (SPIFFS.begin()) {
     File fp;
     fp = SPIFFS.open("/hours.dat", "w");
     if (fp) {
-      if (fp.write((uint8_t *)&datahour, sizeof(datahour)) != sizeof(datahour)) {
-        Serial.println(F("hours.dat写入不完整"));  // codex修改: 小时统计文件改为整块覆盖写，保证重启后读取到最新 24 小时快照而不是历史首块
+      if (fp.write((uint8_t *)&datahour, sizeof(datahour)) !=
+          sizeof(datahour)) {
+        Serial.println(F("hours.dat写入不完整")); // codex修改:
+                                                  // 小时统计文件改为整块覆盖写，保证重启后读取到最新
+                                                  // 24 小时快照而不是历史首块
       }
       fp.close();
     } else {
-      Serial.println(F("hours.dat打开失败"));  // codex修改: 覆盖保存小时统计失败时输出明确日志，避免重启后继续读到陈旧快照
+      Serial.println(F(
+          "hours.dat打开失败")); // codex修改:
+                                 // 覆盖保存小时统计失败时输出明确日志，避免重启后继续读到陈旧快照
     }
     SPIFFS.end();
   }
@@ -301,40 +336,52 @@ void day() {
   runtime_snapshot_t snap;
   double kwh_day0;
   runtime_snapshot(&snap);
-  if (kwh_days_p < 0) return;  // codex修改: 再加一道保护，避免异常顺序下日统计索引未初始化时写越界
-  if (snap.now.tm_year <= 2021 - 1900) return;  // codex修改: 时间尚未有效时不能提前推进日基线，否则授时成功后当天累计会被直接吃掉
+  if (kwh_days_p < 0)
+    return; // codex修改: 再加一道保护，避免异常顺序下日统计索引未初始化时写越界
+  if (snap.now.tm_year <= 2021 - 1900)
+    return; // codex修改:
+            // 时间尚未有效时不能提前推进日基线，否则授时成功后当天累计会被直接吃掉
   kwh_day0 = kwh_day0_swap(snap.kwh);
-  kwh_days[kwh_days_p].kwh = snap.kwh - kwh_day0;  // codex修改: 日统计也基于同一份累计电量快照结算，避免新日基线和旧日增量错位
+  kwh_days[kwh_days_p].kwh =
+      snap.kwh -
+      kwh_day0; // codex修改:
+                // 日统计也基于同一份累计电量快照结算，避免新日基线和旧日增量错位
   kwh_days[kwh_days_p].time = mktime(&snap.now);
   if (SPIFFS.begin()) {
     File fp;
     fp = SPIFFS.open(year_dat_path(snap.now.tm_year + 1900), "a");
     if (fp) {
-      if (fp.write((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) != sizeof(dataday)) {
-        Serial.println(F("日统计写入不完整"));  // codex修改: 年统计写失败时保留日志，避免文件损坏被静默吞掉
+      if (fp.write((uint8_t *)&kwh_days[kwh_days_p], sizeof(dataday)) !=
+          sizeof(dataday)) {
+        Serial.println(F(
+            "日统计写入不完整")); // codex修改:
+                                  // 年统计写失败时保留日志，避免文件损坏被静默吞掉
       }
       fp.close();
     } else {
-      Serial.println(F("日统计文件打开失败"));  // codex修改: 补齐年统计文件句柄检查，避免空句柄写入
+      Serial.println(
+          F("日统计文件打开失败")); // codex修改:
+                                    // 补齐年统计文件句柄检查，避免空句柄写入
     }
     SPIFFS.end();
   }
   kwh_days_p = (kwh_days_p + 1) % KWH_DAYS;
 }
 void smart_config() {
-  uint32_t colors[3] = { 0xf00000, 0x00f000, 0x0000f0 };
-  //手机连上2.4G的wifi,然后微信打开网页：http://wx.ai-thinker.com/api/old/wifi/config
+  uint32_t colors[3] = {0xf00000, 0x00f000, 0x0000f0};
+  // 手机连上2.4G的wifi,然后微信打开网页：http://wx.ai-thinker.com/api/old/wifi/config
   save_nvram();
   smart_status = 1;
   // if (wifi_connected_is_ok()) return true;
-  WiFi.mode(WIFI_STA);  //开AP
+  WiFi.mode(WIFI_STA); // 开AP
   WiFi.beginSmartConfig();
   for (uint16_t i = 0; i < 500; i++) {
     delay(200);
-    system_soft_wdt_feed();  //各loop里要根据需要执行喂狗命令
+    system_soft_wdt_feed(); // 各loop里要根据需要执行喂狗命令
     led_send(colors[i % 3]);
     yield();
-    if (smart_status == 2 && digitalRead(KEYWORD) == LOW) {  //松开按键后，又按下按键
+    if (smart_status == 2 &&
+        digitalRead(KEYWORD) == LOW) { // 松开按键后，又按下按键
       Serial.println(F("key down exit"));
       WiFi.stopSmartConfig();
       wifi_off();
@@ -342,7 +389,7 @@ void smart_config() {
       return;
     }
     if (smart_status == 1 && digitalRead(KEYWORD) == HIGH)
-      smart_status = 2;  //按键已经松开
+      smart_status = 2; // 按键已经松开
     if (WiFi.smartConfigDone()) {
       wifi_set_clean();
       wifi_set_add(WiFi.SSID().c_str(), WiFi.psk().c_str());
@@ -358,13 +405,17 @@ void smart_config() {
     if (i % 100 == 0)
       Serial.println();
     yield();
-    system_soft_wdt_feed();  //各loop里要根据需要执行喂狗命令
+    system_soft_wdt_feed(); // 各loop里要根据需要执行喂狗命令
     if (wifi_connected_is_ok()) {
       httpd_loop();
     }
   }
-  Serial.println(F("smart_config timeout"));  // codex修改: 超时退出时保留明确日志，避免和手动退出、成功退出混淆
+  Serial.println(F(
+      "smart_config timeout")); // codex修改:
+                                // 超时退出时保留明确日志，避免和手动退出、成功退出混淆
   WiFi.stopSmartConfig();
-  wifi_off();          // codex修改: 超时路径也统一关闭 WiFi，避免残留 smart config 状态影响后续重连
-  set0.relink = true;  // codex修改: 超时退出后也走统一重连流程，保持与成功/手动退出一致
+  wifi_off(); // codex修改: 超时路径也统一关闭 WiFi，避免残留 smart config
+              // 状态影响后续重连
+  set0.relink =
+      true; // codex修改: 超时退出后也走统一重连流程，保持与成功/手动退出一致
 }
